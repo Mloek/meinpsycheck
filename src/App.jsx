@@ -14,46 +14,53 @@ const colors = {
 }
 
 const PHQ4_FRAGEN = [
-  { id: 'phq4_1', text: 'Wenig Interesse oder Freude an deinen Aktivitäten' },
+  { id: 'phq4_1', text: 'Wenig Interesse oder Freude an Ihren Tätigkeiten' },
   { id: 'phq4_2', text: 'Niedergeschlagenheit, Schwermut oder Hoffnungslosigkeit' },
-  { id: 'phq4_3', text: 'Nervosität, Ängstlichkeit oder innere Anspannung' },
-  { id: 'phq4_4', text: 'Nicht in der Lage sein, Sorgen zu stoppen oder zu kontrollieren' },
+  { id: 'phq4_3', text: 'Gefühle der Nervosität, Ängstlichkeit oder Anspannung' },
+  { id: 'phq4_4', text: 'Unfähigkeit, Sorgen zu stoppen oder zu kontrollieren' },
 ]
 
 // PHQ9 hat jetzt nur noch 8 Fragen – die Suizid-Frage (Item 9) ist ein eigener Screen
 const PHQ9_FRAGEN = [
-  { id: 'phq9_1', text: 'Wenig Interesse oder Freude an deinen Aktivitäten' },
+  { id: 'phq9_1', text: 'Wenig Interesse oder Freude an Ihren Tätigkeiten' },
   { id: 'phq9_2', text: 'Niedergeschlagenheit, Schwermut oder Hoffnungslosigkeit' },
-  { id: 'phq9_3', text: 'Schwierigkeiten, ein- oder durchzuschlafen, oder zu viel schlafen' },
+  { id: 'phq9_3', text: 'Schwierigkeiten, ein- oder durchzuschlafen, oder vermehrter Schlaf' },
   { id: 'phq9_4', text: 'Müdigkeit oder Gefühl, keine Energie zu haben' },
-  { id: 'phq9_5', text: 'Verminderter Appetit oder übermäßiges Essen' },
-  { id: 'phq9_6', text: 'Schlechte Meinung von dir selbst – Gefühl, ein Versager zu sein oder andere enttäuscht zu haben' },
-  { id: 'phq9_7', text: 'Schwierigkeiten, dich auf Dinge zu konzentrieren' },
-  { id: 'phq9_8', text: 'Machst du Dinge ungewöhnlich langsam, oder bist du besonders rastlos und zappelig?' },
+  { id: 'phq9_5', text: 'Verminderter Appetit oder übermäßiges Bedürfnis zu essen' },
+  { id: 'phq9_6', text: 'Schlechte Meinung von sich selbst; Gefühl, ein Versager zu sein oder die Familie enttäuscht zu haben' },
+  { id: 'phq9_7', text: 'Schwierigkeiten, sich auf etwas zu konzentrieren, z. B. beim Zeitungslesen oder Fernsehen' },
+  { id: 'phq9_8', text: 'Waren Ihre Bewegungen oder Ihre Sprache so verlangsamt, dass es auch anderen auffallen würde? Oder waren Sie im Gegenteil \u201ezappelig\u201c oder ruhelos und hatten dadurch einen stärkeren Bewegungsdrang als sonst?' },
 ]
 
 const GAD7_FRAGEN = [
-  { id: 'gad7_1', text: 'Nervosität, Ängstlichkeit oder innere Anspannung' },
-  { id: 'gad7_2', text: 'Nicht in der Lage sein, Sorgen zu stoppen oder zu kontrollieren' },
+  { id: 'gad7_1', text: 'Gefühle der Nervosität, Ängstlichkeit oder Anspannung' },
+  { id: 'gad7_2', text: 'Unfähigkeit, Sorgen zu stoppen oder zu kontrollieren' },
   { id: 'gad7_3', text: 'Übermäßige Sorgen bezüglich verschiedener Angelegenheiten' },
   { id: 'gad7_4', text: 'Schwierigkeiten, sich zu entspannen' },
-  { id: 'gad7_5', text: 'Rastlosigkeit, sodass Stillsitzen schwerfällt' },
-  { id: 'gad7_6', text: 'Schnelle Verärgerung oder Reizbarkeit' },
-  { id: 'gad7_7', text: 'Angst, dass etwas Schreckliches passieren könnte' },
+  { id: 'gad7_5', text: 'So rastlos sein, dass das Stillsitzen schwer fällt' },
+  { id: 'gad7_6', text: 'Schnelle Verärgerung oder Gereiztheit' },
+  { id: 'gad7_7', text: 'Angstgefühle, so als könnte etwas Schreckliches passieren' },
 ]
 
 const ASRS_FRAGEN = [
-  { id: 'asrs_1', text: 'Schwierigkeiten, eine Aufgabe zu beenden, nachdem der schwierige Teil erledigt ist' },
-  { id: 'asrs_2', text: 'Schwierigkeiten, dich zu organisieren, wenn du eine Aufgabe erledigen musst' },
-  { id: 'asrs_3', text: 'Schwierigkeiten, Termine einzuhalten oder Verpflichtungen nachzukommen' },
-  { id: 'asrs_4', text: 'Aufgaben vermeiden oder aufschieben, die gründliches Nachdenken erfordern' },
-  { id: 'asrs_5', text: 'Dinge verlegen oder nicht mehr finden, wenn du sie brauchst' },
-  { id: 'asrs_6', text: 'Durch äußere Dinge oder Geräusche abgelenkt werden' },
+  { id: 'asrs_1', text: 'Wie oft haben Sie Probleme, die letzten Feinheiten einer Arbeit zum Abschluss zu bringen, nachdem Sie die wesentlichen Punkte erledigt haben?' },
+  { id: 'asrs_2', text: 'Wie oft fällt es Ihnen schwer, Dinge in die Reihe zu bekommen, wenn Sie an einer Aufgabe arbeiten, bei der Organisation gefragt ist?' },
+  { id: 'asrs_3', text: 'Wie oft haben Sie Probleme, sich an Termine oder Verabredungen zu erinnern?' },
+  { id: 'asrs_4', text: 'Wie oft vermeiden Sie oder verzögern Sie, die Aufgabe zu beginnen, wenn Sie vor einer Aufgabe stehen, bei der sehr viel Denkvermögen gefragt ist?' },
+  { id: 'asrs_5', text: 'Wie oft sind Ihre Hände bzw. Füße bei langem Sitzen in Bewegung?' },
+  { id: 'asrs_6', text: 'Wie oft fühlen Sie sich übermäßig aktiv und verspüren den Drang Dinge zu tun, als ob Sie von einem Motor angetrieben würden?' },
 ]
 
 const ANTWORTEN_STANDARD = [
   { wert: 0, label: 'Überhaupt nicht' },
   { wert: 1, label: 'An einzelnen Tagen' },
+  { wert: 2, label: 'An mehr als der Hälfte der Tage' },
+  { wert: 3, label: 'Beinahe jeden Tag' },
+]
+
+const ANTWORTEN_GAD7 = [
+  { wert: 0, label: 'Nie' },
+  { wert: 1, label: 'An manchen Tagen' },
   { wert: 2, label: 'An mehr als der Hälfte der Tage' },
   { wert: 3, label: 'Beinahe jeden Tag' },
 ]
@@ -69,9 +76,9 @@ const ANTWORTEN_ASRS = [
 const INSTRUMENTE = ['PHQ9', 'GAD7', 'ASRS']
 
 const INSTRUMENT_CONFIG = {
-  PHQ9: { fragen: PHQ9_FRAGEN, antworten: ANTWORTEN_STANDARD, titel: 'Stimmung & Befinden', untertitel: 'Wie oft haben dich folgende Dinge in den letzten 2 Wochen belastet?' },
-  GAD7: { fragen: GAD7_FRAGEN, antworten: ANTWORTEN_STANDARD, titel: 'Angst & Sorgen', untertitel: 'Wie oft haben dich folgende Dinge in den letzten 2 Wochen belastet?' },
-  ASRS: { fragen: ASRS_FRAGEN, antworten: ANTWORTEN_ASRS, titel: 'Konzentration & Aufmerksamkeit', untertitel: 'Wie häufig tritt das bei dir auf?' },
+  PHQ9: { fragen: PHQ9_FRAGEN, antworten: ANTWORTEN_STANDARD, titel: 'Stimmung & Befinden', untertitel: 'Wie oft fühlten Sie sich im Verlauf der letzten 2 Wochen durch die folgenden Beschwerden beeinträchtigt?' },
+  GAD7: { fragen: GAD7_FRAGEN, antworten: ANTWORTEN_GAD7, titel: 'Angst & Sorgen', untertitel: 'Wie oft fühlten Sie sich im Verlauf der letzten 2 Wochen durch folgende Beschwerden beeinträchtigt?' },
+  ASRS: { fragen: ASRS_FRAGEN, antworten: ANTWORTEN_ASRS, titel: 'Konzentration & Aufmerksamkeit', untertitel: 'Markieren Sie das Kästchen, das am besten beschreibt, wie Sie sich in den letzten 6 Monaten gefühlt und sich benommen haben.' },
 }
 
 // 4 (PHQ4) + 8 (PHQ9 ohne Suizid) + 7 (GAD7) + 6 (ASRS) + 1 (Suizid-Screen) = 26
@@ -305,45 +312,73 @@ function ScreeningFragen({ fragen, antworten: antwortOptionen, titel, untertitel
   )
 }
 
-// ─── NEU: Suizid-Frage als eigener, separater Screen ─────────────────────────
-// Diese Komponente ist komplett unabhängig vom normalen Fragen-Flow.
-// Sie hat nur zwei Buttons – kein komplizierter State, keine Race Condition möglich.
-function SuizidScreen({ onNein, onJa }) {
+function SuizidScreen({ onAntwort }) {
+  const [ausgewaehlt, setAusgewaehlt] = useState(-1)
+
   return (
     <div style={{ padding: '16px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Fortschrittsbalken zeigt 100% – wir sind bei Frage 26 von 26 */}
       <div style={{ height: '4px', backgroundColor: colors.border, borderRadius: '2px', marginBottom: '8px' }}>
         <div style={{ height: '4px', backgroundColor: colors.primary, borderRadius: '2px', width: '100%' }} />
       </div>
       <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 32px' }}>Frage 26 von 26</p>
 
-      {/* Hinweis-Box */}
       <div style={{ backgroundColor: colors.crisisBg, borderRadius: '10px', padding: '12px 14px', marginBottom: '24px' }}>
         <p style={{ fontSize: '13px', color: colors.crisis, margin: 0, lineHeight: '1.5' }}>
-          Bitte beantworte die Frage bezogen auf die letzten 2 Wochen.
+          Bitte beantworten Sie die Frage bezogen auf die letzten 2 Wochen.
         </p>
       </div>
 
-      {/* Die eigentliche Frage */}
-      <p style={{ fontSize: '20px', fontWeight: '600', color: colors.text, lineHeight: '1.5', margin: '0 0 32px', flex: 1 }}>
-        Hattest du in den letzten 2 Wochen Gedanken, dass du lieber tot wärst oder dir selbst Schaden zufügen möchtest?
-      </p>
-
-      {/* Zwei klare Buttons – kein Weiter-Button nötig */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-        <button
-          onClick={onNein}
-          style={{ padding: '18px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${colors.border}`, borderRadius: '12px', backgroundColor: colors.background, color: colors.text, cursor: 'pointer', fontWeight: '400' }}
-        >
-          Nein, solche Gedanken hatte ich nicht
-        </button>
-        <button
-          onClick={onJa}
-          style={{ padding: '18px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${colors.border}`, borderRadius: '12px', backgroundColor: colors.background, color: colors.text, cursor: 'pointer', fontWeight: '400' }}
-        >
-          Ja, solche Gedanken hatte ich
-        </button>
+      <div style={{ flex: 1 }}>
+        <p style={{ fontSize: '20px', fontWeight: '600', color: colors.text, lineHeight: '1.5', margin: '0 0 32px' }}>
+          Gedanken, dass Sie lieber tot wären oder sich Leid zufügen möchten
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+          {ANTWORTEN_STANDARD.map((opt) => {
+            const aktiv = ausgewaehlt === opt.wert
+            return (
+              <button key={opt.wert} onClick={() => setAusgewaehlt(opt.wert)} style={{ padding: '16px 18px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${aktiv ? colors.primary : colors.border}`, borderRadius: '12px', backgroundColor: aktiv ? colors.primaryLight : colors.background, color: aktiv ? colors.primary : colors.text, cursor: 'pointer', fontWeight: aktiv ? '600' : '400', transition: 'all 0.15s' }}>
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
+
+      <button onClick={() => onAntwort(ausgewaehlt)} disabled={ausgewaehlt === -1} style={{ width: '100%', padding: '16px', backgroundColor: ausgewaehlt !== -1 ? colors.primary : colors.border, color: ausgewaehlt !== -1 ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: ausgewaehlt !== -1 ? 'pointer' : 'default', transition: 'background 0.2s', marginBottom: '16px' }}>
+        Weiter
+      </button>
+    </div>
+  )
+}
+
+function SuizidHinweisScreen({ wert, onWeiter }) {
+  const config = {
+    1: { bg: '#FFF8E1', border: '#FFE082', color: '#F57F17', titel: 'Hinweis', text: 'Du hast angegeben, dass dich solche Gedanken an einzelnen Tagen beschäftigt haben. Das ist ernst zu nehmen. Bitte sprich mit jemandem darüber.' },
+    2: { bg: '#FFF3E0', border: '#FFCC80', color: '#E65100', titel: 'Wichtiger Hinweis', text: 'Du hast angegeben, dass dich solche Gedanken an mehr als der Hälfte der Tage beschäftigt haben. Bitte such dir Unterstützung – du musst das nicht alleine tragen.' },
+    3: { bg: colors.crisisBg, border: '#FFCDD2', color: colors.crisis, titel: 'Bitte such dir jetzt Hilfe', text: 'Du hast angegeben, dass dich solche Gedanken beinahe jeden Tag beschäftigen. Das ist ein ernstes Warnsignal. Bitte nimm sofort Kontakt auf.' },
+  }[wert]
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: config.bg, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px 24px' }}>
+      <h2 style={{ fontSize: '22px', fontWeight: '700', color: config.color, margin: '0 0 12px' }}>{config.titel}</h2>
+      <p style={{ fontSize: '15px', color: '#333', lineHeight: '1.7', margin: '0 0 28px' }}>{config.text}</p>
+
+      <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '20px', marginBottom: '16px', border: `1px solid ${config.border}` }}>
+        <p style={{ fontSize: '14px', fontWeight: '700', color: config.color, margin: '0 0 4px' }}>Telefonseelsorge</p>
+        <p style={{ fontSize: '13px', color: colors.textMuted, margin: '0 0 12px' }}>Kostenlos · anonym · 24/7 erreichbar</p>
+        <a href="tel:08001110111" style={{ display: 'block', padding: '13px', backgroundColor: colors.crisis, color: '#fff', borderRadius: '10px', fontSize: '17px', fontWeight: '700', textAlign: 'center', textDecoration: 'none' }}>0800 111 0 111</a>
+      </div>
+
+      {wert === 3 && (
+        <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '18px', marginBottom: '24px', border: `1px solid ${config.border}` }}>
+          <p style={{ fontSize: '14px', fontWeight: '700', color: config.color, margin: '0 0 10px' }}>Notfall</p>
+          <a href="tel:112" style={{ display: 'block', padding: '13px', backgroundColor: '#fff', color: colors.crisis, border: `2px solid ${colors.crisis}`, borderRadius: '10px', fontSize: '17px', fontWeight: '700', textAlign: 'center', textDecoration: 'none' }}>112 anrufen</a>
+        </div>
+      )}
+
+      <button onClick={onWeiter} style={{ width: '100%', padding: '16px', backgroundColor: colors.primary, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginTop: wert < 3 ? '8px' : '0' }}>
+        Weiter zu den Ergebnissen
+      </button>
     </div>
   )
 }
@@ -356,6 +391,7 @@ function ScreeningFlow({ onZurueck }) {
   const [alleAntworten, setAlleAntworten] = useState({})
   const [aktuellesInstrument, setAktuellesInstrument] = useState(0)
   const [ergebnisse, setErgebnisse] = useState([])
+  const [suizidWert, setSuizidWert] = useState(0)
 
   // Wie viele Fragen waren schon vor diesem Instrument?
   // PHQ4=4 Fragen, dann PHQ9 startet bei Frage 5 (bisherFragen=4)
@@ -384,16 +420,21 @@ function ScreeningFlow({ onZurueck }) {
     }
   }
 
-  // User hat "Nein" auf Suizid-Frage geantwortet → Ergebnis berechnen
-  const handleSuizidNein = () => {
-    const merged = { ...alleAntworten, phq9_9: 0 }
-    setErgebnisse(berechneErgebnisse(merged))
-    setPhase('ergebnis')
+  const handleSuizidAntwort = (wert) => {
+    setSuizidWert(wert)
+    const merged = { ...alleAntworten, phq9_9: wert }
+    setAlleAntworten(merged)
+    if (wert === 0) {
+      setErgebnisse(berechneErgebnisse(merged))
+      setPhase('ergebnis')
+    } else {
+      setPhase('suizid_hinweis')
+    }
   }
 
-  // User hat "Ja" auf Suizid-Frage geantwortet → Krisen-Screen
-  const handleSuizidJa = () => {
-    setPhase('krise')
+  const handleSuizidHinweisWeiter = () => {
+    setErgebnisse(berechneErgebnisse(alleAntworten))
+    setPhase('ergebnis')
   }
 
   if (phase === 'einstieg') {
@@ -401,7 +442,7 @@ function ScreeningFlow({ onZurueck }) {
   }
 
   if (phase === 'phq4') {
-    return <ScreeningFragen fragen={PHQ4_FRAGEN} antworten={ANTWORTEN_STANDARD} titel="Eingangsscreening" untertitel="Wie oft haben dich folgende Dinge in den letzten 2 Wochen belastet?" onFertig={handlePHQ4Fertig} onZurueck={() => setPhase('einstieg')} bisherFragen={0} />
+    return <ScreeningFragen fragen={PHQ4_FRAGEN} antworten={ANTWORTEN_STANDARD} titel="Eingangsscreening" untertitel="Wie oft fühlten Sie sich im Verlauf der letzten 2 Wochen durch die folgenden Beschwerden beeinträchtigt?" onFertig={handlePHQ4Fertig} onZurueck={() => setPhase('einstieg')} bisherFragen={0} />
   }
 
   if (phase === 'vertiefung') {
@@ -422,15 +463,15 @@ function ScreeningFlow({ onZurueck }) {
   }
 
   if (phase === 'suizid') {
-    return <SuizidScreen onNein={handleSuizidNein} onJa={handleSuizidJa} />
+    return <SuizidScreen onAntwort={handleSuizidAntwort} />
   }
 
-  if (phase === 'krise') {
-    return <KrisenScreen />
+  if (phase === 'suizid_hinweis') {
+    return <SuizidHinweisScreen wert={suizidWert} onWeiter={handleSuizidHinweisWeiter} />
   }
 
   if (phase === 'ergebnis') {
-    return <ScreeningErgebnis ergebnisse={ergebnisse} onNeustart={() => { setPhase('einstieg'); setAlleAntworten({}); setSymptomAuswahl([]) }} onZurueck={onZurueck} />
+    return <ScreeningErgebnis ergebnisse={ergebnisse} suizidItem={suizidWert} onNeustart={() => { setPhase('einstieg'); setAlleAntworten({}); setSymptomAuswahl([]); setSuizidWert(0) }} onZurueck={onZurueck} />
   }
 
   return null
@@ -458,7 +499,7 @@ function KrisenScreen() {
   )
 }
 
-function ScreeningErgebnis({ ergebnisse, onNeustart, onZurueck }) {
+function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }) {
   const höchsteStufe = Math.min(...ergebnisse.map(e => e.stufe))
   const stufe1 = ergebnisse.filter(e => e.stufe === 1)
   const stufe2 = ergebnisse.filter(e => e.stufe === 2)
@@ -472,6 +513,14 @@ function ScreeningErgebnis({ ergebnisse, onNeustart, onZurueck }) {
   return (
     <div style={{ padding: '16px', paddingBottom: '40px' }}>
       <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 20px' }}>Dein Ergebnis</h2>
+
+      {suizidItem > 0 && (
+        <div style={{ backgroundColor: colors.crisisBg, borderRadius: '14px', padding: '16px', border: '1px solid #FFCDD2', marginBottom: '16px' }}>
+          <p style={{ fontSize: '14px', fontWeight: '700', color: colors.crisis, margin: '0 0 6px' }}>Wichtiger Hinweis</p>
+          <p style={{ fontSize: '13px', color: '#5D2D2D', margin: '0 0 12px', lineHeight: '1.6' }}>Du hast angegeben, dass dich Gedanken, dir selbst Schaden zuzufügen, in den letzten 2 Wochen beschäftigt haben. Bitte such dir Unterstützung.</p>
+          <a href="tel:08001110111" style={{ display: 'block', padding: '12px', backgroundColor: colors.crisis, color: '#fff', borderRadius: '10px', fontSize: '15px', fontWeight: '700', textAlign: 'center', textDecoration: 'none' }}>Telefonseelsorge: 0800 111 0 111</a>
+        </div>
+      )}
 
       {stufe1.map((res) => (
         <div key={res.instrument} style={{ backgroundColor: '#FFEBEE', borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '10px' }}>

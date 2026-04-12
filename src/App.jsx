@@ -76,9 +76,9 @@ const ANTWORTEN_ASRS = [
 const INSTRUMENTE = ['PHQ9', 'GAD7', 'ASRS']
 
 const INSTRUMENT_CONFIG = {
-  PHQ9: { fragen: PHQ9_FRAGEN, antworten: ANTWORTEN_STANDARD, titel: 'Stimmung & Befinden', untertitel: 'Wie oft fühlten Sie sich im Verlauf der letzten 2 Wochen durch die folgenden Beschwerden beeinträchtigt?' },
-  GAD7: { fragen: GAD7_FRAGEN, antworten: ANTWORTEN_GAD7, titel: 'Angst & Sorgen', untertitel: 'Wie oft fühlten Sie sich im Verlauf der letzten 2 Wochen durch folgende Beschwerden beeinträchtigt?' },
-  ASRS: { fragen: ASRS_FRAGEN, antworten: ANTWORTEN_ASRS, titel: 'Konzentration & Aufmerksamkeit', untertitel: 'Markieren Sie das Kästchen, das am besten beschreibt, wie Sie sich in den letzten 6 Monaten gefühlt und sich benommen haben.' },
+  PHQ9: { fragen: PHQ9_FRAGEN, antworten: ANTWORTEN_STANDARD, zeitrahmen: 'In den letzten 2 Wochen:' },
+  GAD7: { fragen: GAD7_FRAGEN, antworten: ANTWORTEN_GAD7, zeitrahmen: 'In den letzten 2 Wochen:' },
+  ASRS: { fragen: ASRS_FRAGEN, antworten: ANTWORTEN_ASRS, zeitrahmen: 'In den letzten 6 Monaten:' },
 }
 
 // 4 (PHQ4) + 8 (PHQ9 ohne Suizid) + 7 (GAD7) + 6 (ASRS) + 1 (Suizid-Screen) = 26
@@ -242,7 +242,7 @@ function ScreeningEinstieg({ symptomAuswahl, setSymptomAuswahl, onWeiter, onZuru
   )
 }
 
-function ScreeningFragen({ fragen, antworten: antwortOptionen, titel, untertitel, onFertig, onZurueck, bisherFragen }) {
+function ScreeningFragen({ fragen, antworten: antwortOptionen, zeitrahmen, onFertig, onZurueck, bisherFragen }) {
   const [antworten, setAntworten] = useState({})
   const [aktuelleIndex, setAktuelleIndex] = useState(0)
   const [ausgewaehlt, setAusgewaehlt] = useState(-1)
@@ -284,14 +284,10 @@ function ScreeningFragen({ fragen, antworten: antwortOptionen, titel, untertitel
       </div>
       <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 32px' }}>Frage {aktuelleGesamt} von {GESAMT_FRAGEN}</p>
 
-      {aktuelleIndex === 0 && (
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: '700', color: colors.text, margin: '0 0 6px' }}>{titel}</h2>
-          <p style={{ fontSize: '13px', color: colors.textMuted, margin: 0, lineHeight: '1.5' }}>{untertitel}</p>
-        </div>
-      )}
-
       <div style={{ flex: 1 }}>
+        {zeitrahmen && (
+          <p style={{ fontSize: '20px', fontWeight: '400', color: colors.textMuted, lineHeight: '1.5', margin: '0 0 8px' }}>{zeitrahmen}</p>
+        )}
         <p style={{ fontSize: '20px', fontWeight: '600', color: colors.text, lineHeight: '1.5', margin: '0 0 32px' }}>{aktuelleFrage.text}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
           {antwortOptionen.map((opt) => {
@@ -442,7 +438,7 @@ function ScreeningFlow({ onZurueck }) {
   }
 
   if (phase === 'phq4') {
-    return <ScreeningFragen fragen={PHQ4_FRAGEN} antworten={ANTWORTEN_STANDARD} titel="Eingangsscreening" untertitel="Wie oft fühlten Sie sich im Verlauf der letzten 2 Wochen durch die folgenden Beschwerden beeinträchtigt?" onFertig={handlePHQ4Fertig} onZurueck={() => setPhase('einstieg')} bisherFragen={0} />
+    return <ScreeningFragen fragen={PHQ4_FRAGEN} antworten={ANTWORTEN_STANDARD} zeitrahmen="In den letzten 2 Wochen:" onFertig={handlePHQ4Fertig} onZurueck={() => setPhase('einstieg')} bisherFragen={0} />
   }
 
   if (phase === 'vertiefung') {
@@ -451,8 +447,7 @@ function ScreeningFlow({ onZurueck }) {
       key={INSTRUMENTE[aktuellesInstrument]}
       fragen={c.fragen}
       antworten={c.antworten}
-      titel={c.titel}
-      untertitel={c.untertitel}
+      zeitrahmen={c.zeitrahmen}
       onFertig={handleVertiefungFertig}
       onZurueck={() => {
         if (aktuellesInstrument > 0) setAktuellesInstrument(aktuellesInstrument - 1)
@@ -534,23 +529,31 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
         </div>
       ))}
 
-      {stufe2
-        .filter(res => (res.chips ?? []).length > 0)
-        .map((res) => (
-          <div key={res.instrument} style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '10px' }}>
-            <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.6', margin: '0 0 12px' }}>
-              In einigen Symptombereichen zeigen deine Angaben erhöhte Werte:
+      {stufe2.length > 0 && !hatStufe1 && (() => {
+        const alleChips = [...new Set(stufe2.flatMap(res => res.chips ?? []))]
+        return (
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ fontSize: '16px', fontWeight: '600', color: colors.text, lineHeight: '1.6', margin: '0 0 6px' }}>
+              Deine Angaben erreichen keinen klinischen Grenzwert. Laut den validierten Fragebögen liegen aktuell keine Hinweise auf eine behandlungsbedürftige psychische Störung vor.
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
-              {(res.chips ?? []).map((chip) => (
-                <div key={chip} style={{ padding: '8px 14px', backgroundColor: colors.primaryLight, borderRadius: '20px', fontSize: '13px', color: colors.primary, fontWeight: '500', border: `1px solid ${colors.primary}30` }}>{chip}</div>
-              ))}
-            </div>
-            <p style={{ fontSize: '13px', color: colors.textLight, margin: 0, lineHeight: '1.6' }}>
-              Ressourcen zu diesen Themen folgen in einer späteren Version.
+            <p style={{ fontSize: '13px', color: colors.textMuted, margin: '0 0 16px', lineHeight: '1.5' }}>
+              Das ist eine Momentaufnahme – kein Gesundheitszeugnis.
             </p>
+            {alleChips.length > 0 && (
+              <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}` }}>
+                <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.6', margin: '0 0 12px' }}>
+                  In diesen Bereichen hattest du erhöhte Werte:
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {alleChips.map((chip) => (
+                    <div key={chip} style={{ padding: '8px 14px', backgroundColor: colors.primaryLight, borderRadius: '20px', fontSize: '13px', color: colors.primary, fontWeight: '500', border: `1px solid ${colors.primary}30` }}>{chip}</div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        ))}
+        )
+      })()}
 
       {hatStufe1 && (
         <div style={{ backgroundColor: colors.surface, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>

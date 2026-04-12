@@ -66,7 +66,7 @@ const ANTWORTEN_GAD7 = [
 ]
 
 const ANTWORTEN_ASRS = [
-  { wert: 0, label: 'Nie' },
+  { wert: 0, label: 'Niemals' },
   { wert: 1, label: 'Selten' },
   { wert: 2, label: 'Manchmal' },
   { wert: 3, label: 'Oft' },

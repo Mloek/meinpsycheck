@@ -421,14 +421,17 @@ function ScreeningFlow({ onZurueck }) {
     const merged = { ...alleAntworten, phq9_9: wert }
     setAlleAntworten(merged)
     if (wert === 0) {
-      setErgebnisse(berechneErgebnisse(merged))
-      setPhase('ergebnis')
+      setPhase('disclaimer')
     } else {
       setPhase('suizid_hinweis')
     }
   }
 
   const handleSuizidHinweisWeiter = () => {
+    setPhase('disclaimer')
+  }
+
+  const handleDisclaimerWeiter = () => {
     setErgebnisse(berechneErgebnisse(alleAntworten))
     setPhase('ergebnis')
   }
@@ -465,11 +468,37 @@ function ScreeningFlow({ onZurueck }) {
     return <SuizidHinweisScreen wert={suizidWert} onWeiter={handleSuizidHinweisWeiter} />
   }
 
+  if (phase === 'disclaimer') {
+    return <DisclaimerScreen onWeiter={handleDisclaimerWeiter} />
+  }
+
   if (phase === 'ergebnis') {
     return <ScreeningErgebnis ergebnisse={ergebnisse} suizidItem={suizidWert} onNeustart={() => { setPhase('einstieg'); setAlleAntworten({}); setSymptomAuswahl([]); setSuizidWert(0) }} onZurueck={onZurueck} />
   }
 
   return null
+}
+
+function DisclaimerScreen({ onWeiter }) {
+  return (
+    <div style={{ padding: '24px', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: colors.background }}>
+      <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 24px', lineHeight: '1.4' }}>
+        Bevor du deine Ergebnisse siehst – ein kurzer Hinweis.
+      </h2>
+      <p style={{ fontSize: '16px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 16px' }}>
+        Diese Auswertung basiert auf denselben Fragebögen, die auch Psychologen und Psychiater in der Praxis einsetzen. Sie ist keine Diagnose, aber sie ist auch nicht nichts.
+      </p>
+      <p style={{ fontSize: '16px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 16px' }}>
+        Es ist möglich, dass in mehreren Bereichen erhöhte Werte erscheinen. Das ist häufig – psychische Beschwerden treten oft gemeinsam auf, weil sie sich gegenseitig beeinflussen. Das bedeutet nicht, dass „alles falsch ist". Es bedeutet, dass dein System gerade unter Druck steht.
+      </p>
+      <p style={{ fontSize: '16px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 40px' }}>
+        Das Tagebuch in dieser App hilft dir, Veränderungen über Zeit zu beobachten.
+      </p>
+      <button onClick={onWeiter} style={{ width: '100%', padding: '16px', backgroundColor: colors.primary, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+        Zu meinen Ergebnissen
+      </button>
+    </div>
+  )
 }
 
 function KrisenScreen() {
@@ -494,11 +523,31 @@ function KrisenScreen() {
   )
 }
 
+const STOERUNGSBILDER = {
+  'PHQ-9': {
+    kurz: 'Deine Angaben im Bereich Stimmung & Antrieb überschreiten den klinischen Grenzwert. Das deutet auf depressive Symptome hin.',
+    lang: 'Der PHQ-9 ist einer der weltweit am häufigsten eingesetzten Fragebögen zur Erkennung depressiver Störungen. Die Fragen erfassen, wie oft du in den letzten zwei Wochen typische Symptome einer Depression erlebt hast – wie Antriebslosigkeit, Freudlosigkeit, Schlafprobleme oder das Gefühl, wertlos zu sein. Ein Wert über 10 bedeutet nicht, dass du „krank" bist. Er bedeutet, dass deine Beschwerden ein Ausmaß erreicht haben, bei dem professionelle Unterstützung sinnvoll und wirksam ist. Depressionen gehören zu den am besten behandelbaren psychischen Erkrankungen – mit Therapie sprechen über 60% der Betroffenen gut auf Behandlung an.',
+  },
+  'GAD-7': {
+    kurz: 'Deine Angaben im Bereich Angst & innere Anspannung überschreiten den klinischen Grenzwert. Das deutet auf eine generalisierte Angststörung hin.',
+    lang: 'Der GAD-7 wurde entwickelt um zu erfassen, wie stark Sorgen und Anspannung deinen Alltag belasten. Die Fragen fragen nicht nach einzelnen Angst-Momenten, sondern nach einem anhaltenden Muster über zwei Wochen. Generalisierte Angst bedeutet nicht, dass du Angst vor einer bestimmten Sache hast – es bedeutet, dass das Nervensystem dauerhaft in einem erhöhten Alarmzustand ist. Das kostet enorm viel Energie und beeinflusst Schlaf, Konzentration und soziale Kontakte. Auch hier gilt: Das ist behandelbar. Kognitive Verhaltenstherapie zeigt bei Angststörungen sehr gute Ergebnisse.',
+  },
+  'ASRS v1.1': {
+    kurz: 'Deine Angaben im Bereich Konzentration & Impulsivität überschreiten den klinischen Grenzwert. Das deutet auf ADHS-Symptome im Erwachsenenalter hin.',
+    lang: 'Der ASRS v1.1 wurde von der Weltgesundheitsorganisation entwickelt und erfasst typische ADHS-Symptome bei Erwachsenen – Schwierigkeiten beim Abschließen von Aufgaben, Probleme mit Organisation und Planung sowie motorische Unruhe. ADHS im Erwachsenenalter wird oft spät erkannt, weil die Symptome sich anders zeigen als bei Kindern. Viele Betroffene haben jahrelang das Gefühl, sich einfach „mehr anstrengen" zu müssen – ohne zu wissen, dass ein neurobiologischer Unterschied dahintersteckt. Eine Abklärung beim Psychiater oder einem spezialisierten Psychologen kann Klarheit bringen.',
+  },
+  'WHO-5 (aus PHQ-9)': {
+    kurz: 'Deine Angaben deuten auf ein reduziertes allgemeines Wohlbefinden hin, das auf chronischen Stress oder emotionale Erschöpfung hinweisen kann.',
+    lang: 'Der WHO-5 Wohlbefindens-Index misst, wie oft du dich in den letzten zwei Wochen aktiv, entspannt und positiv gestimmt gefühlt hast. Ein niedriger Wert ist kein Zeichen einer psychischen Störung – aber er ist ein ernstes Signal, das nicht ignoriert werden sollte. Chronischer Stress ist einer der am besten belegten Auslöser für eine Vielzahl von Erkrankungen – sowohl körperlich als auch psychisch. Dauerhafter Stress erhöht das Risiko für Herz-Kreislauf-Erkrankungen, Schlafstörungen, Immunschwäche und ist gleichzeitig einer der häufigsten Wegbereiter für Depressionen und Angststörungen. Du brauchst keine Diagnose, um dir Unterstützung zu suchen. Wer früh gegensteuert, schützt nicht nur seine psychische Gesundheit, sondern seinen gesamten Körper. Ein Gespräch mit dem Hausarzt oder einem Psychologen kann ein sinnvoller erster Schritt sein. Das Tagebuch in dieser App hilft dir, Muster zu erkennen – wann es dir besser geht, wann schlechter, und was den Unterschied macht.',
+  },
+}
+
 function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }) {
   const höchsteStufe = Math.min(...ergebnisse.map(e => e.stufe))
   const stufe1 = ergebnisse.filter(e => e.stufe === 1)
   const stufe2 = ergebnisse.filter(e => e.stufe === 2)
   const hatStufe1 = stufe1.length > 0
+  const [aufgeklappt, setAufgeklappt] = useState(null)
 
   useEffect(() => {
     localStorage.setItem('screening_datum', new Date().toISOString())
@@ -517,17 +566,31 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
         </div>
       )}
 
-      {stufe1.map((res) => (
-        <div key={res.instrument} style={{ backgroundColor: '#FFEBEE', borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: colors.text, margin: 0 }}>{res.label}</p>
-            <span style={{ fontSize: '12px', color: colors.textLight, backgroundColor: colors.surface, padding: '3px 8px', borderRadius: '6px' }}>{res.instrument}</span>
+      {hatStufe1 && (
+        <p style={{ fontSize: '17px', fontWeight: '600', color: colors.text, lineHeight: '1.6', margin: '0 0 20px' }}>
+          Deine Angaben zeigen in mindestens einem Bereich Werte, die auf klinisch relevante Beschwerden hinweisen. Das ist ein Hinweis, den es wert ist, ernst zu nehmen.
+        </p>
+      )}
+
+      {stufe1.map((res) => {
+        const info = STOERUNGSBILDER[res.instrument]
+        const istOffen = aufgeklappt === res.instrument
+        return (
+          <div key={res.instrument} onClick={() => setAufgeklappt(istOffen ? null : res.instrument)} style={{ backgroundColor: '#FFEBEE', borderRadius: '14px', padding: '16px', border: `1px solid #FFCDD2`, marginBottom: '10px', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: info ? '10px' : '0' }}>
+              <p style={{ fontSize: '14px', color: colors.text, lineHeight: '1.6', margin: 0, flex: 1, paddingRight: '12px' }}>
+                {info?.kurz ?? 'Deine Angaben liegen oberhalb des Schwellenwerts.'}
+              </p>
+              <span style={{ fontSize: '18px', color: colors.crisis, flexShrink: 0, marginTop: '2px' }}>{istOffen ? '↑' : '↓'}</span>
+            </div>
+            {istOffen && info?.lang && (
+              <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.7', margin: '12px 0 0', borderTop: '1px solid #FFCDD2', paddingTop: '12px' }}>
+                {info.lang}
+              </p>
+            )}
           </div>
-          <p style={{ fontSize: '14px', color: colors.text, lineHeight: '1.7', margin: 0 }}>
-            Deine Angaben liegen oberhalb des Schwellenwerts. Ein Gespräch mit einem Psychologen oder Arzt wird empfohlen.
-          </p>
-        </div>
-      ))}
+        )
+      })}
 
       {stufe2.length > 0 && !hatStufe1 && (() => {
         const alleChips = [...new Set(stufe2.flatMap(res => res.chips ?? []))]

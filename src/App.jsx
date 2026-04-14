@@ -486,10 +486,10 @@ function DisclaimerScreen({ onWeiter }) {
         Bevor du deine Ergebnisse siehst – ein kurzer Hinweis.
       </h2>
       <p style={{ fontSize: '16px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 16px' }}>
-        Diese Auswertung basiert auf denselben Fragebögen, die auch Psychologen und Psychiater in der Praxis einsetzen. Sie ist keine Diagnose, aber sie ist auch nicht nichts.
+        Diese Auswertung ersetzt keine professionelle Diagnose – sie gibt dir jedoch eine erste Orientierung auf Basis wissenschaftlich validierter Screening-Instrumente.
       </p>
       <p style={{ fontSize: '16px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 16px' }}>
-        Es ist möglich, dass in mehreren Bereichen erhöhte Werte erscheinen. Das ist häufig – psychische Beschwerden treten oft gemeinsam auf, weil sie sich gegenseitig beeinflussen. Das bedeutet nicht, dass „alles falsch ist". Es bedeutet, dass dein System gerade unter Druck steht.
+        Es ist möglich, dass in mehreren Bereichen erhöhte Werte erscheinen. Das ist häufig – psychische Beschwerden treten oft gemeinsam auf, weil sie sich gegenseitig beeinflussen.
       </p>
       <p style={{ fontSize: '16px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 40px' }}>
         Das Tagebuch in dieser App hilft dir, Veränderungen über Zeit zu beobachten.
@@ -642,17 +642,28 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
   )
 }
 
+const IS_DEV = import.meta.env.DEV
+
 function HauptApp() {
   const [aktiveTab, setAktiveTab] = useState('home')
   const [tagebuchOffen, setTagebuchOffen] = useState(false)
   const [screeningOffen, setScreeningOffen] = useState(false)
+  const [testErgebnis, setTestErgebnis] = useState(null)
+
+  const handleTestErgebnis = (ergebnisse) => {
+    setTestErgebnis(ergebnisse)
+    setScreeningOffen(true)
+  }
 
   return (
     <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: colors.surface, fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '70px' }}>
-        {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={() => setTagebuchOffen(true)} onScreeningOeffnen={() => setScreeningOffen(true)} />}
+        {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={() => setTagebuchOffen(true)} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <TagebuchEintrag onZurueck={() => setTagebuchOffen(false)} />}
-        {aktiveTab === 'home' && screeningOffen && <ScreeningFlow onZurueck={() => setScreeningOffen(false)} />}
+        {aktiveTab === 'home' && screeningOffen && (testErgebnis
+          ? <ScreeningErgebnis ergebnisse={testErgebnis} suizidItem={0} onNeustart={() => { setScreeningOffen(false); setTestErgebnis(null) }} onZurueck={() => { setScreeningOffen(false); setTestErgebnis(null) }} />
+          : <ScreeningFlow onZurueck={() => setScreeningOffen(false)} />
+        )}
         {aktiveTab === 'therapeuten' && <TherapeutenPlatzhalter />}
         {aktiveTab === 'einstellungen' && <Einstellungen />}
       </div>
@@ -667,7 +678,7 @@ function HauptApp() {
   )
 }
 
-function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen }) {
+function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
   const hour = new Date().getHours()
   const greeting = hour >= 5 && hour < 11 ? 'Guten Morgen'
     : hour >= 11 && hour < 17 ? 'Guten Tag'
@@ -699,6 +710,23 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen }) {
           <p style={{ fontSize: '13px', color: colors.primary, margin: 0, fontWeight: '500' }}>Eintrag öffnen →</p>
         </div>
       </div>
+
+      {onTestErgebnis && (
+        <div style={{ marginTop: '32px', padding: '16px', backgroundColor: '#F3E5F5', borderRadius: '14px', border: '1px dashed #9C27B0' }}>
+          <p style={{ fontSize: '11px', fontWeight: '700', color: '#7B1FA2', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 10px' }}>Dev · Test-Shortcuts</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {[
+              { label: 'Test: Stufe 1', ergebnisse: berechneErgebnisse({ phq9_1:3,phq9_2:3,phq9_3:2,phq9_4:2,phq9_5:1,phq9_6:2,phq9_7:1,phq9_8:1,phq9_9:0, gad7_1:2,gad7_2:2,gad7_3:2,gad7_4:2,gad7_5:2,gad7_6:1,gad7_7:1, asrs_1:1,asrs_2:1,asrs_3:1,asrs_4:1,asrs_5:1,asrs_6:1 }) },
+              { label: 'Test: Stufe 2', ergebnisse: berechneErgebnisse({ phq9_1:1,phq9_2:2,phq9_3:1,phq9_4:2,phq9_5:1,phq9_6:0,phq9_7:1,phq9_8:0,phq9_9:0, gad7_1:1,gad7_2:1,gad7_3:1,gad7_4:1,gad7_5:0,gad7_6:1,gad7_7:0, asrs_1:1,asrs_2:1,asrs_3:0,asrs_4:1,asrs_5:0,asrs_6:0 }) },
+              { label: 'Test: Stufe 3', ergebnisse: berechneErgebnisse({ phq9_1:0,phq9_2:0,phq9_3:0,phq9_4:0,phq9_5:0,phq9_6:0,phq9_7:0,phq9_8:0,phq9_9:0, gad7_1:0,gad7_2:0,gad7_3:0,gad7_4:0,gad7_5:0,gad7_6:0,gad7_7:0, asrs_1:0,asrs_2:0,asrs_3:0,asrs_4:0,asrs_5:0,asrs_6:0 }) },
+            ].map(({ label, ergebnisse }) => (
+              <button key={label} onClick={() => onTestErgebnis(ergebnisse)} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#7B1FA2', backgroundColor: '#fff', border: '1px solid #CE93D8', borderRadius: '10px', cursor: 'pointer' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -782,7 +782,7 @@ function HauptApp() {
     <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: colors.surface, fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '70px' }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={() => setTagebuchOffen(true)} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
-        {aktiveTab === 'home' && tagebuchOffen && <TagebuchEintrag onZurueck={() => setTagebuchOffen(false)} />}
+        {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => setTagebuchOffen(false)} />}
         {aktiveTab === 'home' && screeningOffen && (testErgebnis
           ? <ScreeningErgebnis ergebnisse={testErgebnis} suizidItem={0} onNeustart={() => { setScreeningOffen(false); setTestErgebnis(null) }} onZurueck={() => { setScreeningOffen(false); setTestErgebnis(null) }} />
           : <ScreeningFlow onZurueck={() => setScreeningOffen(false)} />
@@ -854,28 +854,17 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
   )
 }
 
-function TagebuchEintrag({ onZurueck }) {
+function Tagebuch({ onZurueck }) {
+  const [ansicht, setAnsicht] = useState('eintrag')
+  const [gewaehlterTag, setGewaehlterTag] = useState(null)
+  const [kalenderMonat, setKalenderMonat] = useState(new Date().getMonth())
+  const [kalenderJahr, setKalenderJahr] = useState(new Date().getFullYear())
   const [werte, setWerte] = useState({ befinden: 0, energie: 0, schlaf: 0 })
   const [notiz, setNotiz] = useState('')
-  const [gespeichert, setGespeichert] = useState(false)
-  const [heuteGeladen, setHeuteGeladen] = useState(false)
+  const [formularOffen, setFormularOffen] = useState(false)
+
   const heute = new Date().toISOString().split('T')[0]
-
-  useEffect(() => {
-    const gespeicherterEintrag = localStorage.getItem(`tagebuch_${heute}`)
-    if (gespeicherterEintrag) {
-      const daten = JSON.parse(gespeicherterEintrag)
-      setWerte(daten.werte)
-      setNotiz(daten.notiz)
-      setHeuteGeladen(true)
-    }
-  }, [])
-
-  const handleSpeichern = () => {
-    localStorage.setItem(`tagebuch_${heute}`, JSON.stringify({ datum: heute, werte, notiz, gespeichertUm: new Date().toISOString() }))
-    setGespeichert(true)
-    setTimeout(() => onZurueck(), 1200)
-  }
+  const hatHeuteEintrag = !!localStorage.getItem(`tagebuch_${heute}`)
 
   const kategorien = [
     { key: 'befinden', label: 'Befinden', links: 'Schlecht', rechts: 'Sehr gut' },
@@ -883,45 +872,220 @@ function TagebuchEintrag({ onZurueck }) {
     { key: 'schlaf', label: 'Schlaf', links: 'Schlecht', rechts: 'Gut' },
   ]
 
+  const leseEintrag = (datum) => {
+    const raw = localStorage.getItem(`tagebuch_${datum}`)
+    if (!raw) return null
+    const e = JSON.parse(raw)
+    return {
+      befinden: e.befinden ?? e.werte?.befinden ?? 0,
+      energie: e.energie ?? e.werte?.energie ?? 0,
+      schlaf: e.schlaf ?? e.werte?.schlaf ?? 0,
+      notiz: e.notiz || '',
+      datum: e.datum || datum,
+    }
+  }
+
+  const ladeHeutigenEintrag = () => {
+    const e = leseEintrag(heute)
+    if (e) {
+      setWerte({ befinden: e.befinden, energie: e.energie, schlaf: e.schlaf })
+      setNotiz(e.notiz)
+    }
+    setFormularOffen(true)
+  }
+
+  const handleSpeichern = () => {
+    localStorage.setItem(`tagebuch_${heute}`, JSON.stringify({
+      befinden: werte.befinden,
+      energie: werte.energie,
+      schlaf: werte.schlaf,
+      notiz,
+      datum: heute,
+    }))
+    setFormularOffen(false)
+  }
+
   const alleAusgewaehlt = werte.befinden > 0 && werte.energie > 0 && werte.schlaf > 0
 
-  return (
-    <div style={{ padding: '16px' }}>
-      <button onClick={onZurueck} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
-      <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 6px' }}>Tagebuch</h2>
-      <p style={{ fontSize: '13px', color: colors.textLight, margin: '0 0 24px' }}>{new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-      {heuteGeladen && (
-        <div style={{ backgroundColor: colors.primaryLight, borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
-          <p style={{ fontSize: '13px', color: colors.primary, margin: 0, fontWeight: '500' }}>Du hast heute bereits einen Eintrag gespeichert. Du kannst ihn hier anpassen.</p>
-        </div>
-      )}
-      <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '12px' }}>
-        <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 20px' }}>Wie geht es dir heute?</p>
-        {kategorien.map((kat) => (
-          <div key={kat.key} style={{ marginBottom: '20px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '600', color: colors.text }}>{kat.label}</span>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
-              <span style={{ fontSize: '11px', color: colors.textLight, width: '48px' }}>{kat.links}</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <div key={n} onClick={() => setWerte({ ...werte, [kat.key]: n })} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: werte[kat.key] >= n ? colors.primary : colors.border, cursor: 'pointer', transition: 'background 0.15s' }} />
-                ))}
-              </div>
-              <span style={{ fontSize: '11px', color: colors.textLight, width: '48px', textAlign: 'right' }}>{kat.rechts}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
-        <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 10px' }}>Notiz</p>
-        <textarea value={notiz} onChange={(e) => setNotiz(e.target.value)} placeholder="Was beschäftigt dich heute? Was war gut, was war schwer?" rows={4} style={{ width: '100%', fontSize: '14px', color: colors.text, border: 'none', outline: 'none', resize: 'none', backgroundColor: 'transparent', lineHeight: '1.6', boxSizing: 'border-box', fontFamily: 'system-ui, -apple-system, sans-serif' }} />
-      </div>
-      <button onClick={handleSpeichern} disabled={!alleAusgewaehlt || gespeichert} style={{ width: '100%', padding: '16px', backgroundColor: gespeichert ? '#4CAF50' : alleAusgewaehlt ? colors.primary : colors.border, color: alleAusgewaehlt || gespeichert ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: alleAusgewaehlt && !gespeichert ? 'pointer' : 'default', transition: 'background 0.2s' }}>
-        {gespeichert ? 'Gespeichert ✓' : 'Eintrag speichern'}
-      </button>
-      {!alleAusgewaehlt && <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '8px' }}>Bitte alle drei Ratings ausfüllen</p>}
+  const padZwei = (n) => String(n).padStart(2, '0')
+
+  const renderPunkte = (wert) => (
+    <div style={{ display: 'flex', gap: '6px' }}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <div key={n} style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: n <= wert ? colors.primary : colors.border }} />
+      ))}
     </div>
   )
+
+  // ─── ANSICHT 1: Tageseintrag ────────────────────────────────────────────────
+  if (ansicht === 'eintrag') {
+    // Fall B: Heute bereits Eintrag vorhanden, Formular nicht geöffnet
+    if (hatHeuteEintrag && !formularOffen) {
+      return (
+        <div style={{ padding: '16px' }}>
+          <button onClick={onZurueck} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 6px' }}>Tagebuch</h2>
+          <p style={{ fontSize: '13px', color: colors.textLight, margin: '0 0 32px' }}>{new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <div style={{ backgroundColor: colors.primaryLight, borderRadius: '14px', padding: '20px', marginBottom: '24px' }}>
+            <p style={{ fontSize: '15px', color: colors.primary, margin: 0, fontWeight: '500', lineHeight: '1.6' }}>Du hast dein Tagebuch für heute bereits ausgefüllt.</p>
+          </div>
+          <button onClick={ladeHeutigenEintrag} style={{ width: '100%', padding: '16px', backgroundColor: colors.background, color: colors.primary, border: `1.5px solid ${colors.primary}`, borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '10px' }}>
+            Eintrag ergänzen
+          </button>
+          <button onClick={() => setAnsicht('kalender')} style={{ width: '100%', padding: '16px', backgroundColor: colors.background, color: colors.primary, border: `1.5px solid ${colors.primary}`, borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+            Mein Tagebuch
+          </button>
+        </div>
+      )
+    }
+
+    // Fall A: Kein Eintrag heute ODER Formular-Modus (Eintrag ergänzen)
+    return (
+      <div style={{ padding: '16px' }}>
+        <button onClick={onZurueck} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 6px' }}>Tagebuch</h2>
+        <p style={{ fontSize: '13px', color: colors.textLight, margin: '0 0 24px' }}>{new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '12px' }}>
+          <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 20px' }}>Wie geht es dir heute?</p>
+          {kategorien.map((kat) => (
+            <div key={kat.key} style={{ marginBottom: '20px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: colors.text }}>{kat.label}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px' }}>
+                <span style={{ fontSize: '11px', color: colors.textLight, width: '48px' }}>{kat.links}</span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <div key={n} onClick={() => setWerte({ ...werte, [kat.key]: n })} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: werte[kat.key] >= n ? colors.primary : colors.border, cursor: 'pointer', transition: 'background 0.15s' }} />
+                  ))}
+                </div>
+                <span style={{ fontSize: '11px', color: colors.textLight, width: '48px', textAlign: 'right' }}>{kat.rechts}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+          <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 10px' }}>Notiz</p>
+          <textarea value={notiz} onChange={(e) => setNotiz(e.target.value)} placeholder="Was beschäftigt dich heute? Was war gut, was war schwer?" rows={4} style={{ width: '100%', fontSize: '14px', color: colors.text, border: 'none', outline: 'none', resize: 'none', backgroundColor: 'transparent', lineHeight: '1.6', boxSizing: 'border-box', fontFamily: 'system-ui, -apple-system, sans-serif' }} />
+        </div>
+        <button onClick={handleSpeichern} disabled={!alleAusgewaehlt} style={{ width: '100%', padding: '16px', backgroundColor: alleAusgewaehlt ? colors.primary : colors.border, color: alleAusgewaehlt ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: alleAusgewaehlt ? 'pointer' : 'default', transition: 'background 0.2s', marginBottom: '10px' }}>
+          Speichern
+        </button>
+        <button onClick={() => setAnsicht('kalender')} style={{ width: '100%', padding: '16px', backgroundColor: colors.background, color: colors.primary, border: `1.5px solid ${colors.primary}`, borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+          Mein Tagebuch
+        </button>
+        {!alleAusgewaehlt && <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '8px' }}>Bitte alle drei Ratings ausfüllen</p>}
+      </div>
+    )
+  }
+
+  // ─── ANSICHT 2: Kalender ────────────────────────────────────────────────────
+  if (ansicht === 'kalender') {
+    const eintraegeTage = Object.keys(localStorage)
+      .filter(k => k.startsWith('tagebuch_'))
+      .map(k => k.replace('tagebuch_', ''))
+
+    const ersterTag = new Date(kalenderJahr, kalenderMonat, 1)
+    const letzterTag = new Date(kalenderJahr, kalenderMonat + 1, 0)
+    const startWochentag = (ersterTag.getDay() + 6) % 7 // Montag = 0
+    const anzahlTage = letzterTag.getDate()
+    const monatName = ersterTag.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+
+    const vorherigerMonat = () => {
+      if (kalenderMonat === 0) { setKalenderMonat(11); setKalenderJahr(j => j - 1) }
+      else setKalenderMonat(m => m - 1)
+    }
+    const naechsterMonat = () => {
+      if (kalenderMonat === 11) { setKalenderMonat(0); setKalenderJahr(j => j + 1) }
+      else setKalenderMonat(m => m + 1)
+    }
+
+    const handleTagKlick = (tag) => {
+      const datum = `${kalenderJahr}-${padZwei(kalenderMonat + 1)}-${padZwei(tag)}`
+      const hatEintrag = eintraegeTage.includes(datum)
+      if (hatEintrag) {
+        setGewaehlterTag(datum)
+        setAnsicht('lesen')
+      } else if (datum === heute) {
+        setAnsicht('eintrag')
+      }
+    }
+
+    return (
+      <div style={{ padding: '16px' }}>
+        <button onClick={() => setAnsicht('eintrag')} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 24px' }}>Mein Tagebuch</h2>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <button onClick={vorherigerMonat} style={{ background: 'none', border: 'none', fontSize: '20px', color: colors.primary, cursor: 'pointer', padding: '4px 8px' }}>←</button>
+          <span style={{ fontSize: '16px', fontWeight: '600', color: colors.text, textTransform: 'capitalize' }}>{monatName}</span>
+          <button onClick={naechsterMonat} style={{ background: 'none', border: 'none', fontSize: '20px', color: colors.primary, cursor: 'pointer', padding: '4px 8px' }}>→</button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', textAlign: 'center' }}>
+          {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((t) => (
+            <div key={t} style={{ fontSize: '12px', color: colors.textLight, padding: '8px 0', fontWeight: '600' }}>{t}</div>
+          ))}
+
+          {Array.from({ length: startWochentag }).map((_, i) => (
+            <div key={`leer-${i}`} />
+          ))}
+
+          {Array.from({ length: anzahlTage }).map((_, i) => {
+            const tag = i + 1
+            const datum = `${kalenderJahr}-${padZwei(kalenderMonat + 1)}-${padZwei(tag)}`
+            const hatEintrag = eintraegeTage.includes(datum)
+            const istHeute = datum === heute
+
+            return (
+              <div key={tag} onClick={() => handleTagKlick(tag)} style={{ padding: '8px 0', cursor: hatEintrag || datum === heute ? 'pointer' : 'default', borderRadius: '10px', backgroundColor: istHeute ? colors.primaryLight : 'transparent', position: 'relative' }}>
+                <span style={{ fontSize: '14px', color: istHeute ? colors.primary : colors.text, fontWeight: istHeute ? '700' : '400' }}>{tag}</span>
+                {hatEintrag && (
+                  <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: colors.primary, margin: '3px auto 0' }} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // ─── ANSICHT 3: Eintrag lesen ───────────────────────────────────────────────
+  if (ansicht === 'lesen' && gewaehlterTag) {
+    const eintrag = leseEintrag(gewaehlterTag)
+    if (!eintrag) { setAnsicht('kalender'); return null }
+
+    const datumObj = new Date(gewaehlterTag + 'T12:00:00')
+    const datumText = datumObj.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+    return (
+      <div style={{ padding: '16px' }}>
+        <button onClick={() => setAnsicht('kalender')} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück zum Kalender</button>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 24px', textTransform: 'capitalize' }}>{datumText}</h2>
+
+        <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+          {[
+            { label: 'Befinden', wert: eintrag.befinden },
+            { label: 'Energie', wert: eintrag.energie },
+            { label: 'Schlaf', wert: eintrag.schlaf },
+          ].map((kat) => (
+            <div key={kat.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>{kat.label}</span>
+              {renderPunkte(kat.wert)}
+            </div>
+          ))}
+        </div>
+
+        {eintrag.notiz && (
+          <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}` }}>
+            <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 8px' }}>Notiz</p>
+            <p style={{ fontSize: '14px', color: colors.textMuted, margin: 0, lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{eintrag.notiz}</p>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return null
 }
 
 function TherapeutenPlatzhalter() {

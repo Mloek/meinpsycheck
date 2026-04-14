@@ -542,12 +542,127 @@ const STOERUNGSBILDER = {
   },
 }
 
+const RESSOURCEN_KATALOG = {
+  'Schlafprobleme': {
+    erklaerung: 'Du hast angegeben, dass du an mehr als der Hälfte der Tage Schwierigkeiten beim Ein- oder Durchschlafen hast. Schlafprobleme sind eines der häufigsten und am besten behandelbaren Symptome.',
+    interventionen: [
+      { titel: 'Schlafhygiene', text: 'Feste Schlafzeiten, kein Bildschirm 45 Min. vor Schlaf, kühles Zimmer', video: 'https://youtu.be/l72IHVMcapk' },
+      { titel: 'Progressive Muskelentspannung', text: 'Muskelgruppen anspannen und loslassen – Körperscan vor dem Schlafen', video: 'https://youtu.be/vsJ01LxdAi4' },
+      { titel: 'Stimulus-Kontrolle', text: 'Bett nur zum Schlafen nutzen, bei Wachheit aufstehen' },
+      { titel: 'Schlaf-Apps', text: 'Sleep Cycle (kostenlos); 7Schläfer / TK-SchlafCoach (Kassenleistung)' },
+    ],
+  },
+  'Grübeln': {
+    erklaerung: 'Gedanken kreisen immer wieder um dieselben Themen. Grübeln fühlt sich produktiv an – ist es aber meist nicht. Es gibt konkrete Techniken, um den Kreis zu unterbrechen.',
+    interventionen: [
+      { titel: 'MBCT/MBSR-Einführung', text: 'Gedanken beobachten ohne zu bewerten', video: 'https://youtu.be/TSGOQaxu43o' },
+      { titel: 'Worry-Time', text: '15 Min. täglich für Sorgen reservieren, Rest des Tages aktiv unterbrechen' },
+      { titel: 'Verhaltensaktivierung', text: 'Kleine konkrete Aktivität planen – unterbricht den Grübelkreis' },
+    ],
+  },
+  'Antriebslosigkeit': {
+    erklaerung: 'Antriebslosigkeit ist nicht Faulheit. Es ist ein neurobiologisches Signal. Der Schlüssel ist nicht mehr Willenskraft, sondern kluge kleine Schritte.',
+    interventionen: [
+      { titel: 'Ausdauersport', text: 'Walking, Jogging, Radfahren – Dopamin-Anstieg, Cortisolabbau' },
+      { titel: 'Krafttraining', text: 'Hantel oder Eigengewicht – wirkt nachweislich antidepressiv' },
+      { titel: 'Verhaltensaktivierung', text: 'Eine Kleinstaufgabe heute, die sich machbar anfühlt' },
+      { titel: 'Tagesstruktur aufbauen', text: 'Feste Aufstehzeit als erster Anker' },
+    ],
+  },
+  'Konzentration': {
+    erklaerung: 'Konzentrationsprobleme entstehen oft durch mentale Überlastung oder Schlafmangel – sie sind ein Symptom, kein Charakterfehler.',
+    interventionen: [
+      { titel: 'Pomodoro-Technik', text: '25 Min. fokussiert arbeiten, dann 5 Min. Pause', video: 'https://youtu.be/O8Y3WvWM42g' },
+      { titel: '5-Minuten-Regel', text: 'Nur 5 Min. an einer Aufgabe starten – der Anfang ist die größte Hürde' },
+      { titel: '5-4-3-2-1 Erdung', text: '5 Dinge sehen, 4 hören, 3 fühlen, 2 riechen, 1 schmecken', video: 'https://youtu.be/TsIGZklzSyc' },
+      { titel: 'Box Breathing', text: '4 Sek. einatmen, 4 halten, 4 ausatmen, 4 halten', video: 'https://youtu.be/wazCdqIBi2c' },
+      { titel: '3-Minuten-Atemraum', text: 'Kurzmeditation aus der MBCT', video: 'https://youtu.be/JEmNFgt21qo' },
+      { titel: 'STOPP-Technik', text: 'Stopp – Tief atmen – Beobachten – Perspektive – Weiter', video: 'https://youtu.be/Jj61HkABO7c' },
+      { titel: 'Insight Timer', text: 'Kostenlose App für geführte Meditationen' },
+    ],
+  },
+  'Innere Unruhe': {
+    erklaerung: 'Innere Unruhe ist oft ein Zeichen, dass das Nervensystem im Alarmzustand ist – auch ohne sichtbaren Auslöser. Beruhigungstechniken wirken direkt auf die Körperebene.',
+    interventionen: [
+      { titel: 'Box Breathing', text: '4 Sek. einatmen, 4 halten, 4 ausatmen, 4 halten', video: 'https://youtu.be/wazCdqIBi2c' },
+      { titel: '4-7-8 Atemtechnik', text: '4 Sek. einatmen, 7 halten, 8 ausatmen – aktiviert den Parasympathikus' },
+      { titel: 'Progressive Muskelentspannung', text: 'Muskeln anspannen und loslassen – senkt Cortisol direkt', video: 'https://youtu.be/vsJ01LxdAi4' },
+      { titel: '5-4-3-2-1 Erdung', text: 'Sofort anwendbar bei akuter Unruhe', video: 'https://youtu.be/TsIGZklzSyc' },
+    ],
+  },
+  'Reizbarkeit': {
+    erklaerung: 'Reizbarkeit ist oft kein Charakterzug – sie ist ein Zeichen von Überlastung, Schlafmangel oder unterdrücktem Stress. Das Nervensystem reagiert schneller als der Verstand denken kann.',
+    interventionen: [
+      { titel: 'STOPP-Technik', text: 'Innehalten bevor man reagiert: Stopp – Atmen – Beobachten – Perspektive – Weiter', video: 'https://youtu.be/Jj61HkABO7c' },
+      { titel: 'Stresstagebuch', text: 'Auslöser 1 Woche täglich notieren – Muster erkennen' },
+      { titel: 'Schlafhygiene', text: 'Schlafmangel ist einer der stärksten Treiber von Reizbarkeit', video: 'https://youtu.be/l72IHVMcapk' },
+      { titel: 'Grenzen setzen', text: 'Konkrete Übung: eine Anfrage diese Woche ablehnen' },
+    ],
+  },
+  'Chronischer Stress': {
+    erklaerung: 'Chronischer Stress ist nicht Schwäche – er ist ein Signal des Körpers, dass das System überlastet ist. Es gibt gut belegte Techniken, um gezielt gegenzusteuern.',
+    interventionen: [
+      { titel: 'Progressive Muskelentspannung', text: 'Muskeln anspannen und loslassen – senkt Cortisol direkt', video: 'https://youtu.be/vsJ01LxdAi4' },
+      { titel: '4-7-8 Atemtechnik', text: '4 Sek. einatmen, 7 halten, 8 ausatmen' },
+      { titel: 'MBSR-Kurzübung', text: '10 Min. Achtsamkeit täglich – über 500 Studien belegt', video: 'https://youtu.be/TSGOQaxu43o' },
+      { titel: 'Stresstagebuch', text: 'Auslöser 1 Woche täglich notieren' },
+      { titel: 'Grenzen setzen', text: 'Konkrete Übung: eine Anfrage diese Woche ablehnen' },
+    ],
+  },
+  'Sozialer Rückzug': {
+    erklaerung: 'Sozialer Rückzug kann sich selbst verstärken. Nicht mehr Kontakte helfen – sondern die Gedanken darüber verändern.',
+    interventionen: [
+      { titel: 'Gedanken prüfen', text: 'Fehlbewertungen über soziale Situationen erkennen und hinterfragen' },
+      { titel: 'Kleine soziale Handlung', text: 'Nicht \'Freunde finden\' – den Kassierer ansprechen genügt' },
+      { titel: 'Strukturierte Gruppenaktivität', text: 'Kurs, Verein, Ehrenamt – ohne Beziehungsdruck' },
+      { titel: 'Selbstmitgefühl', text: 'Innere Kritik bei sozialer Angst reduzieren' },
+    ],
+  },
+}
+
 function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }) {
   const höchsteStufe = Math.min(...ergebnisse.map(e => e.stufe))
   const stufe1 = ergebnisse.filter(e => e.stufe === 1)
   const stufe2 = ergebnisse.filter(e => e.stufe === 2)
   const hatStufe1 = stufe1.length > 0
   const [aufgeklappt, setAufgeklappt] = useState(null)
+  const [openChipId, setOpenChipId] = useState(null)
+
+  const renderChips = (chips) => {
+    if (chips.length === 0) return null
+    const klickbareChips = chips.filter(c => RESSOURCEN_KATALOG[c])
+    const nichtKlickbar = chips.filter(c => !RESSOURCEN_KATALOG[c])
+    return (
+      <>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {klickbareChips.map((chip) => (
+            <div key={chip} onClick={(e) => { e.stopPropagation(); setOpenChipId(openChipId === chip ? null : chip) }} style={{ padding: '8px 14px', backgroundColor: openChipId === chip ? colors.primary : colors.primaryLight, borderRadius: '20px', fontSize: '13px', color: openChipId === chip ? '#fff' : colors.primary, fontWeight: '500', border: `1px solid ${colors.primary}30`, cursor: 'pointer', transition: 'all 0.2s' }}>{chip}</div>
+          ))}
+          {nichtKlickbar.map((chip) => (
+            <div key={chip} style={{ padding: '8px 14px', backgroundColor: colors.primaryLight, borderRadius: '20px', fontSize: '13px', color: colors.primary, fontWeight: '500', border: `1px solid ${colors.primary}30` }}>{chip}</div>
+          ))}
+        </div>
+        {openChipId && chips.includes(openChipId) && RESSOURCEN_KATALOG[openChipId] && (
+          <div style={{ marginTop: '12px', padding: '16px', backgroundColor: colors.background, borderRadius: '14px', border: `1px solid ${colors.border}` }}>
+            <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 16px' }}>
+              {RESSOURCEN_KATALOG[openChipId].erklaerung}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {RESSOURCEN_KATALOG[openChipId].interventionen.map((inv) => (
+                <div key={inv.titel} style={{ backgroundColor: '#f5f5f5', borderRadius: '12px', padding: '12px' }}>
+                  <p style={{ fontSize: '14px', fontWeight: '700', color: colors.text, margin: '0 0 4px' }}>{inv.titel}</p>
+                  <p style={{ fontSize: '13px', color: colors.textMuted, margin: 0, lineHeight: '1.5' }}>{inv.text}</p>
+                  {inv.video && (
+                    <a href={inv.video} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', color: colors.primary, textDecoration: 'none', marginTop: '6px', display: 'inline-block' }}>Video ansehen</a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }
 
   useEffect(() => {
     localStorage.setItem('screening_datum', new Date().toISOString())
@@ -607,13 +722,21 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
                 <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.6', margin: '0 0 12px' }}>
                   In diesen Bereichen hattest du erhöhte Werte:
                 </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {alleChips.map((chip) => (
-                    <div key={chip} style={{ padding: '8px 14px', backgroundColor: colors.primaryLight, borderRadius: '20px', fontSize: '13px', color: colors.primary, fontWeight: '500', border: `1px solid ${colors.primary}30` }}>{chip}</div>
-                  ))}
-                </div>
+                {renderChips(alleChips)}
               </div>
             )}
+          </div>
+        )
+      })()}
+
+      {hatStufe1 && (() => {
+        const alleStufe1Chips = [...new Set(stufe1.flatMap(res => res.chips ?? []))]
+        return alleStufe1Chips.length > 0 && (
+          <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+            <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.6', margin: '0 0 12px' }}>
+              In diesen Bereichen hattest du erhöhte Werte:
+            </p>
+            {renderChips(alleStufe1Chips)}
           </div>
         )
       })()}

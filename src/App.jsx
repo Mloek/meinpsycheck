@@ -136,6 +136,7 @@ function HalloScreen({ onWeiter }) {
         <p style={{ fontSize: '16px', lineHeight: '1.7', color: colors.textMuted, margin: '0 0 32px' }}>MeinPsyCheck hilft dir mit wissenschaftlich validierten Fragen, deine Symptome einzuordnen. <strong style={{ color: colors.text }}>Kostenlos, anonym und ohne Wartezeit.</strong></p>
         <div style={{ backgroundColor: colors.surface, borderRadius: '12px', padding: '16px', marginBottom: '16px', borderLeft: `3px solid ${colors.primary}` }}>
           <p style={{ fontSize: '13px', color: colors.textMuted, margin: 0, lineHeight: '1.6' }}><strong style={{ color: colors.text }}>Wichtiger Hinweis:</strong> Diese App stellt keine Diagnose und ersetzt keine professionelle Beratung. Sie dient ausschließlich der persönlichen Orientierung.</p>
+          <p style={{ fontSize: '13px', color: colors.textMuted, margin: '10px 0 0', lineHeight: '1.6' }}>Alle verwendeten Screening-Instrumente und wissenschaftlichen Grundlagen findest du unter Einstellungen → Wissenschaftliche Grundlagen.</p>
         </div>
         <div style={{ backgroundColor: colors.crisisBg, borderRadius: '12px', padding: '16px', marginBottom: '40px' }}>
           <p style={{ fontSize: '13px', color: colors.crisis, margin: 0, lineHeight: '1.6' }}><strong>Akute Belastung oder Krise:</strong> Telefonseelsorge (kostenlos, anonym, 24/7): <strong>0800 111 0 111</strong></p>
@@ -1100,10 +1101,145 @@ function TherapeutenPlatzhalter() {
 }
 
 function Einstellungen() {
+  const [offen, setOffen] = useState(null)
+
+  const [detailAnsicht, setDetailAnsicht] = useState(null)
+
   const sektionen = [
     { titel: 'Konto', items: ['E-Mail-Adresse hinterlegen', 'App bewerten'] },
-    { titel: 'Info', items: ['Neuigkeiten & Updates', 'Datenschutz', 'Impressum', 'Hilfe & FAQ'] },
+    { titel: 'Info', items: ['Neuigkeiten & Updates', 'Datenschutz', 'Impressum', 'Hilfe & FAQ', 'Wissenschaftliche Grundlagen'] },
   ]
+
+  const wissenschaft = [
+    {
+      id: 'frageboegen',
+      titel: 'Warum validierte Fragebögen?',
+      text: 'MeinPsyCheck verwendet ausschließlich psychometrisch validierte Screening-Instrumente. Das bedeutet: Die Fragen wurden in klinischen Studien an tausenden von Menschen getestet – auf ihre Zuverlässigkeit (Reliabilität), ihre Genauigkeit (Validität) sowie ihre Fähigkeit, Betroffene zu erkennen (Sensitivität) und Gesunde nicht fälschlicherweise als krank einzustufen (Spezifität).\nDie verwendeten Cut-Off-Werte gelten ausschließlich für den exakten Originalwortlaut der Fragen. Schon eine kleine Änderung einer Formulierung würde die Normwerte ungültig machen. Deswegen sind alle Fragen in dieser App gesperrt und werden niemals verändert.',
+      quellen: [
+        'Kroenke K, Spitzer RL, Williams JB (2001). The PHQ-9: Validity of a brief depression severity measure. Journal of General Internal Medicine, 16(9), 606–613.',
+        'Spitzer RL, Kroenke K, Williams JB, Löwe B (2006). A brief measure for assessing generalized anxiety disorder: the GAD-7. Archives of Internal Medicine, 166(10), 1092–1097.',
+        'Kessler RC et al. (2005). The World Health Organization Adult ADHD Self-Report Scale (ASRS). Psychological Medicine, 35(2), 245–256.',
+      ],
+    },
+    {
+      id: 'cutoff',
+      titel: 'Warum diese Cut-Off-Werte?',
+      text: 'Ein Cut-Off ist der Punktwert, ab dem ein Screening-Ergebnis als klinisch auffällig gilt. Diese Werte wurden nicht willkürlich gewählt – sie stammen aus den Originalpublikationen der Fragebogenentwickler und wurden in unabhängigen Studien für die deutsche Bevölkerung validiert.\nPHQ-9: Cut-Off ≥ 10 – Sensitivität 88%, Spezifität 88% für eine depressive Störung (Kroenke et al., 2001).\nGAD-7: Cut-Off ≥ 10 – Sensitivität 89%, Spezifität 82% für eine generalisierte Angststörung (Spitzer et al., 2006).\nASRS v1.1: ≥ 4 auffällige Antworten – entwickelt von der WHO (Kessler et al., 2005).\nEin positives Screening bedeutet nicht, dass eine Erkrankung vorliegt. Es bedeutet, dass deine Angaben in einem Bereich liegen, in dem professionelle Abklärung sinnvoll ist.',
+      quellen: [
+        'Löwe B et al. (2004). Diagnosing ICD-10 depressive episodes: superior criterion validity of the Patient Health Questionnaire. Psychother Psychosom, 73(6), 386–390.',
+        'Löwe B et al. (2008). Validation and standardization of the GAD-7 in the general population. Medical Care, 46(3), 266–274.',
+      ],
+    },
+    {
+      id: 'tagebuch',
+      titel: 'Warum ein Tagebuch?',
+      text: 'Das Führen eines Stimmungstagebuchs ist ein etablierter Bestandteil der kognitiven Verhaltenstherapie. Es hilft dabei, Muster zu erkennen – wann fühle ich mich schlechter, wann besser, was beeinflusst meine Stimmung?\nDer Psychologe James Pennebaker (Universität Texas) hat seit 1986 in über 400 Studien gezeigt, dass das regelmäßige Aufschreiben von Gedanken und Gefühlen die psychische und körperliche Gesundheit messbar verbessert: weniger Stress, weniger depressive Symptome, stärkeres Immunsystem.\nDas Tagebuch in dieser App ist bewusst einfach gehalten – drei kurze Ratings und ein Freitextfeld. Es soll eine tägliche Reflexion ermöglichen, keine Belastung darstellen.',
+      quellen: [
+        'Pennebaker JW, Beall SK (1986). Confronting a traumatic event: Toward an understanding of inhibition and disease. Journal of Abnormal Psychology, 95(3), 274–281.',
+        'Pennebaker JW (1997). Writing about emotional experiences as a therapeutic process. Psychological Science, 8(3), 162–166.',
+      ],
+    },
+    {
+      id: 'diagnose',
+      titel: 'Warum kein Diagnose-Anspruch?',
+      text: 'Diese App ist kein Medizinprodukt und stellt keine Diagnose. Das ist keine rechtliche Absicherung – es ist eine inhaltliche Wahrheit.\nPsychische Störungen werden durch klinische Fachleute diagnostiziert: durch Gespräche, Beobachtung über Zeit, Ausschluss körperlicher Ursachen und die Einschätzung des Funktionsniveaus. Ein Fragebogen alleine kann das nicht leisten.\nWas ein validiertes Screening leisten kann: Es zeigt, ob deine Beschwerden ein Ausmaß erreicht haben, das eine professionelle Abklärung rechtfertigt. Das ist der einzige Anspruch dieser App – und er ist wissenschaftlich begründet.\nRechtliche Grundlage: Die App ist als Informations- und Orientierungsangebot konzipiert, nicht als Medizinprodukt nach MDR/MPDG. Grundlage: OLG Hamburg 2024 – Zweckbestimmung durch den Hersteller.',
+      quellen: [],
+    },
+    {
+      id: 'instrumente',
+      titel: 'Alle verwendeten Instrumente mit Quellenangaben',
+      instrumente: [
+        {
+          name: 'PHQ-9 – Depression',
+          refs: [
+            'Originalentwicklung: Kroenke K, Spitzer RL, Williams JB (2001). The PHQ-9: Validity of a brief depression severity measure. Journal of General Internal Medicine, 16(9), 606–613.',
+            'Deutsche Version: Löwe B, Zipfel S, Herzog W. Übersetzung des PHQ-9. Medizinische Universitätsklinik Heidelberg. © 2002 Pfizer GmbH.',
+            'Validierung DE: Löwe B et al. (2004). Psychother Psychosom, 73(6), 386–390.',
+            'Lizenz: Public Domain. Pfizer Inc. via phqscreeners.com.',
+          ],
+        },
+        {
+          name: 'GAD-7 – Angst',
+          refs: [
+            'Originalentwicklung: Spitzer RL, Kroenke K, Williams JB, Löwe B (2006). Archives of Internal Medicine, 166(10), 1092–1097.',
+            'Validierung DE: Löwe B et al. (2008). Medical Care, 46(3), 266–274.',
+            'Lizenz: Public Domain. Pfizer Inc. via phqscreeners.com.',
+          ],
+        },
+        {
+          name: 'ASRS v1.1 – ADHS',
+          refs: [
+            'Originalentwicklung: Kessler RC et al. (2005). Psychological Medicine, 35(2), 245–256.',
+            'Entwickler: WHO / Adler L, Kessler RC, Spencer T. © New York University & Harvard Medical School.',
+            'Validierung DE: Buchli-Kammermann J et al. (2011). Z Psychiatrie Psychol Psychother, 59(4), 273–281.',
+          ],
+        },
+        {
+          name: 'Suizidprotokoll',
+          refs: [
+            'Basis: PHQ-9 Item 9. Leitlinie: S3-Leitlinie/Nationale VersorgungsLeitlinie Unipolare Depression. DGPPN, BÄK, KBV, AWMF. Version 3.0, 2022. DOI: 10.6101/AZQ/000493.',
+            'Krisenhotline: Telefonseelsorge Deutschland, 0800 111 0 111 (kostenlos, 24/7, anonym).',
+          ],
+        },
+        {
+          name: 'Tagebuch',
+          refs: [
+            'Pennebaker JW, Beall SK (1986). Journal of Abnormal Psychology, 95(3), 274–281.',
+            'Pennebaker JW (1997). Psychological Science, 8(3), 162–166.',
+          ],
+        },
+      ],
+    },
+  ]
+
+  if (detailAnsicht === 'wissenschaft') {
+    return (
+      <div style={{ padding: '24px 16px 0' }}>
+        <button onClick={() => { setDetailAnsicht(null); setOffen(null) }} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
+        <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 24px' }}>Wissenschaftliche Grundlagen</h1>
+        <div style={{ backgroundColor: colors.background, borderRadius: '14px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+          {wissenschaft.map((item, i) => {
+            const istOffen = offen === item.id
+            return (
+              <div key={item.id} style={{ borderBottom: i < wissenschaft.length - 1 ? `1px solid ${colors.border}` : 'none' }}>
+                <div onClick={() => setOffen(istOffen ? null : item.id)} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '15px', color: colors.text, fontWeight: '600' }}>{item.titel}</span>
+                  <span style={{ color: colors.textLight, fontSize: '16px', flexShrink: 0, marginLeft: '8px' }}>{istOffen ? '↑' : '↓'}</span>
+                </div>
+                {istOffen && (
+                  <div style={{ padding: '0 16px 14px' }}>
+                    {item.text && (
+                      <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 12px', whiteSpace: 'pre-line' }}>{item.text}</p>
+                    )}
+                    {item.quellen && item.quellen.length > 0 && (
+                      <div style={{ marginTop: '8px' }}>
+                        {item.quellen.map((q, qi) => (
+                          <p key={qi} style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px' }}>{q}</p>
+                        ))}
+                      </div>
+                    )}
+                    {item.instrumente && (
+                      <div>
+                        {item.instrumente.map((inst) => (
+                          <div key={inst.name} style={{ marginBottom: '14px' }}>
+                            <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 6px' }}>{inst.name}</p>
+                            {inst.refs.map((ref, ri) => (
+                              <p key={ri} style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px' }}>{ref}</p>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ padding: '24px 16px 0' }}>
       <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 24px' }}>Einstellungen</h1>
@@ -1112,7 +1248,7 @@ function Einstellungen() {
           <p style={{ fontSize: '11px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px 4px' }}>{sektion.titel}</p>
           <div style={{ backgroundColor: colors.background, borderRadius: '14px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
             {sektion.items.map((item, i) => (
-              <div key={item} style={{ padding: '14px 16px', fontSize: '15px', color: colors.text, borderBottom: i < sektion.items.length - 1 ? `1px solid ${colors.border}` : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={item} onClick={item === 'Wissenschaftliche Grundlagen' ? () => setDetailAnsicht('wissenschaft') : undefined} style={{ padding: '14px 16px', fontSize: '15px', color: colors.text, borderBottom: i < sektion.items.length - 1 ? `1px solid ${colors.border}` : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 {item}<span style={{ color: colors.textLight, fontSize: '16px' }}>›</span>
               </div>
             ))}

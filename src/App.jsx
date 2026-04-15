@@ -771,8 +771,14 @@ const IS_DEV = import.meta.env.DEV
 function HauptApp() {
   const [aktiveTab, setAktiveTab] = useState('home')
   const [tagebuchOffen, setTagebuchOffen] = useState(false)
+  const [tagebuchStartAnsicht, setTagebuchStartAnsicht] = useState(null)
   const [screeningOffen, setScreeningOffen] = useState(false)
   const [testErgebnis, setTestErgebnis] = useState(null)
+
+  const handleTagebuchOeffnen = (startAnsicht) => {
+    setTagebuchStartAnsicht(startAnsicht || null)
+    setTagebuchOffen(true)
+  }
 
   const handleTestErgebnis = (ergebnisse) => {
     setTestErgebnis(ergebnisse)
@@ -782,8 +788,8 @@ function HauptApp() {
   return (
     <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: colors.surface, fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '70px' }}>
-        {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={() => setTagebuchOffen(true)} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
-        {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => setTagebuchOffen(false)} />}
+        {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
+        {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
         {aktiveTab === 'home' && screeningOffen && (testErgebnis
           ? <ScreeningErgebnis ergebnisse={testErgebnis} suizidItem={0} onNeustart={() => { setScreeningOffen(false); setTestErgebnis(null) }} onZurueck={() => { setScreeningOffen(false); setTestErgebnis(null) }} />
           : <ScreeningFlow onZurueck={() => setScreeningOffen(false)} />
@@ -803,17 +809,60 @@ function HauptApp() {
 }
 
 function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
-  const hour = new Date().getHours()
+  const [erinnerungGeschlossen, setErinnerungGeschlossen] = useState(false)
+
+  const now = new Date()
+  const hour = now.getHours()
   const greeting = hour >= 5 && hour < 11 ? 'Guten Morgen'
     : hour >= 11 && hour < 17 ? 'Guten Tag'
       : hour >= 17 && hour < 22 ? 'Guten Abend'
         : 'Hallo'
+
+  // Heute als YYYY-MM-DD
+  const heuteKey = now.toISOString().split('T')[0]
+  const hatHeuteEintrag = !!localStorage.getItem(`tagebuch_${heuteKey}`)
+
+  // Wochentage berechnen (Mo–So der aktuellen Woche)
+  const montag = new Date(now)
+  const tagInWoche = now.getDay() === 0 ? 7 : now.getDay() // Sonntag=7
+  montag.setDate(now.getDate() - (tagInWoche - 1))
+  montag.setHours(0, 0, 0, 0)
+
+  const wochenTage = []
+  const tagesKuerzel = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+  for (let i = 0; i < 7; i++) {
+    const tag = new Date(montag)
+    tag.setDate(montag.getDate() + i)
+    const key = tag.toISOString().split('T')[0]
+    const istHeute = key === heuteKey
+    const istVergangen = tag < new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const hatEintrag = !!localStorage.getItem(`tagebuch_${key}`)
+    wochenTage.push({ kuerzel: tagesKuerzel[i], key, istHeute, istVergangen, hatEintrag })
+  }
+
+  const handleTagKlick = (tag) => {
+    if (tag.hatEintrag) {
+      onTagebuchOeffnen('kalender')
+    } else if (tag.istHeute) {
+      onTagebuchOeffnen('eintrag')
+    }
+    // Vergangene Tage ohne Eintrag → nichts
+  }
+
   return (
     <div style={{ padding: '24px 16px 0' }}>
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 4px' }}>{greeting}</h1>
-        <p style={{ fontSize: '13px', color: colors.textLight, margin: 0 }}>{new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        <p style={{ fontSize: '13px', color: colors.textLight, margin: 0 }}>{now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </div>
+
+      {!hatHeuteEintrag && !erinnerungGeschlossen && (
+        <div style={{ backgroundColor: '#FFF8E1', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', borderLeft: '3px solid #F9A825', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+          <p style={{ fontSize: '13px', color: colors.textMuted, margin: 0, lineHeight: '1.5', flex: 1 }}>Du hast heute noch kein Tagebuch ausgefüllt. Tägliche Einträge helfen dir, Muster zu erkennen.</p>
+          <button onClick={() => setErinnerungGeschlossen(true)} style={{ background: 'none', border: 'none', color: '#999', fontSize: '16px', cursor: 'pointer', padding: '0', lineHeight: 1, flexShrink: 0 }}>×</button>
+        </div>
+      )}
+
       <div style={{ marginBottom: '8px' }}>
         <p style={{ fontSize: '11px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 10px 4px' }}>Screening</p>
         <div onClick={onScreeningOeffnen} style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', marginBottom: '10px', cursor: 'pointer', border: `1px solid ${colors.border}` }}>
@@ -827,11 +876,24 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
       </div>
       <div style={{ height: '1px', backgroundColor: colors.border, margin: '20px 4px' }} />
       <div>
-        <p style={{ fontSize: '11px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 10px 4px' }}>Tagebuch</p>
-        <div onClick={onTagebuchOeffnen} style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', cursor: 'pointer', border: `1px solid ${colors.border}` }}>
-          <p style={{ fontSize: '15px', fontWeight: '600', color: colors.text, margin: '0 0 4px' }}>Heute eintragen</p>
-          <p style={{ fontSize: '13px', color: colors.textLight, margin: '0 0 10px' }}>Befinden · Energie · Schlaf · Notiz</p>
-          <p style={{ fontSize: '13px', color: colors.primary, margin: 0, fontWeight: '500' }}>Eintrag öffnen →</p>
+        <div style={{ backgroundColor: colors.background, borderRadius: '16px', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <p style={{ fontSize: '15px', fontWeight: '700', color: colors.text, margin: 0 }}>Mein Tagebuch</p>
+            <button onClick={() => onTagebuchOeffnen('kalender')} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: 0 }}>Öffnen</button>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            {wochenTage.map((tag) => {
+              const kreisfarbe = tag.hatEintrag ? colors.primary : tag.istVergangen ? '#E57373' : '#E0E0E0'
+              const klickbar = tag.hatEintrag || tag.istHeute
+              return (
+                <div key={tag.key} onClick={() => handleTagKlick(tag)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: klickbar ? 'pointer' : 'default' }}>
+                  <span style={{ fontSize: '11px', color: tag.istHeute ? colors.text : colors.textLight, fontWeight: tag.istHeute ? '700' : '400' }}>{tag.kuerzel}</span>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: kreisfarbe, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+                  {tag.istHeute && <div style={{ width: '14px', height: '2px', backgroundColor: colors.primary, borderRadius: '1px' }} />}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
 
@@ -855,8 +917,8 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
   )
 }
 
-function Tagebuch({ onZurueck }) {
-  const [ansicht, setAnsicht] = useState('eintrag')
+function Tagebuch({ onZurueck, startAnsicht }) {
+  const [ansicht, setAnsicht] = useState(startAnsicht || 'eintrag')
   const [gewaehlterTag, setGewaehlterTag] = useState(null)
   const [kalenderMonat, setKalenderMonat] = useState(new Date().getMonth())
   const [kalenderJahr, setKalenderJahr] = useState(new Date().getFullYear())

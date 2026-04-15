@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import lottie from 'lottie-web'
 
 const colors = {
   primary: '#2D6A4F',
@@ -123,40 +124,123 @@ function berechneErgebnisse(antworten) {
   return ergebnisse
 }
 
-function HalloScreen({ onWeiter }) {
+const ONBOARDING_SCREENS = [
+  {
+    label: 'Willkommen',
+    titel: 'MeinPsyCheck',
+    text: 'Ein wissenschaftlich fundiertes Screening-Tool zur ersten Einschätzung psychischer Beschwerden – kostenlos, anonym, ohne Konto.',
+    titelGross: true,
+  },
+  {
+    label: 'Wie es funktioniert',
+    titel: 'Validierte Fragebögen. Klare Einschätzung.',
+    text: 'MeinPsyCheck nutzt PHQ-9, GAD-7 und ASRS v1.1 – international standardisierte Instrumente aus der klinischen Praxis. Du beantwortest 26 Fragen. Das Ergebnis zeigt dir, ob deine Beschwerden eine professionelle Abklärung rechtfertigen.',
+  },
+  {
+    label: 'Deine Privatsphäre',
+    titel: 'Anonym. Lokal gespeichert. Keine Weitergabe.',
+    text: 'Alle Daten bleiben ausschließlich auf deinem Gerät. Es gibt keine Registrierung, keinen Server und kein Tracking. Die App ist vollständig DSGVO-konform – du entscheidest, wann und ob du sie nutzt.',
+  },
+  {
+    label: 'Bereit?',
+    titel: 'Der Check dauert 5–10 Minuten.',
+    text: 'Du kannst das Screening jederzeit unterbrechen. Nach dem Check erhältst du eine Einschätzung in drei Stufen – von unauffällig bis hin zur Empfehlung einer professionellen Abklärung.',
+  },
+]
+
+function OnboardingFlow({ onWeiter }) {
+  const [step, setStep] = useState(0)
+  const [animClass, setAnimClass] = useState('ob-enter')
+  const lottieRef = useRef(null)
+
+  useEffect(() => {
+    const anim = lottie.loadAnimation({
+      container: lottieRef.current,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: '/lottie/background.json',
+    })
+    return () => anim.destroy()
+  }, [])
+
+  const goTo = (next) => {
+    setAnimClass('ob-exit')
+    setTimeout(() => {
+      setStep(next)
+      setAnimClass('ob-enter')
+    }, 300)
+  }
+
+  const screen = ONBOARDING_SCREENS[step]
+  const isLast = step === ONBOARDING_SCREENS.length - 1
+
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: colors.background, fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', padding: '0 24px' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingTop: '60px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{ width: '64px', height: '64px', backgroundColor: colors.primaryLight, borderRadius: '16px', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>🧠</div>
-          <h1 style={{ fontSize: '26px', fontWeight: '700', color: colors.text, margin: '0 0 6px' }}>MeinPsyCheck</h1>
-          <p style={{ fontSize: '14px', color: colors.textLight, margin: 0 }}>Deine erste Orientierung für psychische Gesundheit</p>
+    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative', overflow: 'hidden' }}>
+      <style>{`
+        @keyframes obEnter {
+          from { opacity: 0; transform: translateY(28px) translateX(16px); }
+          to { opacity: 1; transform: translate(0, 0); }
+        }
+        @keyframes obExit {
+          from { opacity: 1; transform: translate(0, 0); }
+          to { opacity: 0; transform: translateY(-20px) translateX(-12px); }
+        }
+        .ob-enter { animation: obEnter 600ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+        .ob-exit { animation: obExit 300ms ease-in forwards; }
+      `}</style>
+
+      <div ref={lottieRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.7) 100%)', zIndex: 1 }} />
+
+      <div style={{ position: 'relative', zIndex: 2, minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 24px 40px' }}>
+        {step > 0 && (
+          <p style={{ position: 'absolute', top: '52px', left: '24px', fontSize: '14px', fontWeight: '600', color: 'rgba(255,255,255,0.7)', margin: 0, letterSpacing: '0.5px' }}>MeinPsyCheck</p>
+        )}
+        <div key={step} className={animClass}>
+          <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '3px', color: 'rgba(255,255,255,0.5)', margin: '0 0 16px' }}>{screen.label}</p>
+          <h1 style={{ fontSize: screen.titelGross ? '42px' : '24px', fontWeight: screen.titelGross ? '700' : '600', color: '#fff', margin: '0 0 16px', textShadow: '0 1px 16px rgba(0,0,0,0.5)', lineHeight: 1.15 }}>{screen.titel}</h1>
+          <p style={{ fontSize: '14px', color: 'rgba(220,240,220,0.9)', lineHeight: '1.75', margin: '0 0 32px' }}>{screen.text}</p>
         </div>
-        <p style={{ fontSize: '16px', lineHeight: '1.7', color: colors.textMuted, margin: '0 0 16px' }}>Du fragst dich, wie es dir wirklich geht – und ob du professionelle Unterstützung brauchst. Genau dafür ist diese App da.</p>
-        <p style={{ fontSize: '16px', lineHeight: '1.7', color: colors.textMuted, margin: '0 0 32px' }}>MeinPsyCheck hilft dir mit wissenschaftlich validierten Fragen, deine Symptome einzuordnen. <strong style={{ color: colors.text }}>Kostenlos, anonym und ohne Wartezeit.</strong></p>
-        <div style={{ backgroundColor: colors.surface, borderRadius: '12px', padding: '16px', marginBottom: '16px', borderLeft: `3px solid ${colors.primary}` }}>
-          <p style={{ fontSize: '13px', color: colors.textMuted, margin: 0, lineHeight: '1.6' }}><strong style={{ color: colors.text }}>Wichtiger Hinweis:</strong> Diese App stellt keine Diagnose und ersetzt keine professionelle Beratung. Sie dient ausschließlich der persönlichen Orientierung.</p>
-          <p style={{ fontSize: '13px', color: colors.textMuted, margin: '10px 0 0', lineHeight: '1.6' }}>Alle verwendeten Screening-Instrumente und wissenschaftlichen Grundlagen findest du unter Einstellungen → Wissenschaftliche Grundlagen.</p>
+
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '24px', justifyContent: 'center' }}>
+          {ONBOARDING_SCREENS.map((_, i) => (
+            <div key={i} style={{ height: '4px', borderRadius: '4px', backgroundColor: i === step ? '#ffffff' : 'rgba(255,255,255,0.55)', width: i === step ? '22px' : '8px', transition: 'all 0.3s ease' }} />
+          ))}
         </div>
-        <div style={{ backgroundColor: colors.crisisBg, borderRadius: '12px', padding: '16px', marginBottom: '40px' }}>
-          <p style={{ fontSize: '13px', color: colors.crisis, margin: 0, lineHeight: '1.6' }}><strong>Akute Belastung oder Krise:</strong> Telefonseelsorge (kostenlos, anonym, 24/7): <strong>0800 111 0 111</strong></p>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {step > 0 && (
+            <button onClick={() => goTo(step - 1)} style={{ flex: 1, padding: '16px', backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+              Zurück
+            </button>
+          )}
+          {!isLast ? (
+            <button onClick={() => goTo(step + 1)} style={{ flex: 1, padding: '16px', backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+              Weiter
+            </button>
+          ) : (
+            <button onClick={onWeiter} style={{ flex: 1, padding: '16px', backgroundColor: '#2D6A4F', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+              Starten
+            </button>
+          )}
         </div>
-      </div>
-      <div style={{ paddingBottom: '40px' }}>
-        <button onClick={onWeiter} style={{ width: '100%', padding: '16px', backgroundColor: colors.primary, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>Starten</button>
       </div>
     </div>
   )
 }
 
 function AlterScreen({ onWeiter, onZurueck }) {
+  const [name, setName] = useState('')
   const [alter, setAlter] = useState('')
   const [geschlecht, setGeschlecht] = useState('')
   const [fehler, setFehler] = useState('')
 
   const handleWeiter = () => {
+    if (!name.trim()) { setFehler('Bitte gib deinen Namen ein.'); return }
     if (!alter || parseInt(alter) < 18 || parseInt(alter) > 99) { setFehler('Bitte gib ein gültiges Alter ein (18–99 Jahre).'); return }
     if (!geschlecht) { setFehler('Bitte wähle eine Option aus.'); return }
+    localStorage.setItem('user_name', name.trim())
     localStorage.setItem('user_alter', alter)
     localStorage.setItem('user_geschlecht', geschlecht)
     localStorage.setItem('onboarding_done', 'true')
@@ -164,24 +248,40 @@ function AlterScreen({ onWeiter, onZurueck }) {
   }
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: colors.background, fontFamily: 'system-ui, -apple-system, sans-serif', padding: '60px 24px 40px' }}>
-      <button onClick={onZurueck} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 32px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
-      <h2 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 8px' }}>Kurz zu dir</h2>
-      <p style={{ fontSize: '15px', color: colors.textMuted, margin: '0 0 36px', lineHeight: '1.6' }}>Diese Angaben helfen dabei, deine Ergebnisse besser einzuordnen. Sie werden nur auf deinem Gerät gespeichert.</p>
-      <div style={{ marginBottom: '28px' }}>
-        <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: colors.text, marginBottom: '8px' }}>Dein Alter</label>
-        <input type="number" min="18" max="99" placeholder="z. B. 28" value={alter} onChange={(e) => { setAlter(e.target.value); setFehler('') }} style={{ width: '100%', padding: '14px 16px', fontSize: '16px', border: `1px solid ${colors.border}`, borderRadius: '10px', outline: 'none', boxSizing: 'border-box', color: colors.text }} />
+    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', background: 'linear-gradient(160deg, #E8EAF6 0%, #E1F5FE 35%, #F3E5F5 70%, #EDE7F6 100%)', fontFamily: 'system-ui, -apple-system, sans-serif', padding: '0 24px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ paddingTop: '52px', marginBottom: '8px' }}>
+        <p style={{ fontSize: '14px', fontWeight: '600', color: 'rgba(90,80,130,0.7)', margin: '0 0 24px', letterSpacing: '0.5px' }}>MeinPsyCheck</p>
+        <button onClick={onZurueck} style={{ background: 'none', border: 'none', color: '#5C6BC0', fontSize: '15px', cursor: 'pointer', padding: '0 0 24px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
       </div>
-      <div style={{ marginBottom: '36px' }}>
-        <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', color: colors.text, marginBottom: '12px' }}>Geschlecht</label>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {['Weiblich', 'Männlich', 'Divers', 'Keine Angabe'].map((option) => (
-            <button key={option} onClick={() => { setGeschlecht(option); setFehler('') }} style={{ padding: '14px 16px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${geschlecht === option ? colors.primary : colors.border}`, borderRadius: '10px', backgroundColor: geschlecht === option ? colors.primaryLight : colors.background, color: geschlecht === option ? colors.primary : colors.text, cursor: 'pointer', fontWeight: geschlecht === option ? '600' : '400' }}>{option}</button>
-          ))}
+      <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#37474F', margin: '0 0 8px' }}>Kurz zu dir</h2>
+      <p style={{ fontSize: '14px', color: '#78909C', margin: '0 0 32px', lineHeight: '1.6' }}>Diese Angaben helfen, deine Ergebnisse einzuordnen. Alles bleibt auf deinem Gerät.</p>
+
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '120px' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#546E7A', marginBottom: '8px' }}>Dein Name</label>
+          <input type="text" placeholder="Vorname" value={name} onChange={(e) => { setName(e.target.value); setFehler('') }} style={{ width: '100%', padding: '14px 16px', fontSize: '16px', border: '1.5px solid rgba(92,107,192,0.3)', borderRadius: '12px', outline: 'none', boxSizing: 'border-box', color: '#37474F', backgroundColor: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(4px)' }} />
         </div>
+
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#546E7A', marginBottom: '8px' }}>Dein Alter</label>
+          <input type="number" min="18" max="99" placeholder="z. B. 28" value={alter} onChange={(e) => { setAlter(e.target.value); setFehler('') }} style={{ width: '100%', padding: '14px 16px', fontSize: '16px', border: '1.5px solid rgba(92,107,192,0.3)', borderRadius: '12px', outline: 'none', boxSizing: 'border-box', color: '#37474F', backgroundColor: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(4px)' }} />
+        </div>
+
+        <div style={{ marginBottom: '28px' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#546E7A', marginBottom: '10px' }}>Geschlecht</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {['Weiblich', 'Männlich', 'Divers', 'Keine Angabe'].map((option) => (
+              <button key={option} onClick={() => { setGeschlecht(option); setFehler('') }} style={{ padding: '14px 16px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${geschlecht === option ? '#5C6BC0' : 'rgba(92,107,192,0.3)'}`, borderRadius: '12px', backgroundColor: geschlecht === option ? 'rgba(92,107,192,0.15)' : 'rgba(255,255,255,0.7)', color: geschlecht === option ? '#3949AB' : '#546E7A', cursor: 'pointer', fontWeight: geschlecht === option ? '600' : '400', backdropFilter: 'blur(4px)' }}>{option}</button>
+            ))}
+          </div>
+        </div>
+
+        {fehler && <p style={{ color: '#E53935', fontSize: '14px', margin: '0 0 16px' }}>{fehler}</p>}
       </div>
-      {fehler && <p style={{ color: colors.crisis, fontSize: '14px', margin: '0 0 16px' }}>{fehler}</p>}
-      <button onClick={handleWeiter} style={{ width: '100%', padding: '16px', backgroundColor: colors.primary, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>Weiter</button>
+
+      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', padding: '16px 24px 40px', boxSizing: 'border-box', background: 'linear-gradient(to top, #E8EAF6 60%, transparent)' }}>
+        <button onClick={handleWeiter} style={{ width: '100%', padding: '16px', backgroundColor: '#5C6BC0', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>Weiter</button>
+      </div>
     </div>
   )
 }
@@ -813,10 +913,12 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
 
   const now = new Date()
   const hour = now.getHours()
-  const greeting = hour >= 5 && hour < 11 ? 'Guten Morgen'
+  const userName = localStorage.getItem('user_name') || ''
+  const grussFormel = hour >= 5 && hour < 11 ? 'Guten Morgen'
     : hour >= 11 && hour < 17 ? 'Guten Tag'
       : hour >= 17 && hour < 22 ? 'Guten Abend'
         : 'Hallo'
+  const greeting = userName ? `${grussFormel}, ${userName}` : grussFormel
 
   // Heute als YYYY-MM-DD
   const heuteKey = now.toISOString().split('T')[0]
@@ -829,7 +931,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
   montag.setHours(0, 0, 0, 0)
 
   const wochenTage = []
-  const tagesKuerzel = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+  const tagesKuerzel = ['M', 'D', 'M', 'D', 'F', 'S', 'S']
   for (let i = 0; i < 7; i++) {
     const tag = new Date(montag)
     tag.setDate(montag.getDate() + i)
@@ -837,17 +939,10 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
     const istHeute = key === heuteKey
     const istVergangen = tag < new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const hatEintrag = !!localStorage.getItem(`tagebuch_${key}`)
-    wochenTage.push({ kuerzel: tagesKuerzel[i], key, istHeute, istVergangen, hatEintrag })
+    wochenTage.push({ kuerzel: tagesKuerzel[i], key, istHeute, istVergangen, hatEintrag, tagNr: tag.getDate() })
   }
 
-  const handleTagKlick = (tag) => {
-    if (tag.hatEintrag) {
-      onTagebuchOeffnen('kalender')
-    } else if (tag.istHeute) {
-      onTagebuchOeffnen('eintrag')
-    }
-    // Vergangene Tage ohne Eintrag → nichts
-  }
+  const monatsName = now.toLocaleDateString('de-DE', { month: 'long' })
 
   return (
     <div style={{ padding: '24px 16px 0' }}>
@@ -876,24 +971,25 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
       </div>
       <div style={{ height: '1px', backgroundColor: colors.border, margin: '20px 4px' }} />
       <div>
-        <div style={{ backgroundColor: colors.background, borderRadius: '16px', padding: '16px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: colors.text, margin: 0 }}>Mein Tagebuch</p>
-            <button onClick={() => onTagebuchOeffnen('kalender')} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: 0 }}>Öffnen</button>
+        <div style={{ backgroundColor: colors.background, borderRadius: '16px', padding: '20px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <p style={{ fontSize: '18px', fontWeight: '700', color: colors.text, margin: '0 0 4px', textAlign: 'center' }}>Mein Tagebuch</p>
+          <p style={{ fontSize: '13px', color: colors.textLight, margin: '0 0 16px', textAlign: 'center' }}>Befinden · Energie · Schlaf</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '18px' }}>
+            <div style={{ backgroundColor: colors.surface, borderRadius: '10px', padding: '8px 10px' }}>
+              <p style={{ fontSize: '10px', fontWeight: '600', color: colors.textMuted, margin: '0 0 6px', textAlign: 'center', textTransform: 'capitalize' }}>{monatsName}</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+                {wochenTage.map((tag) => (
+                  <div key={tag.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
+                    <span style={{ fontSize: '8px', color: tag.istHeute ? colors.text : colors.textLight, fontWeight: tag.istHeute ? '700' : '400' }}>{tag.kuerzel}</span>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: tag.hatEintrag ? colors.primary : tag.istVergangen ? '#E57373' : '#E0E0E0' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            {wochenTage.map((tag) => {
-              const kreisfarbe = tag.hatEintrag ? colors.primary : tag.istVergangen ? '#E57373' : '#E0E0E0'
-              const klickbar = tag.hatEintrag || tag.istHeute
-              return (
-                <div key={tag.key} onClick={() => handleTagKlick(tag)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: klickbar ? 'pointer' : 'default' }}>
-                  <span style={{ fontSize: '11px', color: tag.istHeute ? colors.text : colors.textLight, fontWeight: tag.istHeute ? '700' : '400' }}>{tag.kuerzel}</span>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: kreisfarbe, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
-                  {tag.istHeute && <div style={{ width: '14px', height: '2px', backgroundColor: colors.primary, borderRadius: '1px' }} />}
-                </div>
-              )
-            })}
-          </div>
+          <button onClick={() => onTagebuchOeffnen('eintrag')} style={{ width: '100%', padding: '12px 0', backgroundColor: colors.primary, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+            {hatHeuteEintrag ? 'Tagebuch ansehen' : 'Heute eintragen'}
+          </button>
         </div>
       </div>
 
@@ -925,6 +1021,7 @@ function Tagebuch({ onZurueck, startAnsicht }) {
   const [werte, setWerte] = useState({ befinden: 0, energie: 0, schlaf: 0 })
   const [notiz, setNotiz] = useState('')
   const [formularOffen, setFormularOffen] = useState(false)
+  const [gespeichert, setGespeichert] = useState(false)
 
   const heute = new Date().toISOString().split('T')[0]
   const hatHeuteEintrag = !!localStorage.getItem(`tagebuch_${heute}`)
@@ -965,7 +1062,8 @@ function Tagebuch({ onZurueck, startAnsicht }) {
       notiz,
       datum: heute,
     }))
-    setFormularOffen(false)
+    setGespeichert(true)
+    setTimeout(() => onZurueck(), 2000)
   }
 
   const alleAusgewaehlt = werte.befinden > 0 && werte.energie > 0 && werte.schlaf > 0
@@ -975,28 +1073,59 @@ function Tagebuch({ onZurueck, startAnsicht }) {
   const renderPunkte = (wert) => (
     <div style={{ display: 'flex', gap: '6px' }}>
       {[1, 2, 3, 4, 5].map((n) => (
-        <div key={n} style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: n <= wert ? colors.primary : colors.border }} />
+        <div key={n} style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: n === wert ? colors.primary : colors.border }} />
       ))}
     </div>
   )
 
+  // ─── GESPEICHERT-BESTÄTIGUNG ─────────────────────────────────────────────────
+  if (gespeichert) {
+    return (
+      <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: colors.background, fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+        <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: colors.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <path d="M10 20L17 27L30 13" stroke={colors.primary} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <p style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 8px' }}>Eintrag gespeichert</p>
+        <p style={{ fontSize: '14px', color: colors.textLight, margin: 0 }}>Gut gemacht – bleib dran.</p>
+      </div>
+    )
+  }
+
   // ─── ANSICHT 1: Tageseintrag ────────────────────────────────────────────────
   if (ansicht === 'eintrag') {
-    // Fall B: Heute bereits Eintrag vorhanden, Formular nicht geöffnet
+    // Fall B: Heute bereits Eintrag vorhanden, Formular nicht geöffnet → Eintrag anzeigen
     if (hatHeuteEintrag && !formularOffen) {
+      const heutigerEintrag = leseEintrag(heute)
       return (
         <div style={{ padding: '16px' }}>
           <button onClick={onZurueck} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 6px' }}>Tagebuch</h2>
-          <p style={{ fontSize: '13px', color: colors.textLight, margin: '0 0 32px' }}>{new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-          <div style={{ backgroundColor: colors.primaryLight, borderRadius: '14px', padding: '20px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '15px', color: colors.primary, margin: 0, fontWeight: '500', lineHeight: '1.6' }}>Du hast dein Tagebuch für heute bereits ausgefüllt.</p>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 6px' }}>Dein Eintrag</h2>
+          <p style={{ fontSize: '13px', color: colors.textLight, margin: '0 0 24px' }}>{new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+            {[
+              { label: 'Befinden', wert: heutigerEintrag?.befinden ?? 0 },
+              { label: 'Energie', wert: heutigerEintrag?.energie ?? 0 },
+              { label: 'Schlaf', wert: heutigerEintrag?.schlaf ?? 0 },
+            ].map((kat) => (
+              <div key={kat.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <span style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>{kat.label}</span>
+                {renderPunkte(kat.wert)}
+              </div>
+            ))}
           </div>
-          <button onClick={ladeHeutigenEintrag} style={{ width: '100%', padding: '16px', backgroundColor: colors.background, color: colors.primary, border: `1.5px solid ${colors.primary}`, borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '10px' }}>
-            Eintrag ergänzen
+          {heutigerEintrag?.notiz && (
+            <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
+              <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 8px' }}>Notiz</p>
+              <p style={{ fontSize: '14px', color: colors.textMuted, margin: 0, lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>{heutigerEintrag.notiz}</p>
+            </div>
+          )}
+          <button onClick={ladeHeutigenEintrag} style={{ width: '100%', padding: '16px', backgroundColor: colors.primary, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '10px' }}>
+            Eintrag bearbeiten
           </button>
           <button onClick={() => setAnsicht('kalender')} style={{ width: '100%', padding: '16px', backgroundColor: colors.background, color: colors.primary, border: `1.5px solid ${colors.primary}`, borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
-            Mein Tagebuch
+            Alle Einträge
           </button>
         </div>
       )
@@ -1017,7 +1146,7 @@ function Tagebuch({ onZurueck, startAnsicht }) {
                 <span style={{ fontSize: '11px', color: colors.textLight, width: '48px' }}>{kat.links}</span>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {[1, 2, 3, 4, 5].map((n) => (
-                    <div key={n} onClick={() => setWerte({ ...werte, [kat.key]: n })} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: werte[kat.key] >= n ? colors.primary : colors.border, cursor: 'pointer', transition: 'background 0.15s' }} />
+                    <div key={n} onClick={() => setWerte({ ...werte, [kat.key]: n })} style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: werte[kat.key] === n ? colors.primary : colors.border, cursor: 'pointer', transition: 'background 0.15s' }} />
                   ))}
                 </div>
                 <span style={{ fontSize: '11px', color: colors.textLight, width: '48px', textAlign: 'right' }}>{kat.rechts}</span>
@@ -1328,7 +1457,7 @@ function App() {
     setScreen(done === 'true' ? 'app' : 'hallo')
   }, [])
   if (screen === 'loading') return null
-  if (screen === 'hallo') return <HalloScreen onWeiter={() => setScreen('alter')} />
+  if (screen === 'hallo') return <OnboardingFlow onWeiter={() => setScreen('alter')} />
   if (screen === 'alter') return <AlterScreen onWeiter={() => setScreen('app')} onZurueck={() => setScreen('hallo')} />
   return <HauptApp />
 }

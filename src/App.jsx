@@ -394,7 +394,7 @@ function ScreeningFragen({ fragen, antworten: antwortOptionen, zeitrahmen, onFer
           {antwortOptionen.map((opt) => {
             const aktiv = ausgewaehlt === opt.wert
             return (
-              <button key={opt.wert} onClick={() => setAusgewaehlt(opt.wert)} style={{ padding: '16px 18px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${aktiv ? colors.primary : colors.border}`, borderRadius: '12px', backgroundColor: aktiv ? colors.primaryLight : colors.background, color: aktiv ? colors.primary : colors.text, cursor: 'pointer', fontWeight: aktiv ? '600' : '400', transition: 'all 0.15s' }}>
+              <button key={opt.wert} onClick={() => setAusgewaehlt(opt.wert)} style={{ padding: '16px 18px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${aktiv ? '#5B6BC8' : colors.border}`, borderRadius: '12px', backgroundColor: aktiv ? '#eeeffa' : colors.background, color: aktiv ? '#5B6BC8' : colors.text, cursor: 'pointer', fontWeight: aktiv ? '600' : '400', transition: 'all 0.15s' }}>
                 {opt.label}
               </button>
             )
@@ -402,7 +402,7 @@ function ScreeningFragen({ fragen, antworten: antwortOptionen, zeitrahmen, onFer
         </div>
       </div>
 
-      <button onClick={handleWeiter} disabled={ausgewaehlt === -1} style={{ width: '100%', padding: '16px', backgroundColor: ausgewaehlt !== -1 ? colors.primary : colors.border, color: ausgewaehlt !== -1 ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: ausgewaehlt !== -1 ? 'pointer' : 'default', transition: 'background 0.2s', marginBottom: '16px' }}>
+      <button onClick={handleWeiter} disabled={ausgewaehlt === -1} style={{ width: '100%', padding: '16px', backgroundColor: ausgewaehlt !== -1 ? '#5B6BC8' : colors.border, color: ausgewaehlt !== -1 ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: ausgewaehlt !== -1 ? 'pointer' : 'default', transition: 'background 0.2s', marginBottom: '16px' }}>
         {istLetzte ? 'Abschließen' : 'Weiter'}
       </button>
     </div>
@@ -433,7 +433,7 @@ function SuizidScreen({ onAntwort }) {
           {ANTWORTEN_STANDARD.map((opt) => {
             const aktiv = ausgewaehlt === opt.wert
             return (
-              <button key={opt.wert} onClick={() => setAusgewaehlt(opt.wert)} style={{ padding: '16px 18px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${aktiv ? colors.primary : colors.border}`, borderRadius: '12px', backgroundColor: aktiv ? colors.primaryLight : colors.background, color: aktiv ? colors.primary : colors.text, cursor: 'pointer', fontWeight: aktiv ? '600' : '400', transition: 'all 0.15s' }}>
+              <button key={opt.wert} onClick={() => setAusgewaehlt(opt.wert)} style={{ padding: '16px 18px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${aktiv ? '#5B6BC8' : colors.border}`, borderRadius: '12px', backgroundColor: aktiv ? '#eeeffa' : colors.background, color: aktiv ? '#5B6BC8' : colors.text, cursor: 'pointer', fontWeight: aktiv ? '600' : '400', transition: 'all 0.15s' }}>
                 {opt.label}
               </button>
             )
@@ -441,7 +441,7 @@ function SuizidScreen({ onAntwort }) {
         </div>
       </div>
 
-      <button onClick={() => onAntwort(ausgewaehlt)} disabled={ausgewaehlt === -1} style={{ width: '100%', padding: '16px', backgroundColor: ausgewaehlt !== -1 ? colors.primary : colors.border, color: ausgewaehlt !== -1 ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: ausgewaehlt !== -1 ? 'pointer' : 'default', transition: 'background 0.2s', marginBottom: '16px' }}>
+      <button onClick={() => onAntwort(ausgewaehlt)} disabled={ausgewaehlt === -1} style={{ width: '100%', padding: '16px', backgroundColor: ausgewaehlt !== -1 ? '#5B6BC8' : colors.border, color: ausgewaehlt !== -1 ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: ausgewaehlt !== -1 ? 'pointer' : 'default', transition: 'background 0.2s', marginBottom: '16px' }}>
         Weiter
       </button>
     </div>
@@ -896,7 +896,7 @@ function HauptApp() {
   }
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: '#f0f3f8', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '70px' }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
@@ -1010,19 +1010,33 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
   ]
 
   const accent = '#5B6BC8'
-  const bg = '#f0f3f8'
+  const bg = '#dde1ee'
   const textP = '#2a2a3e'
   const textS = '#8a8faa'
   const cardBorder = '1px solid rgba(91,107,200,0.1)'
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ background: '#dde1ee', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <style>{`
+        @keyframes bergDrift1 {
+          0%   { transform: translateX(0); }
+          50%  { transform: translateX(-18px); }
+          100% { transform: translateX(0); }
+        }
+        @keyframes bergDrift2 {
+          0%   { transform: translateX(0); }
+          50%  { transform: translateX(12px); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <div style={{ height: '185px', background: 'linear-gradient(to bottom, #a8c8e8 0%, #c9a8d4 45%, #7b5ea7 75%, #2d1f4a 100%)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: '22px' }}>
-        <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '80px', display: 'block' }}>
-          <polygon points="0,100 55,38 110,72 170,18 230,55 295,8 355,46 430,28 430,100" fill="#2d1f4a" />
-          <polygon points="0,100 35,52 75,70 125,32 175,58 225,22 285,52 335,18 385,42 430,32 430,100" fill="#1e1235" opacity="0.65" />
+        <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: '-10px', width: 'calc(100% + 20px)', height: '80px', display: 'block', animation: 'bergDrift1 14s ease-in-out infinite' }}>
+          <polygon points="0,100 55,38 110,72 170,18 230,55 295,8 355,46 430,28 440,100" fill="#2d1f4a" />
+        </svg>
+        <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: '-10px', width: 'calc(100% + 20px)', height: '80px', display: 'block', animation: 'bergDrift2 18s ease-in-out infinite' }}>
+          <polygon points="0,100 35,52 75,70 125,32 175,58 225,22 285,52 335,18 385,42 440,32 440,100" fill="#1e1235" opacity="0.65" />
         </svg>
         <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
           <p style={{ fontSize: '11px', letterSpacing: '2.5px', color: 'rgba(255,255,255,0.72)', margin: '0 0 5px', textTransform: 'uppercase' }}>{greetingText}</p>
@@ -1129,19 +1143,27 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
           })}
         </div>
         {openResName && RESSOURCEN_KATALOG[CHIP_TO_KATALOG[openResName]] && (
-          <div style={{ marginTop: '8px', padding: '14px', background: '#fff', borderRadius: '14px', border: cardBorder }}>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 6px' }}>{openResName}</p>
-            <p style={{ fontSize: '13px', color: textS, lineHeight: '1.7', margin: '0 0 12px' }}>{RESSOURCEN_KATALOG[CHIP_TO_KATALOG[openResName]].erklaerung}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {RESSOURCEN_KATALOG[CHIP_TO_KATALOG[openResName]].interventionen.map((inv) => (
-                <div key={inv.titel} style={{ background: '#f5f6fa', borderRadius: '10px', padding: '10px 12px' }}>
-                  <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 3px' }}>{inv.titel}</p>
-                  <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.5' }}>{inv.text}</p>
-                  {inv.video && <a href={inv.video} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: accent, textDecoration: 'none', marginTop: '4px', display: 'inline-block' }}>Video ansehen</a>}
+          <>
+            <div onClick={() => setOpenResName(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(20,15,40,0.55)', zIndex: 200 }} />
+            <div style={{ position: 'fixed', top: '60px', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '402px', zIndex: 201, padding: '0 14px', boxSizing: 'border-box' }}>
+              <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <p style={{ fontSize: '15px', fontWeight: '700', color: textP, margin: 0 }}>{openResName}</p>
+                  <button onClick={() => setOpenResName(null)} style={{ background: '#f0f0f5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', fontSize: '16px', cursor: 'pointer', color: textS, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                 </div>
-              ))}
+                <p style={{ fontSize: '13px', color: textS, lineHeight: '1.7', margin: '0 0 14px' }}>{RESSOURCEN_KATALOG[CHIP_TO_KATALOG[openResName]].erklaerung}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {RESSOURCEN_KATALOG[CHIP_TO_KATALOG[openResName]].interventionen.map((inv) => (
+                    <div key={inv.titel} style={{ background: '#f5f6fa', borderRadius: '10px', padding: '10px 12px' }}>
+                      <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 3px' }}>{inv.titel}</p>
+                      <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.5' }}>{inv.text}</p>
+                      {inv.video && <a href={inv.video} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: accent, textDecoration: 'none', marginTop: '4px', display: 'inline-block' }}>Video ansehen</a>}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* ── Dev Shortcuts ────────────────────────────────────── */}

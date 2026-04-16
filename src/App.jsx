@@ -314,7 +314,7 @@ function ScreeningEinstieg({ symptomAuswahl, setSymptomAuswahl, onWeiter, onZuru
 
   return (
     <div style={{ padding: '16px' }}>
-      <button onClick={onZurueck} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
+      <button onClick={onZurueck} style={{ background: 'none', border: 'none', color: '#5B6BC8', fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
       <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 8px' }}>Screening starten</h2>
       <p style={{ fontSize: '14px', color: colors.textMuted, margin: '0 0 28px', lineHeight: '1.6' }}>Wähle aus, welche Aussage(n) aktuell am ehesten zutreffen. Mehrfachauswahl ist möglich.</p>
 
@@ -330,14 +330,14 @@ function ScreeningEinstieg({ symptomAuswahl, setSymptomAuswahl, onWeiter, onZuru
         {optionen.map((opt) => {
           const aktiv = symptomAuswahl.includes(opt.id)
           return (
-            <button key={opt.id} onClick={() => toggleOption(opt.id)} style={{ padding: '16px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${aktiv ? colors.primary : colors.border}`, borderRadius: '12px', backgroundColor: aktiv ? colors.primaryLight : colors.background, color: aktiv ? colors.primary : colors.text, cursor: 'pointer', fontWeight: aktiv ? '600' : '400', lineHeight: '1.4' }}>
+            <button key={opt.id} onClick={() => toggleOption(opt.id)} style={{ padding: '16px', textAlign: 'left', fontSize: '15px', border: `1.5px solid ${aktiv ? '#5B6BC8' : colors.border}`, borderRadius: '12px', backgroundColor: aktiv ? '#eeeffa' : colors.background, color: aktiv ? '#5B6BC8' : colors.text, cursor: 'pointer', fontWeight: aktiv ? '600' : '400', lineHeight: '1.4' }}>
               {opt.label}
             </button>
           )
         })}
       </div>
 
-      <button onClick={onWeiter} disabled={!kannWeiter} style={{ width: '100%', padding: '16px', backgroundColor: kannWeiter ? colors.primary : colors.border, color: kannWeiter ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: kannWeiter ? 'pointer' : 'default' }}>Weiter</button>
+      <button onClick={onWeiter} disabled={!kannWeiter} style={{ width: '100%', padding: '16px', backgroundColor: kannWeiter ? '#5B6BC8' : colors.border, color: kannWeiter ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: kannWeiter ? 'pointer' : 'default' }}>Weiter</button>
       <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '12px' }}>26 Fragen · ca. 5–10 Minuten · Alle Angaben bleiben auf deinem Gerät</p>
     </div>
   )
@@ -378,10 +378,10 @@ function ScreeningFragen({ fragen, antworten: antwortOptionen, zeitrahmen, onFer
 
   return (
     <div style={{ padding: '16px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <button onClick={handleZurueck} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 16px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
+      <button onClick={handleZurueck} style={{ background: 'none', border: 'none', color: '#5B6BC8', fontSize: '15px', cursor: 'pointer', padding: '0 0 16px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
 
       <div style={{ height: '4px', backgroundColor: colors.border, borderRadius: '2px', marginBottom: '8px' }}>
-        <div style={{ height: '4px', backgroundColor: colors.primary, borderRadius: '2px', width: `${prozent}%`, transition: 'width 0.4s ease' }} />
+        <div style={{ height: '4px', backgroundColor: '#5B6BC8', borderRadius: '2px', width: `${prozent}%`, transition: 'width 0.4s ease' }} />
       </div>
       <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 32px' }}>Frage {aktuelleGesamt} von {GESAMT_FRAGEN}</p>
 

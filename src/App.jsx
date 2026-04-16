@@ -768,6 +768,16 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
   useEffect(() => {
     localStorage.setItem('screening_datum', new Date().toISOString())
     localStorage.setItem('screening_ergebnis', JSON.stringify(ergebnisse))
+    // Relevante Ressourcen für Hauptseite-Chips speichern
+    const katalogToChip = {
+      'Schlafprobleme': 'Schlaf', 'Grübeln': 'Grübeln', 'Grübeln / Sorgen': 'Grübeln',
+      'Antriebslosigkeit': 'Antrieb', 'Konzentration': 'Konzentration',
+      'Innere Unruhe': 'Innere Unruhe', 'Reizbarkeit': 'Reizbarkeit',
+      'Chronischer Stress': 'Stress', 'Sozialer Rückzug': 'Sozialer Rückzug',
+    }
+    const alleChips = [...new Set(ergebnisse.flatMap(e => e.chips ?? []))]
+    const mapped = [...new Set(alleChips.map(c => katalogToChip[c]).filter(Boolean))]
+    localStorage.setItem('screening_relevant_resources', JSON.stringify(mapped))
   }, [])
 
   return (
@@ -886,7 +896,7 @@ function HauptApp() {
   }
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: colors.surface, fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: '#f0f3f8', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '70px' }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
@@ -897,9 +907,9 @@ function HauptApp() {
         {aktiveTab === 'therapeuten' && <TherapeutenPlatzhalter />}
         {aktiveTab === 'einstellungen' && <Einstellungen />}
       </div>
-      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', backgroundColor: colors.background, borderTop: `1px solid ${colors.border}`, display: 'flex', zIndex: 100 }}>
+      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100 }}>
         {[{ id: 'home', label: 'Hauptseite' }, { id: 'therapeuten', label: 'Therapeuten' }, { id: 'einstellungen', label: 'Einstellungen' }].map((tab) => (
-          <button key={tab.id} onClick={() => { setAktiveTab(tab.id); setTagebuchOffen(false); setScreeningOffen(false) }} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? colors.primary : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? colors.primary : colors.textLight }}>
+          <button key={tab.id} onClick={() => { setAktiveTab(tab.id); setTagebuchOffen(false); setScreeningOffen(false) }} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
             {tab.label}
           </button>
         ))}
@@ -908,8 +918,32 @@ function HauptApp() {
   )
 }
 
+const CHIP_TO_KATALOG = {
+  'Schlaf': 'Schlafprobleme',
+  'Grübeln': 'Grübeln',
+  'Antrieb': 'Antriebslosigkeit',
+  'Konzentration': 'Konzentration',
+  'Innere Unruhe': 'Innere Unruhe',
+  'Reizbarkeit': 'Reizbarkeit',
+  'Stress': 'Chronischer Stress',
+  'Sozialer Rückzug': 'Sozialer Rückzug',
+}
+
+function RessourceIcon({ typ }) {
+  const s = { width: 20, height: 20 }
+  if (typ === 'moon') return <svg style={s} viewBox="0 0 24 24" fill="white"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  if (typ === 'bulb') return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4" fill="white"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+  if (typ === 'bolt') return <svg style={s} viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+  if (typ === 'target') return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="white"/></svg>
+  if (typ === 'wave') return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/></svg>
+  if (typ === 'flame') return <svg style={s} viewBox="0 0 24 24" fill="white"><path d="M12 2c0 6-6 8-6 14a6 6 0 0012 0c0-6-6-8-6-14z"/></svg>
+  if (typ === 'spiral') return <svg style={s} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M12 12m-2 0a2 2 0 104 0 2 2 0 10-4 0"/><path d="M12 10V6M12 18v-4M10 12H6M18 12h-4"/></svg>
+  if (typ === 'person') return <svg style={s} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3" fill="white"/><path d="M6 20c0-4 2.7-6 6-6s6 2 6 6" stroke="white" strokeWidth="2" strokeLinecap="round"/><path d="M3 12h3M18 12h3" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
+  return null
+}
+
 function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
-  const [erinnerungGeschlossen, setErinnerungGeschlossen] = useState(false)
+  const [openResName, setOpenResName] = useState(null)
 
   const now = new Date()
   const hour = now.getHours()
@@ -918,97 +952,216 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
     : hour >= 11 && hour < 17 ? 'Guten Tag'
       : hour >= 17 && hour < 22 ? 'Guten Abend'
         : 'Hallo'
-  const greeting = userName ? `${grussFormel}, ${userName}` : grussFormel
+  const greetingText = (userName ? `${grussFormel}, ${userName}` : grussFormel).toUpperCase()
 
-  // Heute als YYYY-MM-DD
   const heuteKey = now.toISOString().split('T')[0]
-  const hatHeuteEintrag = !!localStorage.getItem(`tagebuch_${heuteKey}`)
 
-  // Wochentage berechnen (Mo–So der aktuellen Woche)
+  // Hero-Mode: Screening oder Tagebuch
+  const lastScreening = localStorage.getItem('screening_datum')
+  const daysSince = lastScreening ? (Date.now() - new Date(lastScreening)) / 86400000 : 999
+  const heroMode = daysSince < 14 ? 'tagebuch' : 'screening'
+
+  // Wochentage
   const montag = new Date(now)
-  const tagInWoche = now.getDay() === 0 ? 7 : now.getDay() // Sonntag=7
+  const tagInWoche = now.getDay() === 0 ? 7 : now.getDay()
   montag.setDate(now.getDate() - (tagInWoche - 1))
   montag.setHours(0, 0, 0, 0)
-
-  const wochenTage = []
-  const tagesKuerzel = ['M', 'D', 'M', 'D', 'F', 'S', 'S']
-  for (let i = 0; i < 7; i++) {
+  const wochenTage = ['M','D','M','D','F','S','S'].map((k, i) => {
     const tag = new Date(montag)
     tag.setDate(montag.getDate() + i)
     const key = tag.toISOString().split('T')[0]
-    const istHeute = key === heuteKey
-    const istVergangen = tag < new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const hatEintrag = !!localStorage.getItem(`tagebuch_${key}`)
-    wochenTage.push({ kuerzel: tagesKuerzel[i], key, istHeute, istVergangen, hatEintrag, tagNr: tag.getDate() })
-  }
-
+    return {
+      kuerzel: k, key,
+      istHeute: key === heuteKey,
+      istVergangen: tag < new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+      hatEintrag: !!localStorage.getItem(`tagebuch_${key}`),
+    }
+  })
   const monatsName = now.toLocaleDateString('de-DE', { month: 'long' })
 
+  // Letzte Ergebnisse
+  const letztesDatum = localStorage.getItem('screening_datum')
+  const letztesErgebnisRaw = localStorage.getItem('screening_ergebnis')
+  let ergebnisZeile = 'Noch kein Screening durchgeführt'
+  if (letztesDatum && letztesErgebnisRaw) {
+    try {
+      const datum = new Date(letztesDatum).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })
+      const ergs = JSON.parse(letztesErgebnisRaw)
+      const höchsteStufe = Math.min(...ergs.map(e => e.stufe))
+      ergebnisZeile = `${datum} · Stufe ${höchsteStufe}`
+    } catch {}
+  }
+  const hatErgebnis = !!letztesDatum
+
+  // Ressourcen-Highlighting
+  const relevantRaw = localStorage.getItem('screening_relevant_resources')
+  const relevantChips = relevantRaw ? JSON.parse(relevantRaw) : null
+  const hatScreening = !!letztesDatum
+
+  const ressourcen = [
+    { name: 'Schlaf',           farbe: '#b8d4f0', icon: 'moon'   },
+    { name: 'Grübeln',          farbe: '#d4b8e8', icon: 'bulb'   },
+    { name: 'Antrieb',          farbe: '#b8e4d0', icon: 'bolt'   },
+    { name: 'Konzentration',    farbe: '#c8d8f0', icon: 'target' },
+    { name: 'Innere Unruhe',    farbe: '#f0b8c8', icon: 'wave'   },
+    { name: 'Reizbarkeit',      farbe: '#f0d4b8', icon: 'flame'  },
+    { name: 'Stress',           farbe: '#a8c8e0', icon: 'spiral' },
+    { name: 'Sozialer Rückzug', farbe: '#c8b8e8', icon: 'person' },
+  ]
+
+  const accent = '#5B6BC8'
+  const bg = '#f0f3f8'
+  const textP = '#2a2a3e'
+  const textS = '#8a8faa'
+  const cardBorder = '1px solid rgba(91,107,200,0.1)'
+
   return (
-    <div style={{ padding: '24px 16px 0' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 4px' }}>{greeting}</h1>
-        <p style={{ fontSize: '13px', color: colors.textLight, margin: 0 }}>{now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-      </div>
+    <div style={{ background: bg, minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
-      {!hatHeuteEintrag && !erinnerungGeschlossen && (
-        <div style={{ backgroundColor: '#FFF8E1', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', borderLeft: '3px solid #F9A825', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-          <p style={{ fontSize: '13px', color: colors.textMuted, margin: 0, lineHeight: '1.5', flex: 1 }}>Du hast heute noch kein Tagebuch ausgefüllt. Tägliche Einträge helfen dir, Muster zu erkennen.</p>
-          <button onClick={() => setErinnerungGeschlossen(true)} style={{ background: 'none', border: 'none', color: '#999', fontSize: '16px', cursor: 'pointer', padding: '0', lineHeight: 1, flexShrink: 0 }}>×</button>
-        </div>
-      )}
-
-      <div style={{ marginBottom: '8px' }}>
-        <p style={{ fontSize: '11px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 10px 4px' }}>Screening</p>
-        <div onClick={onScreeningOeffnen} style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', marginBottom: '10px', cursor: 'pointer', border: `1px solid ${colors.border}` }}>
-          <p style={{ fontSize: '15px', fontWeight: '600', color: colors.primary, margin: '0 0 4px' }}>Neues Screening starten</p>
-          <p style={{ fontSize: '13px', color: colors.textMuted, margin: 0 }}>26 Fragen · ca. 5–10 Min · wissenschaftlich validiert</p>
-        </div>
-        <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}` }}>
-          <p style={{ fontSize: '15px', fontWeight: '600', color: colors.text, margin: '0 0 4px' }}>Letzte Ergebnisse</p>
-          <p style={{ fontSize: '13px', color: colors.textLight, margin: 0 }}>Noch kein Screening durchgeführt</p>
-        </div>
-      </div>
-      <div style={{ height: '1px', backgroundColor: colors.border, margin: '20px 4px' }} />
-      <div>
-        <div style={{ backgroundColor: colors.background, borderRadius: '16px', padding: '20px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-          <p style={{ fontSize: '18px', fontWeight: '700', color: colors.text, margin: '0 0 4px', textAlign: 'center' }}>Mein Tagebuch</p>
-          <p style={{ fontSize: '13px', color: colors.textLight, margin: '0 0 16px', textAlign: 'center' }}>Befinden · Energie · Schlaf</p>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '18px' }}>
-            <div style={{ backgroundColor: colors.surface, borderRadius: '10px', padding: '8px 10px' }}>
-              <p style={{ fontSize: '10px', fontWeight: '600', color: colors.textMuted, margin: '0 0 6px', textAlign: 'center', textTransform: 'capitalize' }}>{monatsName}</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
-                {wochenTage.map((tag) => (
-                  <div key={tag.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
-                    <span style={{ fontSize: '8px', color: tag.istHeute ? colors.text : colors.textLight, fontWeight: tag.istHeute ? '700' : '400' }}>{tag.kuerzel}</span>
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: tag.hatEintrag ? colors.primary : tag.istVergangen ? '#E57373' : '#E0E0E0' }} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <button onClick={() => onTagebuchOeffnen('eintrag')} style={{ width: '100%', padding: '12px 0', backgroundColor: colors.primary, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-            {hatHeuteEintrag ? 'Tagebuch ansehen' : 'Heute eintragen'}
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <div style={{ height: '185px', background: 'linear-gradient(to bottom, #a8c8e8 0%, #c9a8d4 45%, #7b5ea7 75%, #2d1f4a 100%)', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: '22px' }}>
+        <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '80px', display: 'block' }}>
+          <polygon points="0,100 55,38 110,72 170,18 230,55 295,8 355,46 430,28 430,100" fill="#2d1f4a" />
+          <polygon points="0,100 35,52 75,70 125,32 175,58 225,22 285,52 335,18 385,42 430,32 430,100" fill="#1e1235" opacity="0.65" />
+        </svg>
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+          <p style={{ fontSize: '11px', letterSpacing: '2.5px', color: 'rgba(255,255,255,0.72)', margin: '0 0 5px', textTransform: 'uppercase' }}>{greetingText}</p>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#fff', margin: '0 0 16px', textShadow: '0 1px 12px rgba(0,0,0,0.35)' }}>Wie geht es dir heute?</h1>
+          <button
+            onClick={heroMode === 'screening' ? onScreeningOeffnen : () => onTagebuchOeffnen('eintrag')}
+            style={{ padding: '10px 28px', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(255,255,255,0.6)', borderRadius: '100px', color: '#fff', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}
+          >
+            {heroMode === 'screening' ? 'Screening starten' : 'Tagebuch eintragen'}
           </button>
         </div>
       </div>
 
-      {onTestErgebnis && (
-        <div style={{ marginTop: '32px', padding: '16px', backgroundColor: '#F3E5F5', borderRadius: '14px', border: '1px dashed #9C27B0' }}>
-          <p style={{ fontSize: '11px', fontWeight: '700', color: '#7B1FA2', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 10px' }}>Dev · Test-Shortcuts</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {[
-              { label: 'Test: Stufe 1', ergebnisse: berechneErgebnisse({ phq9_1:3,phq9_2:3,phq9_3:2,phq9_4:2,phq9_5:1,phq9_6:2,phq9_7:1,phq9_8:1,phq9_9:0, gad7_1:2,gad7_2:2,gad7_3:2,gad7_4:2,gad7_5:2,gad7_6:1,gad7_7:1, asrs_1:1,asrs_2:1,asrs_3:1,asrs_4:1,asrs_5:1,asrs_6:1 }) },
-              { label: 'Test: Stufe 2', ergebnisse: berechneErgebnisse({ phq9_1:1,phq9_2:2,phq9_3:1,phq9_4:2,phq9_5:1,phq9_6:0,phq9_7:1,phq9_8:0,phq9_9:0, gad7_1:1,gad7_2:1,gad7_3:1,gad7_4:1,gad7_5:0,gad7_6:1,gad7_7:0, asrs_1:1,asrs_2:1,asrs_3:0,asrs_4:1,asrs_5:0,asrs_6:0 }) },
-              { label: 'Test: Stufe 3', ergebnisse: berechneErgebnisse({ phq9_1:0,phq9_2:0,phq9_3:0,phq9_4:0,phq9_5:0,phq9_6:0,phq9_7:0,phq9_8:0,phq9_9:0, gad7_1:0,gad7_2:0,gad7_3:0,gad7_4:0,gad7_5:0,gad7_6:0,gad7_7:0, asrs_1:0,asrs_2:0,asrs_3:0,asrs_4:0,asrs_5:0,asrs_6:0 }) },
-            ].map(({ label, ergebnisse }) => (
-              <button key={label} onClick={() => onTestErgebnis(ergebnisse)} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#7B1FA2', backgroundColor: '#fff', border: '1px solid #CE93D8', borderRadius: '10px', cursor: 'pointer' }}>
-                {label}
-              </button>
-            ))}
+      <div style={{ padding: '0 14px 40px' }}>
+
+        {/* ── Screening ────────────────────────────────────────── */}
+        <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Screening</p>
+        <div style={{ background: '#fff', borderRadius: '18px', border: cardBorder, overflow: 'hidden' }}>
+          <div onClick={onScreeningOeffnen} style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
+            <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #7b5ea7, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <rect x="5" y="3" width="14" height="18" rx="2" stroke="#fff" strokeWidth="1.8"/>
+                <path d="M9 8h6M9 12h6M9 16h4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: textP, margin: '0 0 2px' }}>Neues Screening starten</p>
+              <p style={{ fontSize: '11px', color: textS, margin: 0 }}>26 Fragen · ca. 5–10 Min · wissenschaftlich validiert</p>
+            </div>
+            <span style={{ fontSize: '18px', color: '#c0c5dd', flexShrink: 0 }}>›</span>
+          </div>
+          <div style={{ height: '0.5px', background: 'rgba(91,107,200,0.08)', margin: '0 16px' }} />
+          <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 2px' }}>Letzte Ergebnisse</p>
+              <p style={{ fontSize: '11px', color: hatErgebnis ? textS : '#aab0c8', margin: 0 }}>{ergebnisZeile}</p>
+            </div>
+            <span style={{ fontSize: '18px', color: '#c0c5dd', flexShrink: 0 }}>›</span>
           </div>
         </div>
-      )}
+
+        {/* ── Tagebuch ─────────────────────────────────────────── */}
+        <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Tagebuch</p>
+        <div style={{ background: '#fff', borderRadius: '18px', border: cardBorder, padding: '20px 16px' }}>
+          <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: '0 0 2px', textAlign: 'center' }}>Mein Tagebuch</p>
+          <p style={{ fontSize: '11px', color: textS, margin: '0 0 14px', textAlign: 'center' }}>Befinden · Energie · Schlaf</p>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: textP, margin: '0 0 10px', textAlign: 'center' }}>{monatsName}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '16px' }}>
+            {wochenTage.map((tag) => {
+              const dotBg = tag.hatEintrag ? '#2d6a4f' : tag.istVergangen ? '#e57373' : '#d0d5e8'
+              return (
+                <div key={tag.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ fontSize: '11px', color: tag.istHeute ? textP : textS, fontWeight: tag.istHeute ? '700' : '400' }}>{tag.kuerzel}</span>
+                  <div style={{
+                    width: '30px', height: '30px', borderRadius: '50%',
+                    background: dotBg,
+                    border: tag.istHeute ? `2.5px solid ${accent}` : '2.5px solid transparent',
+                    opacity: tag.istVergangen || tag.istHeute || tag.hatEintrag ? 1 : 0.45,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {tag.hatEintrag && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(255,255,255,0.75)' }} />}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <button onClick={() => onTagebuchOeffnen('eintrag')} style={{ width: '100%', padding: '13px', background: '#5B6BC8', color: '#fff', border: 'none', borderRadius: '14px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>
+            Heute eintragen
+          </button>
+        </div>
+
+        {/* ── Ressourcen ───────────────────────────────────────── */}
+        <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Ressourcen für dich</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+          {ressourcen.map((res) => {
+            const istRelevant = relevantChips && relevantChips.includes(res.name)
+            const istGedimmt = hatScreening && relevantChips && !istRelevant
+            const katalogKey = CHIP_TO_KATALOG[res.name]
+            return (
+              <div
+                key={res.name}
+                onClick={() => RESSOURCEN_KATALOG[katalogKey] ? setOpenResName(openResName === res.name ? null : res.name) : null}
+                style={{
+                  background: '#fff', borderRadius: '14px', padding: '10px 6px',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+                  border: cardBorder,
+                  opacity: istGedimmt ? 0.35 : 1,
+                  filter: istGedimmt ? 'grayscale(0.5)' : 'none',
+                  transform: istRelevant ? 'scale(1.04)' : 'scale(1)',
+                  cursor: RESSOURCEN_KATALOG[katalogKey] ? 'pointer' : 'default',
+                  transition: 'all 0.2s',
+                  outline: openResName === res.name ? `2px solid ${accent}` : 'none',
+                }}
+              >
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: res.farbe, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <RessourceIcon typ={res.icon} />
+                </div>
+                <span style={{ fontSize: '8px', fontWeight: '700', color: textP, textAlign: 'center', lineHeight: '1.3' }}>{res.name}</span>
+                {istRelevant && (
+                  <span style={{ fontSize: '8px', fontWeight: '700', color: accent, background: '#ede9f7', borderRadius: '6px', padding: '1px 5px' }}>Für dich</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        {openResName && RESSOURCEN_KATALOG[CHIP_TO_KATALOG[openResName]] && (
+          <div style={{ marginTop: '8px', padding: '14px', background: '#fff', borderRadius: '14px', border: cardBorder }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 6px' }}>{openResName}</p>
+            <p style={{ fontSize: '13px', color: textS, lineHeight: '1.7', margin: '0 0 12px' }}>{RESSOURCEN_KATALOG[CHIP_TO_KATALOG[openResName]].erklaerung}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {RESSOURCEN_KATALOG[CHIP_TO_KATALOG[openResName]].interventionen.map((inv) => (
+                <div key={inv.titel} style={{ background: '#f5f6fa', borderRadius: '10px', padding: '10px 12px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 3px' }}>{inv.titel}</p>
+                  <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.5' }}>{inv.text}</p>
+                  {inv.video && <a href={inv.video} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: accent, textDecoration: 'none', marginTop: '4px', display: 'inline-block' }}>Video ansehen</a>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Dev Shortcuts ────────────────────────────────────── */}
+        {onTestErgebnis && (
+          <div style={{ marginTop: '32px', padding: '16px', backgroundColor: '#F3E5F5', borderRadius: '14px', border: '1px dashed #9C27B0' }}>
+            <p style={{ fontSize: '11px', fontWeight: '700', color: '#7B1FA2', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 10px' }}>Dev · Test-Shortcuts</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Test: Stufe 1', ergebnisse: berechneErgebnisse({ phq9_1:3,phq9_2:3,phq9_3:2,phq9_4:2,phq9_5:1,phq9_6:2,phq9_7:1,phq9_8:1,phq9_9:0, gad7_1:2,gad7_2:2,gad7_3:2,gad7_4:2,gad7_5:2,gad7_6:1,gad7_7:1, asrs_1:1,asrs_2:1,asrs_3:1,asrs_4:1,asrs_5:1,asrs_6:1 }) },
+                { label: 'Test: Stufe 2', ergebnisse: berechneErgebnisse({ phq9_1:1,phq9_2:2,phq9_3:1,phq9_4:2,phq9_5:1,phq9_6:0,phq9_7:1,phq9_8:0,phq9_9:0, gad7_1:1,gad7_2:1,gad7_3:1,gad7_4:1,gad7_5:0,gad7_6:1,gad7_7:0, asrs_1:1,asrs_2:1,asrs_3:0,asrs_4:1,asrs_5:0,asrs_6:0 }) },
+                { label: 'Test: Stufe 3', ergebnisse: berechneErgebnisse({ phq9_1:0,phq9_2:0,phq9_3:0,phq9_4:0,phq9_5:0,phq9_6:0,phq9_7:0,phq9_8:0,phq9_9:0, gad7_1:0,gad7_2:0,gad7_3:0,gad7_4:0,gad7_5:0,gad7_6:0,gad7_7:0, asrs_1:0,asrs_2:0,asrs_3:0,asrs_4:0,asrs_5:0,asrs_6:0 }) },
+              ].map(({ label, ergebnisse }) => (
+                <button key={label} onClick={() => onTestErgebnis(ergebnisse)} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#7B1FA2', backgroundColor: '#fff', border: '1px solid #CE93D8', borderRadius: '10px', cursor: 'pointer' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

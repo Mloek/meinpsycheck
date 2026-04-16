@@ -482,13 +482,30 @@ function SuizidHinweisScreen({ wert, onWeiter }) {
 
 // ─── SCREENING FLOW ───────────────────────────────────────────────────────────
 // Ablauf: einstieg → phq4 → vertiefung (PHQ9, GAD7, ASRS) → suizid → ergebnis ODER krise
+const SCREENING_SPEICHER_KEY = 'screening_fortschritt'
+
 function ScreeningFlow({ onZurueck }) {
-  const [phase, setPhase] = useState('einstieg')
-  const [symptomAuswahl, setSymptomAuswahl] = useState([])
-  const [alleAntworten, setAlleAntworten] = useState({})
-  const [aktuellesInstrument, setAktuellesInstrument] = useState(0)
+  // Gespeicherten Fortschritt laden
+  const gespeichert = (() => {
+    try { return JSON.parse(localStorage.getItem(SCREENING_SPEICHER_KEY)) } catch { return null }
+  })()
+
+  const [phase, setPhase] = useState(gespeichert?.phase ?? 'einstieg')
+  const [symptomAuswahl, setSymptomAuswahl] = useState(gespeichert?.symptomAuswahl ?? [])
+  const [alleAntworten, setAlleAntworten] = useState(gespeichert?.alleAntworten ?? {})
+  const [aktuellesInstrument, setAktuellesInstrument] = useState(gespeichert?.aktuellesInstrument ?? 0)
   const [ergebnisse, setErgebnisse] = useState([])
-  const [suizidWert, setSuizidWert] = useState(0)
+  const [suizidWert, setSuizidWert] = useState(gespeichert?.suizidWert ?? 0)
+
+  // Fortschritt bei jeder Änderung speichern
+  useEffect(() => {
+    if (phase !== 'einstieg' && phase !== 'ergebnis' && phase !== 'disclaimer') {
+      localStorage.setItem(SCREENING_SPEICHER_KEY, JSON.stringify({ phase, symptomAuswahl, alleAntworten, aktuellesInstrument, suizidWert }))
+    }
+    if (phase === 'einstieg' || phase === 'ergebnis') {
+      localStorage.removeItem(SCREENING_SPEICHER_KEY)
+    }
+  }, [phase, alleAntworten, aktuellesInstrument, suizidWert])
 
   // Wie viele Fragen waren schon vor diesem Instrument?
   // PHQ4=4 Fragen, dann PHQ9 startet bei Frage 5 (bisherFragen=4)
@@ -884,6 +901,7 @@ function HauptApp() {
   const [tagebuchStartAnsicht, setTagebuchStartAnsicht] = useState(null)
   const [screeningOffen, setScreeningOffen] = useState(false)
   const [testErgebnis, setTestErgebnis] = useState(null)
+  const [verlassenDialog, setVerlassenDialog] = useState(null) // ziel-tab-id
 
   const handleTagebuchOeffnen = (startAnsicht) => {
     setTagebuchStartAnsicht(startAnsicht || null)
@@ -893,6 +911,30 @@ function HauptApp() {
   const handleTestErgebnis = (ergebnisse) => {
     setTestErgebnis(ergebnisse)
     setScreeningOffen(true)
+  }
+
+  const handleTabKlick = (tabId) => {
+    if (screeningOffen && !testErgebnis) {
+      setVerlassenDialog(tabId)
+    } else {
+      setAktiveTab(tabId)
+      setTagebuchOffen(false)
+      setScreeningOffen(false)
+    }
+  }
+
+  const handleSpeichern = () => {
+    // Fortschritt bleibt in localStorage (ScreeningFlow hat bereits gespeichert)
+    setScreeningOffen(false)
+    setAktiveTab(verlassenDialog)
+    setVerlassenDialog(null)
+  }
+
+  const handleVerwerfen = () => {
+    localStorage.removeItem(SCREENING_SPEICHER_KEY)
+    setScreeningOffen(false)
+    setAktiveTab(verlassenDialog)
+    setVerlassenDialog(null)
   }
 
   return (
@@ -907,9 +949,29 @@ function HauptApp() {
         {aktiveTab === 'therapeuten' && <TherapeutenPlatzhalter />}
         {aktiveTab === 'einstellungen' && <Einstellungen />}
       </div>
+
+      {/* ── Tab-Wechsel-Dialog ──────────────────────────────────── */}
+      {verlassenDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,20,60,0.55)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', padding: '28px 20px 36px', width: '100%', maxWidth: '430px' }}>
+            <p style={{ fontSize: '17px', fontWeight: '700', color: '#2a2a3e', margin: '0 0 8px', textAlign: 'center' }}>Fragebogen pausieren?</p>
+            <p style={{ fontSize: '14px', color: '#8a8faa', margin: '0 0 24px', textAlign: 'center', lineHeight: '1.5' }}>Dein Fortschritt wird gespeichert. Du kannst später weitermachen.</p>
+            <button onClick={handleSpeichern} style={{ width: '100%', padding: '14px', background: '#5B6BC8', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '10px' }}>
+              Speichern &amp; später weitermachen
+            </button>
+            <button onClick={handleVerwerfen} style={{ width: '100%', padding: '14px', background: '#f0f1f8', color: '#5B6BC8', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '10px' }}>
+              Neu anfangen (Fortschritt löschen)
+            </button>
+            <button onClick={() => setVerlassenDialog(null)} style={{ width: '100%', padding: '14px', background: 'none', color: '#8a8faa', border: 'none', fontSize: '15px', cursor: 'pointer' }}>
+              Zurück zum Fragebogen
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100 }}>
         {[{ id: 'home', label: 'Hauptseite' }, { id: 'therapeuten', label: 'Therapeuten' }, { id: 'einstellungen', label: 'Einstellungen' }].map((tab) => (
-          <button key={tab.id} onClick={() => { setAktiveTab(tab.id); setTagebuchOffen(false); setScreeningOffen(false) }} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
+          <button key={tab.id} onClick={() => handleTabKlick(tab.id)} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
             {tab.label}
           </button>
         ))}
@@ -944,6 +1006,7 @@ function RessourceIcon({ typ }) {
 
 function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
   const [openResName, setOpenResName] = useState(null)
+  const hatFortschritt = !!localStorage.getItem(SCREENING_SPEICHER_KEY)
 
   const now = new Date()
   const hour = now.getHours()
@@ -1051,6 +1114,22 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
       </div>
 
       <div style={{ padding: '0 14px 40px' }}>
+
+        {/* ── Fortschritt-Banner ───────────────────────────────── */}
+        {hatFortschritt && (
+          <div onClick={onScreeningOeffnen} style={{ margin: '14px 0 0', background: 'linear-gradient(135deg, #5B6BC8, #7b5ea7)', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12l7 7 7-7" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#fff', margin: '0 0 2px' }}>Screening fortsetzen</p>
+              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', margin: 0 }}>Du hast noch einen offenen Fragebogen</p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.8)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+        )}
 
         {/* ── Screening ────────────────────────────────────────── */}
         <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Screening</p>

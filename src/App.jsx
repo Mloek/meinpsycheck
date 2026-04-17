@@ -767,10 +767,10 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
 
   // Hero config
   const hero = hatStufe1
-    ? { grad: 'linear-gradient(to bottom, #9b7ec8 0%, #7b5ea7 45%, #2d1f4a 100%)', badge: 'AUFFÄLLIG', titel: 'Erhöhte Belastung erkannt', sub: 'Deine Angaben zeigen in mindestens einem Bereich Werte oberhalb des klinischen Grenzwerts. Das ist ein Signal, das es wert ist, ernst genommen zu werden.' }
+    ? { grad: 'linear-gradient(to bottom, #9b7ec8 0%, #7b5ea7 45%, #2d1f4a 100%)', badge: 'AUFFÄLLIG', titel: 'Erhöhte Belastung erkannt', sub: 'Deine Angaben überschreiten in mindestens einem Bereich den klinischen Grenzwert validierter Screening-Instrumente. Wir empfehlen dir, das Gespräch mit einer psychologischen oder ärztlichen Fachkraft zu suchen.' }
     : höchsteStufe === 2
-    ? { grad: 'linear-gradient(to bottom, #8b9ed8 0%, #5B6BC8 50%, #3a4a9a 100%)', badge: 'LEICHT ERHÖHT', titel: 'Leichte Auffälligkeiten', sub: 'Deine Werte liegen unterhalb des klinischen Grenzwerts, zeigen aber in einzelnen Bereichen erhöhte Belastung. Eine gute Gelegenheit, auf dich zu achten.' }
-    : { grad: 'linear-gradient(to bottom, #5a9e82 0%, #3d8068 45%, #1f4d3e 100%)', badge: 'UNAUFFÄLLIG', titel: 'Alles im grünen Bereich', sub: 'Deine Angaben ergeben keine Hinweise auf eine klinisch relevante psychische Erkrankung. Das Screening kann nach 14 Tagen wiederholt werden.' }
+    ? { grad: 'linear-gradient(to bottom, #8b9ed8 0%, #5B6BC8 50%, #3a4a9a 100%)', badge: 'LEICHT ERHÖHT', titel: 'Leichte Auffälligkeiten', sub: 'Deine Werte liegen unterhalb des klinischen Grenzwerts, zeigen aber in einzelnen Bereichen subklinisch erhöhte Belastung. Bei anhaltenden Beschwerden empfehlen wir eine fachliche Abklärung.' }
+    : { grad: 'linear-gradient(to bottom, #5a9e82 0%, #3d8068 45%, #1f4d3e 100%)', badge: 'UNAUFFÄLLIG', titel: 'Keine klinischen Hinweise', sub: 'Deine Angaben ergeben anhand der validierten Screening-Instrumente aktuell keine Hinweise auf eine behandlungsbedürftige psychische Störung. Das Screening kann nach 14 Tagen wiederholt werden.' }
 
   // Welche Karten anzeigen
   const karten = hatStufe1 ? stufe1 : stufe2
@@ -834,36 +834,50 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
 
       <div style={{ padding: '0 14px' }}>
 
-        {/* ── Diagnosen-Karten ────────────────────────────────────── */}
+        {/* ── Diagnosen-Karten (horizontal swipebar) ──────────────── */}
         {karten.length > 0 && (
           <>
-            <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 10px' }}>
-              {hatStufe1 ? 'Auffällige Bereiche' : 'Leicht erhöhte Bereiche'}
-            </p>
-            {karten.map((res) => {
-              const info = STOERUNGSBILDER[res.instrument]
-              const istOffen = aufgeklappt === res.instrument
-              return (
-                <div key={res.instrument} onClick={() => setAufgeklappt(istOffen ? null : res.instrument)}
-                  style={{ background: '#fff', borderRadius: '16px', border: hatStufe1 ? '1px solid rgba(180,80,80,0.18)' : '1px solid rgba(91,107,200,0.12)', marginBottom: '10px', cursor: 'pointer', overflow: 'hidden' }}>
-                  <div style={{ padding: '16px', display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: hatStufe1 ? 'linear-gradient(135deg, #c87070, #9b3a3a)' : 'linear-gradient(135deg, #8b9ed8, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 4px 10px' }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
+                {hatStufe1 ? 'Auffällige Bereiche' : 'Leicht erhöhte Bereiche'}
+              </p>
+              {karten.length > 1 && <p style={{ fontSize: '11px', color: textS, margin: 0 }}>← swipen →</p>}
+            </div>
+            <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none', margin: '0 -14px', padding: '0 14px 8px' }}>
+              <style>{`.diagnose-scroll::-webkit-scrollbar{display:none}`}</style>
+              {karten.map((res) => {
+                const info = STOERUNGSBILDER[res.instrument]
+                const istOffen = aufgeklappt === res.instrument
+                return (
+                  <div key={res.instrument} onClick={() => setAufgeklappt(istOffen ? null : res.instrument)}
+                    className="diagnose-scroll"
+                    style={{ background: '#fff', borderRadius: '16px', border: hatStufe1 ? '1px solid rgba(180,80,80,0.18)' : '1px solid rgba(91,107,200,0.12)', cursor: 'pointer', overflow: 'hidden', flexShrink: 0, width: karten.length === 1 ? '100%' : 'calc(85vw)', maxWidth: '340px', scrollSnapAlign: 'start' }}>
+                    <div style={{ padding: '16px', display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: hatStufe1 ? 'linear-gradient(135deg, #c87070, #9b3a3a)' : 'linear-gradient(135deg, #8b9ed8, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: '13px', fontWeight: '700', color: hatStufe1 ? '#9b3a3a' : accent, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{res.label}</p>
+                        <p style={{ fontSize: '14px', color: textP, margin: 0, lineHeight: '1.5' }}>{info?.kurz ?? 'Deine Angaben liegen oberhalb des Schwellenwerts.'}</p>
+                      </div>
+                      <span style={{ fontSize: '20px', color: textS, flexShrink: 0, marginTop: '10px', transition: 'transform 0.2s', transform: istOffen ? 'rotate(180deg)' : 'rotate(0deg)' }}>⌄</span>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: '13px', fontWeight: '700', color: hatStufe1 ? '#9b3a3a' : accent, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{res.label}</p>
-                      <p style={{ fontSize: '14px', color: textP, margin: 0, lineHeight: '1.5' }}>{info?.kurz ?? 'Deine Angaben liegen oberhalb des Schwellenwerts.'}</p>
-                    </div>
-                    <span style={{ fontSize: '20px', color: textS, flexShrink: 0, marginTop: '10px', transition: 'transform 0.2s', transform: istOffen ? 'rotate(180deg)' : 'rotate(0deg)' }}>⌄</span>
+                    {istOffen && info?.lang && (
+                      <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(91,107,200,0.08)' }}>
+                        <p style={{ fontSize: '13px', color: textS, lineHeight: '1.75', margin: '14px 0 0' }}>{info.lang}</p>
+                      </div>
+                    )}
                   </div>
-                  {istOffen && info?.lang && (
-                    <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(91,107,200,0.08)' }}>
-                      <p style={{ fontSize: '13px', color: textS, lineHeight: '1.75', margin: '14px 0 0' }}>{info.lang}</p>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
+            {karten.length > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', margin: '4px 0 0' }}>
+                {karten.map((_, i) => (
+                  <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === 0 ? accent : 'rgba(91,107,200,0.25)' }} />
+                ))}
+              </div>
+            )}
           </>
         )}
 

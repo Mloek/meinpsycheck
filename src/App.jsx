@@ -744,48 +744,16 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
   const stufe2 = ergebnisse.filter(e => e.stufe === 2)
   const hatStufe1 = stufe1.length > 0
   const [aufgeklappt, setAufgeklappt] = useState(null)
-  const [openChipId, setOpenChipId] = useState(null)
+  const [openResKatalog, setOpenResKatalog] = useState(null)
 
-  const renderChips = (chips) => {
-    if (chips.length === 0) return null
-    const klickbareChips = chips.filter(c => RESSOURCEN_KATALOG[c])
-    const nichtKlickbar = chips.filter(c => !RESSOURCEN_KATALOG[c])
-    return (
-      <>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {klickbareChips.map((chip) => (
-            <div key={chip} onClick={(e) => { e.stopPropagation(); setOpenChipId(openChipId === chip ? null : chip) }} style={{ padding: '8px 14px', backgroundColor: openChipId === chip ? colors.primary : colors.primaryLight, borderRadius: '20px', fontSize: '13px', color: openChipId === chip ? '#fff' : colors.primary, fontWeight: '500', border: `1px solid ${colors.primary}30`, cursor: 'pointer', transition: 'all 0.2s' }}>{chip}</div>
-          ))}
-          {nichtKlickbar.map((chip) => (
-            <div key={chip} style={{ padding: '8px 14px', backgroundColor: colors.primaryLight, borderRadius: '20px', fontSize: '13px', color: colors.primary, fontWeight: '500', border: `1px solid ${colors.primary}30` }}>{chip}</div>
-          ))}
-        </div>
-        {openChipId && chips.includes(openChipId) && RESSOURCEN_KATALOG[openChipId] && (
-          <div style={{ marginTop: '12px', padding: '16px', backgroundColor: colors.background, borderRadius: '14px', border: `1px solid ${colors.border}` }}>
-            <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 16px' }}>
-              {RESSOURCEN_KATALOG[openChipId].erklaerung}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {RESSOURCEN_KATALOG[openChipId].interventionen.map((inv) => (
-                <div key={inv.titel} style={{ backgroundColor: '#f5f5f5', borderRadius: '12px', padding: '12px' }}>
-                  <p style={{ fontSize: '14px', fontWeight: '700', color: colors.text, margin: '0 0 4px' }}>{inv.titel}</p>
-                  <p style={{ fontSize: '13px', color: colors.textMuted, margin: 0, lineHeight: '1.5' }}>{inv.text}</p>
-                  {inv.video && (
-                    <a href={inv.video} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', color: colors.primary, textDecoration: 'none', marginTop: '6px', display: 'inline-block' }}>Video ansehen</a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </>
-    )
-  }
+  const accent = '#5B6BC8'
+  const bg = '#dde1ee'
+  const textP = '#2a2a3e'
+  const textS = '#8a8faa'
 
   useEffect(() => {
     localStorage.setItem('screening_datum', new Date().toISOString())
     localStorage.setItem('screening_ergebnis', JSON.stringify(ergebnisse))
-    // Relevante Ressourcen für Hauptseite-Chips speichern
     const katalogToChip = {
       'Schlafprobleme': 'Schlaf', 'Grübeln': 'Grübeln', 'Grübeln / Sorgen': 'Grübeln',
       'Antriebslosigkeit': 'Antrieb', 'Konzentration': 'Konzentration',
@@ -797,98 +765,196 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
     localStorage.setItem('screening_relevant_resources', JSON.stringify(mapped))
   }, [])
 
+  // Hero config
+  const hero = hatStufe1
+    ? { grad: 'linear-gradient(to bottom, #9b7ec8 0%, #7b5ea7 45%, #2d1f4a 100%)', badge: 'AUFFÄLLIG', titel: 'Erhöhte Belastung erkannt', sub: 'Deine Angaben überschreiten in mindestens einem Bereich den klinischen Grenzwert validierter Screening-Instrumente. Wir empfehlen dir, das Gespräch mit einer psychologischen oder ärztlichen Fachkraft zu suchen.' }
+    : höchsteStufe === 2
+    ? { grad: 'linear-gradient(to bottom, #8b9ed8 0%, #5B6BC8 50%, #3a4a9a 100%)', badge: 'LEICHT ERHÖHT', titel: 'Leichte Auffälligkeiten', sub: 'Deine Werte liegen unterhalb des klinischen Grenzwerts, zeigen aber in einzelnen Bereichen subklinisch erhöhte Belastung. Bei anhaltenden Beschwerden empfehlen wir eine fachliche Abklärung.' }
+    : { grad: 'linear-gradient(to bottom, #5a9e82 0%, #3d8068 45%, #1f4d3e 100%)', badge: 'UNAUFFÄLLIG', titel: 'Keine klinischen Hinweise', sub: 'Deine Angaben ergeben anhand der validierten Screening-Instrumente aktuell keine Hinweise auf eine behandlungsbedürftige psychische Störung. Das Screening kann nach 14 Tagen wiederholt werden.' }
+
+  // Welche Karten anzeigen
+  const karten = hatStufe1 ? stufe1 : stufe2
+
+  // Chip → Katalog-Mapping für Ressourcen
+  const chipToKatalog = {
+    'Schlafprobleme': 'Schlafprobleme', 'Grübeln': 'Grübeln', 'Grübeln / Sorgen': 'Grübeln',
+    'Antriebslosigkeit': 'Antriebslosigkeit', 'Konzentration': 'Konzentration',
+    'Innere Unruhe': 'Innere Unruhe', 'Reizbarkeit': 'Reizbarkeit',
+    'Chronischer Stress': 'Chronischer Stress', 'Sozialer Rückzug': 'Sozialer Rückzug',
+    'Freudlosigkeit': 'Grübeln',
+  }
+  const alleRelevantChips = [...new Set(karten.flatMap(r => r.chips ?? []))]
+  const relevanteKatalogKeys = [...new Set(alleRelevantChips.map(c => chipToKatalog[c]).filter(k => k && RESSOURCEN_KATALOG[k]))]
+
+  const ressourcenConfig = [
+    { katalog: 'Schlafprobleme', label: 'Schlaf', farbe: '#b8d4f0', icon: 'moon' },
+    { katalog: 'Grübeln', label: 'Grübeln', farbe: '#d4b8e8', icon: 'bulb' },
+    { katalog: 'Antriebslosigkeit', label: 'Antrieb', farbe: '#b8e4d0', icon: 'bolt' },
+    { katalog: 'Konzentration', label: 'Konzentration', farbe: '#c8d8f0', icon: 'target' },
+    { katalog: 'Innere Unruhe', label: 'Innere Unruhe', farbe: '#f0b8c8', icon: 'wave' },
+    { katalog: 'Reizbarkeit', label: 'Reizbarkeit', farbe: '#f0d4b8', icon: 'flame' },
+    { katalog: 'Chronischer Stress', label: 'Stress', farbe: '#a8c8e0', icon: 'spiral' },
+    { katalog: 'Sozialer Rückzug', label: 'Sozialer Rückzug', farbe: '#c8b8e8', icon: 'person' },
+  ]
+  const relevanteRessourcen = ressourcenConfig.filter(r => relevanteKatalogKeys.includes(r.katalog))
+
   return (
-    <div style={{ padding: '16px', paddingBottom: '40px' }}>
-      <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 20px' }}>Dein Ergebnis</h2>
+    <div style={{ background: bg, minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', paddingBottom: '40px' }}>
+      <style>{`
+        @keyframes bergDrift1 { 0%{transform:translateX(0)} 50%{transform:translateX(-18px)} 100%{transform:translateX(0)} }
+        @keyframes bergDrift2 { 0%{transform:translateX(0)} 50%{transform:translateX(12px)} 100%{transform:translateX(0)} }
+      `}</style>
 
+      {/* ── Suizid-Hinweis ───────────────────────────────────────── */}
       {suizidItem > 0 && (
-        <div style={{ backgroundColor: colors.crisisBg, borderRadius: '14px', padding: '16px', border: '1px solid #FFCDD2', marginBottom: '16px' }}>
-          <p style={{ fontSize: '14px', fontWeight: '700', color: colors.crisis, margin: '0 0 6px' }}>Wichtiger Hinweis</p>
-          <p style={{ fontSize: '13px', color: '#5D2D2D', margin: '0 0 12px', lineHeight: '1.6' }}>Du hast angegeben, dass dich Gedanken, dir selbst Schaden zuzufügen, in den letzten 2 Wochen beschäftigt haben. Bitte such dir Unterstützung.</p>
-          <a href="tel:08001110111" style={{ display: 'block', padding: '12px', backgroundColor: colors.crisis, color: '#fff', borderRadius: '10px', fontSize: '15px', fontWeight: '700', textAlign: 'center', textDecoration: 'none' }}>Telefonseelsorge: 0800 111 0 111</a>
+        <div style={{ background: '#B71C1C', padding: '16px 16px 14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: '1px' }}><circle cx="12" cy="12" r="10" fill="rgba(255,255,255,0.25)"/><path d="M12 8v4M12 16h.01" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/></svg>
+          <div>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: '#fff', margin: '0 0 4px' }}>Wichtiger Hinweis</p>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.88)', margin: '0 0 10px', lineHeight: '1.5' }}>Du hast Gedanken angegeben, dir selbst Schaden zuzufügen. Bitte such dir Unterstützung.</p>
+            <a href="tel:08001110111" style={{ display: 'inline-block', padding: '8px 16px', background: '#fff', color: '#B71C1C', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>Telefonseelsorge: 0800 111 0 111</a>
+          </div>
         </div>
       )}
 
-      {hatStufe1 && (
-        <p style={{ fontSize: '17px', fontWeight: '600', color: colors.text, lineHeight: '1.6', margin: '0 0 20px' }}>
-          Deine Angaben zeigen in mindestens einem Bereich Werte, die auf klinisch relevante Beschwerden hinweisen. Das ist ein Hinweis, den es wert ist, ernst zu nehmen.
-        </p>
-      )}
-
-      {stufe1.map((res) => {
-        const info = STOERUNGSBILDER[res.instrument]
-        const istOffen = aufgeklappt === res.instrument
-        return (
-          <div key={res.instrument} onClick={() => setAufgeklappt(istOffen ? null : res.instrument)} style={{ backgroundColor: '#FFEBEE', borderRadius: '14px', padding: '16px', border: `1px solid #FFCDD2`, marginBottom: '10px', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: info ? '10px' : '0' }}>
-              <p style={{ fontSize: '14px', color: colors.text, lineHeight: '1.6', margin: 0, flex: 1, paddingRight: '12px' }}>
-                {info?.kurz ?? 'Deine Angaben liegen oberhalb des Schwellenwerts.'}
-              </p>
-              <span style={{ fontSize: '18px', color: colors.crisis, flexShrink: 0, marginTop: '2px' }}>{istOffen ? '↑' : '↓'}</span>
-            </div>
-            {istOffen && info?.lang && (
-              <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.7', margin: '12px 0 0', borderTop: '1px solid #FFCDD2', paddingTop: '12px' }}>
-                {info.lang}
-              </p>
-            )}
-          </div>
-        )
-      })}
-
-      {stufe2.length > 0 && !hatStufe1 && (() => {
-        const alleChips = [...new Set(stufe2.flatMap(res => res.chips ?? []))]
-        return (
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '16px', fontWeight: '600', color: colors.text, lineHeight: '1.6', margin: '0 0 6px' }}>
-              Deine Angaben erreichen keinen klinischen Grenzwert. Laut den validierten Fragebögen liegen aktuell keine Hinweise auf eine behandlungsbedürftige psychische Störung vor.
-            </p>
-            <p style={{ fontSize: '13px', color: colors.textMuted, margin: '0 0 16px', lineHeight: '1.5' }}>
-              Das ist eine Momentaufnahme – kein Gesundheitszeugnis.
-            </p>
-            {alleChips.length > 0 && (
-              <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}` }}>
-                <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.6', margin: '0 0 12px' }}>
-                  In diesen Bereichen hattest du erhöhte Werte:
-                </p>
-                {renderChips(alleChips)}
-              </div>
-            )}
-          </div>
-        )
-      })()}
-
-      {hatStufe1 && (() => {
-        const alleStufe1Chips = [...new Set(stufe1.flatMap(res => res.chips ?? []))]
-        return alleStufe1Chips.length > 0 && (
-          <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
-            <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.6', margin: '0 0 12px' }}>
-              In diesen Bereichen hattest du erhöhte Werte:
-            </p>
-            {renderChips(alleStufe1Chips)}
-          </div>
-        )
-      })()}
-
-      {hatStufe1 && (
-        <div style={{ backgroundColor: colors.surface, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
-          <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 6px' }}>Therapeuten finden</p>
-          <p style={{ fontSize: '13px', color: colors.textMuted, margin: '0 0 12px', lineHeight: '1.5' }}>Wir helfen dir bald, einen passenden Therapeuten zu finden.</p>
-          <button onClick={() => alert('Die Therapeutensuche ist in Version 2 verfügbar.')} style={{ width: '100%', padding: '13px', backgroundColor: colors.surface, color: colors.primary, border: `1.5px solid ${colors.primary}`, borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-            Therapeutensuche – Kommt bald
-          </button>
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <div style={{ height: '230px', background: hero.grad, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: '80px' }}>
+        <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: '-10px', width: 'calc(100% + 20px)', height: '70px', display: 'block', animation: 'bergDrift1 14s ease-in-out infinite', opacity: 0.6 }}>
+          <polygon points="0,100 55,38 110,72 170,18 230,55 295,8 355,46 430,28 440,100" fill={bg} />
+        </svg>
+        <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: '-10px', width: 'calc(100% + 20px)', height: '70px', display: 'block', animation: 'bergDrift2 18s ease-in-out infinite' }}>
+          <polygon points="0,100 35,52 75,70 125,32 175,58 225,22 285,52 335,18 385,42 440,32 440,100" fill={bg} opacity="0.85" />
+        </svg>
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 24px' }}>
+          <span style={{ display: 'inline-block', padding: '4px 12px', background: 'rgba(255,255,255,0.22)', borderRadius: '100px', fontSize: '11px', letterSpacing: '2px', color: 'rgba(255,255,255,0.9)', fontWeight: '700', marginBottom: '10px' }}>{hero.badge}</span>
+          <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#fff', margin: '0 0 10px', textShadow: '0 1px 12px rgba(0,0,0,0.35)', lineHeight: '1.15' }}>{hero.titel}</h1>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: '#fff', margin: 0, lineHeight: '1.55' }}>{hero.sub}</p>
         </div>
-      )}
-
-      <div style={{ backgroundColor: colors.surface, borderRadius: '12px', padding: '14px', marginBottom: '20px', borderLeft: `3px solid ${colors.border}` }}>
-        <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0, lineHeight: '1.6' }}>
-          {höchsteStufe === 1 ? 'Diese Einschätzung basiert auf Selbstangaben und validierten Screening-Fragen. Sie ist keine Diagnose und ersetzt keine fachliche Abklärung.'
-            : höchsteStufe === 2 ? 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei anhaltenden oder zunehmenden Beschwerden ist eine fachliche Abklärung sinnvoll.'
-            : 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei Bedarf kannst du das Screening nach 14 Tagen erneut durchführen.'}
-        </p>
       </div>
 
-      <button onClick={onZurueck} style={{ width: '100%', padding: '16px', backgroundColor: colors.primary, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '12px' }}>Zur Startseite</button>
-      <button onClick={onNeustart} style={{ width: '100%', padding: '14px', backgroundColor: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: '12px', fontSize: '14px', cursor: 'pointer' }}>Neues Screening starten</button>
+      <div style={{ padding: '0 14px' }}>
+
+        {/* ── Diagnosen-Karten (horizontal swipebar) ──────────────── */}
+        {karten.length > 0 && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 4px 10px' }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
+                {hatStufe1 ? 'Auffällige Bereiche' : 'Leicht erhöhte Bereiche'}
+              </p>
+              {karten.length > 1 && <p style={{ fontSize: '11px', color: textS, margin: 0 }}>← swipen →</p>}
+            </div>
+            <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none', margin: '0 -14px', padding: '0 14px 8px' }}>
+              <style>{`.diagnose-scroll::-webkit-scrollbar{display:none}`}</style>
+              {karten.map((res) => {
+                const info = STOERUNGSBILDER[res.instrument]
+                return (
+                  <div key={res.instrument} onClick={() => setAufgeklappt(res.instrument)}
+                    className="diagnose-scroll"
+                    style={{ background: '#fff', borderRadius: '16px', border: hatStufe1 ? '1px solid rgba(180,80,80,0.18)' : '1px solid rgba(91,107,200,0.12)', cursor: 'pointer', overflow: 'hidden', flexShrink: 0, width: karten.length === 1 ? '100%' : 'calc(85vw)', maxWidth: '340px', scrollSnapAlign: 'start' }}>
+                    <div style={{ padding: '16px', display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: hatStufe1 ? 'linear-gradient(135deg, #c87070, #9b3a3a)' : 'linear-gradient(135deg, #8b9ed8, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: '13px', fontWeight: '700', color: hatStufe1 ? '#9b3a3a' : accent, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{res.label}</p>
+                        <p style={{ fontSize: '14px', color: textP, margin: 0, lineHeight: '1.5' }}>{info?.kurz ?? 'Deine Angaben liegen oberhalb des Schwellenwerts.'}</p>
+                      </div>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: '14px' }}><path d="M9 18l6-6-6-6" stroke={textS} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            {karten.length > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', margin: '4px 0 0' }}>
+                {karten.map((_, i) => (
+                  <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === 0 ? accent : 'rgba(91,107,200,0.25)' }} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Ressourcen ──────────────────────────────────────────── */}
+        {relevanteRessourcen.length > 0 && (
+          <>
+            <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 10px' }}>Passende Ressourcen</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {relevanteRessourcen.map((res) => (
+                <div key={res.katalog} onClick={() => setOpenResKatalog(openResKatalog === res.katalog ? null : res.katalog)}
+                  style={{ background: '#fff', borderRadius: '14px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', border: '1px solid rgba(91,107,200,0.1)', outline: openResKatalog === res.katalog ? `2px solid ${accent}` : 'none' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: res.farbe, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <RessourceIcon typ={res.icon} />
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: textP, textAlign: 'center' }}>{res.label}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* ── Disclaimer ──────────────────────────────────────────── */}
+        <div style={{ background: 'rgba(91,107,200,0.06)', borderRadius: '12px', padding: '14px', margin: '20px 0 0', border: '1px solid rgba(91,107,200,0.1)' }}>
+          <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.65' }}>
+            {höchsteStufe === 1
+              ? 'Diese Einschätzung basiert auf Selbstangaben und validierten Screening-Fragen. Sie ist keine Diagnose und ersetzt keine fachliche Abklärung.'
+              : höchsteStufe === 2
+              ? 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei anhaltenden Beschwerden ist eine fachliche Abklärung sinnvoll.'
+              : 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei Bedarf kannst du das Screening nach 14 Tagen erneut durchführen.'}
+          </p>
+        </div>
+
+        {/* ── Buttons ─────────────────────────────────────────────── */}
+        <button onClick={onZurueck} style={{ width: '100%', padding: '16px', background: accent, color: '#fff', border: 'none', borderRadius: '14px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginTop: '16px' }}>Zur Startseite</button>
+        <button onClick={onNeustart} style={{ width: '100%', padding: '14px', background: 'transparent', color: textS, border: '1px solid rgba(91,107,200,0.2)', borderRadius: '14px', fontSize: '14px', cursor: 'pointer', marginTop: '10px' }}>Neues Screening starten</button>
+      </div>
+
+      {/* ── Diagnose Detail Overlay ──────────────────────────────── */}
+      {aufgeklappt && (() => {
+        const res = karten.find(r => r.instrument === aufgeklappt)
+        const info = res ? STOERUNGSBILDER[res.instrument] : null
+        if (!res || !info?.lang) return null
+        return (
+          <>
+            <div onClick={() => setAufgeklappt(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(20,15,40,0.55)', zIndex: 200 }} />
+            <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 28px)', maxWidth: '400px', background: '#fff', borderRadius: '20px', zIndex: 201, padding: '20px', maxHeight: '80vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: hatStufe1 ? 'linear-gradient(135deg, #c87070, #9b3a3a)' : 'linear-gradient(135deg, #8b9ed8, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <p style={{ fontSize: '15px', fontWeight: '700', color: textP, margin: 0 }}>{res.label}</p>
+                </div>
+                <button onClick={() => setAufgeklappt(null)} style={{ background: '#f0f0f5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', fontSize: '16px', cursor: 'pointer', color: textS, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+              </div>
+              <p style={{ fontSize: '13px', color: textS, lineHeight: '1.75', margin: 0 }}>{info.lang}</p>
+            </div>
+          </>
+        )
+      })()}
+
+      {/* ── Ressource Detail Overlay ─────────────────────────────── */}
+      {openResKatalog && RESSOURCEN_KATALOG[openResKatalog] && (
+        <>
+          <div onClick={() => setOpenResKatalog(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(20,15,40,0.55)', zIndex: 200 }} />
+          <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '400px', background: '#fff', borderRadius: '20px', zIndex: 201, padding: '20px', maxHeight: '80vh', overflowY: 'auto', margin: '0 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: 0 }}>{openResKatalog}</p>
+              <button onClick={() => setOpenResKatalog(null)} style={{ background: '#f0f0f5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', fontSize: '16px', cursor: 'pointer', color: textS, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+            </div>
+            <p style={{ fontSize: '13px', color: textS, lineHeight: '1.7', margin: '0 0 14px' }}>{RESSOURCEN_KATALOG[openResKatalog].erklaerung}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {RESSOURCEN_KATALOG[openResKatalog].interventionen.map((inv) => (
+                <div key={inv.titel} style={{ background: '#f6f7fb', borderRadius: '12px', padding: '12px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 4px' }}>{inv.titel}</p>
+                  <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.55' }}>{inv.text}</p>
+                  {inv.video && <a href={inv.video} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: accent, textDecoration: 'none', marginTop: '6px', display: 'inline-block' }}>Video ansehen</a>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

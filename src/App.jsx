@@ -1630,14 +1630,13 @@ function TherapeutenPlatzhalter() {
   const mapObjRef = useRef(null)
   const markersRef = useRef([])
   const [ausgewählt, setAusgewählt] = useState(null)
-  const [userPos, setUserPos] = useState(null)
-  const [filter, setFilter] = useState('alle') // 'alle' | 'frei'
+  const [filter, setFilter] = useState('alle')
 
-  // Karte initialisieren
+  const KARTEN_MITTE = [48.1374, 11.5755] // München, fest
+
   useEffect(() => {
     if (!mapRef.current || mapObjRef.current) return
 
-    // Leaflet Default-Icon-Bug fixen
     delete L.Icon.Default.prototype._getIconUrl
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -1645,103 +1644,95 @@ function TherapeutenPlatzhalter() {
       shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     })
 
-    const startPos = [48.1374, 11.5755] // München als Fallback
-    const map = L.map(mapRef.current, { zoomControl: false, attributionControl: false }).setView(startPos, 14)
+    const map = L.map(mapRef.current, {
+      zoomControl: false,
+      attributionControl: false,
+      dragging: true,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      maxBounds: L.latLngBounds(
+        [KARTEN_MITTE[0] - 0.02, KARTEN_MITTE[1] - 0.03],
+        [KARTEN_MITTE[0] + 0.02, KARTEN_MITTE[1] + 0.03]
+      ),
+      maxBoundsViscosity: 1.0,
+      minZoom: 13,
+      maxZoom: 15,
+    }).setView(KARTEN_MITTE, 14)
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-    }).addTo(map)
-
-    // Attribution klein unten rechts
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map)
     L.control.attribution({ prefix: '© OpenStreetMap' }).addTo(map)
 
+    // Statischer User-Punkt in der Mitte
+    L.circleMarker(KARTEN_MITTE, {
+      radius: 10, fillColor: accent, color: '#fff', weight: 3, fillOpacity: 1,
+      className: 'user-dot'
+    }).addTo(map)
+    // Blauer Pulsring
+    const pulseIcon = L.divIcon({
+      className: '',
+      html: `<div style="width:32px;height:32px;border-radius:50%;background:rgba(91,107,200,0.18);border:2px solid rgba(91,107,200,0.4);"></div>`,
+      iconAnchor: [16, 16],
+    })
+    L.marker(KARTEN_MITTE, { icon: pulseIcon, interactive: false }).addTo(map)
+
     mapObjRef.current = map
-
-    // Geolocation versuchen
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude } = pos.coords
-          setUserPos([latitude, longitude])
-          map.setView([latitude, longitude], 14)
-          // User-Marker
-          L.circleMarker([latitude, longitude], {
-            radius: 10, fillColor: accent, color: '#fff', weight: 3, fillOpacity: 1
-          }).addTo(map)
-        },
-        () => {} // Kein Fehler zeigen wenn abgelehnt
-      )
-    }
-
     return () => { map.remove(); mapObjRef.current = null }
   }, [])
 
-  // Therapeuten-Marker setzen
   useEffect(() => {
     const map = mapObjRef.current
     if (!map) return
 
-    // Alte Marker entfernen
     markersRef.current.forEach(m => m.remove())
     markersRef.current = []
 
-    const basis = userPos || [48.1374, 11.5755]
     const gefilterteT = filter === 'frei' ? DEMO_THERAPEUTEN.filter(t => t.frei) : DEMO_THERAPEUTEN
-
     gefilterteT.forEach((t) => {
-      const pos = [basis[0] + t.lat, basis[1] + t.lng]
+      const pos = [KARTEN_MITTE[0] + t.lat, KARTEN_MITTE[1] + t.lng]
       const icon = L.divIcon({
         className: '',
-        html: `<div style="
-          background: ${t.frei ? accent : '#aab0c8'};
-          color: white;
-          border-radius: 20px;
-          padding: 5px 10px;
-          font-size: 12px;
-          font-weight: 700;
-          font-family: system-ui;
-          white-space: nowrap;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-          border: 2px solid #fff;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        ">★ ${t.bewertung}</div>`,
+        html: `<div style="background:${t.frei ? accent : '#aab0c8'};color:white;border-radius:20px;padding:5px 10px;font-size:12px;font-weight:700;font-family:system-ui;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.25);border:2px solid #fff;display:flex;align-items:center;gap:4px;">★ ${t.bewertung}</div>`,
         iconAnchor: [30, 20],
       })
       const marker = L.marker(pos, { icon }).addTo(map)
       marker.on('click', () => setAusgewählt(t))
       markersRef.current.push(marker)
     })
-  }, [userPos, filter])
+  }, [filter])
 
   const gefilterteT = filter === 'frei' ? DEMO_THERAPEUTEN.filter(t => t.frei) : DEMO_THERAPEUTEN
 
   return (
-    <div style={{ position: 'relative', height: 'calc(100vh - 70px)', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ background: '#dde1ee', minHeight: 'calc(100vh - 70px)', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
 
-      {/* ── Filter-Bar ───────────────────────────────────────────── */}
-      <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', zIndex: 500, display: 'flex', gap: '8px', background: '#fff', borderRadius: '100px', padding: '4px', boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
-        {['alle', 'frei'].map(f => (
-          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 18px', borderRadius: '100px', border: 'none', background: filter === f ? accent : 'transparent', color: filter === f ? '#fff' : textS, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-            {f === 'alle' ? 'Alle' : 'Termine frei'}
-          </button>
-        ))}
+      {/* ── Header ───────────────────────────────────────────────── */}
+      <div style={{ padding: '20px 16px 16px', background: '#dde1ee' }}>
+        <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px' }}>Kommt in Version 2</p>
+        <h2 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 6px' }}>Therapeuten finden</h2>
+        <p style={{ fontSize: '13px', color: textS, margin: 0, lineHeight: '1.5' }}>Finde geprüfte Psychologen und Therapeuten in deiner Nähe — mit echten Bewertungen und freien Terminen.</p>
       </div>
 
       {/* ── Karte ────────────────────────────────────────────────── */}
-      <div ref={mapRef} style={{ flex: 1, width: '100%' }} />
+      <div style={{ position: 'relative', margin: '0 16px', borderRadius: '18px', overflow: 'hidden', height: '240px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+        <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+        {/* Filter-Bar über der Karte */}
+        <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 500, display: 'flex', gap: '6px', background: '#fff', borderRadius: '100px', padding: '3px', boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }}>
+          {['alle', 'frei'].map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 16px', borderRadius: '100px', border: 'none', background: filter === f ? accent : 'transparent', color: filter === f ? '#fff' : textS, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+              {f === 'alle' ? 'Alle' : 'Termine frei'}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* ── Bottom Sheet ─────────────────────────────────────────── */}
-      <div style={{ background: '#fff', borderTop: '1px solid rgba(91,107,200,0.1)', padding: '0 0 8px' }}>
-        {/* Zieh-Indikator */}
+      {/* ── Therapeuten-Liste ────────────────────────────────────── */}
+      <div style={{ flex: 1, background: '#fff', margin: '12px 16px 0', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(91,107,200,0.1)' }}>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
           <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: '#dde1ee' }} />
         </div>
 
         {ausgewählt ? (
-          /* Detail eines ausgewählten Therapeuten */
-          <div style={{ padding: '4px 16px 16px' }}>
+          <div style={{ padding: '4px 16px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <div>
                 <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: '0 0 2px' }}>{ausgewählt.name}</p>
@@ -1768,11 +1759,10 @@ function TherapeutenPlatzhalter() {
             </div>
           </div>
         ) : (
-          /* Horizontale Liste aller Therapeuten */
-          <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '4px 16px 8px', scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '4px 16px 16px', scrollbarWidth: 'none' }}>
             {gefilterteT.map(t => (
               <div key={t.id} onClick={() => setAusgewählt(t)}
-                style={{ flexShrink: 0, width: '200px', background: '#f8f9fe', borderRadius: '14px', padding: '12px', cursor: 'pointer', border: '1.5px solid rgba(91,107,200,0.1)' }}>
+                style={{ flexShrink: 0, width: '190px', background: '#f8f9fe', borderRadius: '14px', padding: '12px', cursor: 'pointer', border: '1.5px solid rgba(91,107,200,0.1)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
                   <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: 0, lineHeight: '1.3' }}>{t.name}</p>
                   <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 6px', background: t.frei ? '#eef9f2' : '#fef2f2', color: t.frei ? '#2d7a4f' : '#b71c1c', borderRadius: '6px', flexShrink: 0, marginLeft: '6px' }}>{t.frei ? 'Frei' : 'Warteliste'}</span>

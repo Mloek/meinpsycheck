@@ -828,7 +828,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
         <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 24px' }}>
           <span style={{ display: 'inline-block', padding: '4px 12px', background: 'rgba(255,255,255,0.22)', borderRadius: '100px', fontSize: '11px', letterSpacing: '2px', color: 'rgba(255,255,255,0.9)', fontWeight: '700', marginBottom: '10px' }}>{hero.badge}</span>
           <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#fff', margin: '0 0 10px', textShadow: '0 1px 12px rgba(0,0,0,0.35)', lineHeight: '1.15' }}>{hero.titel}</h1>
-          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.82)', margin: 0, lineHeight: '1.55' }}>{hero.sub}</p>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: '#fff', margin: 0, lineHeight: '1.55' }}>{hero.sub}</p>
         </div>
       </div>
 
@@ -847,9 +847,8 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
               <style>{`.diagnose-scroll::-webkit-scrollbar{display:none}`}</style>
               {karten.map((res) => {
                 const info = STOERUNGSBILDER[res.instrument]
-                const istOffen = aufgeklappt === res.instrument
                 return (
-                  <div key={res.instrument} onClick={() => setAufgeklappt(istOffen ? null : res.instrument)}
+                  <div key={res.instrument} onClick={() => setAufgeklappt(res.instrument)}
                     className="diagnose-scroll"
                     style={{ background: '#fff', borderRadius: '16px', border: hatStufe1 ? '1px solid rgba(180,80,80,0.18)' : '1px solid rgba(91,107,200,0.12)', cursor: 'pointer', overflow: 'hidden', flexShrink: 0, width: karten.length === 1 ? '100%' : 'calc(85vw)', maxWidth: '340px', scrollSnapAlign: 'start' }}>
                     <div style={{ padding: '16px', display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
@@ -860,13 +859,8 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
                         <p style={{ fontSize: '13px', fontWeight: '700', color: hatStufe1 ? '#9b3a3a' : accent, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{res.label}</p>
                         <p style={{ fontSize: '14px', color: textP, margin: 0, lineHeight: '1.5' }}>{info?.kurz ?? 'Deine Angaben liegen oberhalb des Schwellenwerts.'}</p>
                       </div>
-                      <span style={{ fontSize: '20px', color: textS, flexShrink: 0, marginTop: '10px', transition: 'transform 0.2s', transform: istOffen ? 'rotate(180deg)' : 'rotate(0deg)' }}>⌄</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: '14px' }}><path d="M9 18l6-6-6-6" stroke={textS} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
-                    {istOffen && info?.lang && (
-                      <div style={{ padding: '0 16px 16px', borderTop: '1px solid rgba(91,107,200,0.08)' }}>
-                        <p style={{ fontSize: '13px', color: textS, lineHeight: '1.75', margin: '14px 0 0' }}>{info.lang}</p>
-                      </div>
-                    )}
                   </div>
                 )
               })}
@@ -914,6 +908,30 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
         <button onClick={onZurueck} style={{ width: '100%', padding: '16px', background: accent, color: '#fff', border: 'none', borderRadius: '14px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginTop: '16px' }}>Zur Startseite</button>
         <button onClick={onNeustart} style={{ width: '100%', padding: '14px', background: 'transparent', color: textS, border: '1px solid rgba(91,107,200,0.2)', borderRadius: '14px', fontSize: '14px', cursor: 'pointer', marginTop: '10px' }}>Neues Screening starten</button>
       </div>
+
+      {/* ── Diagnose Detail Overlay ──────────────────────────────── */}
+      {aufgeklappt && (() => {
+        const res = karten.find(r => r.instrument === aufgeklappt)
+        const info = res ? STOERUNGSBILDER[res.instrument] : null
+        if (!res || !info?.lang) return null
+        return (
+          <>
+            <div onClick={() => setAufgeklappt(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(20,15,40,0.55)', zIndex: 200 }} />
+            <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 28px)', maxWidth: '400px', background: '#fff', borderRadius: '20px', zIndex: 201, padding: '20px', maxHeight: '80vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: hatStufe1 ? 'linear-gradient(135deg, #c87070, #9b3a3a)' : 'linear-gradient(135deg, #8b9ed8, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <p style={{ fontSize: '15px', fontWeight: '700', color: textP, margin: 0 }}>{res.label}</p>
+                </div>
+                <button onClick={() => setAufgeklappt(null)} style={{ background: '#f0f0f5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', fontSize: '16px', cursor: 'pointer', color: textS, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+              </div>
+              <p style={{ fontSize: '13px', color: textS, lineHeight: '1.75', margin: 0 }}>{info.lang}</p>
+            </div>
+          </>
+        )
+      })()}
 
       {/* ── Ressource Detail Overlay ─────────────────────────────── */}
       {openResKatalog && RESSOURCEN_KATALOG[openResKatalog] && (

@@ -1691,8 +1691,8 @@ function TherapeutenPlatzhalter() {
       const pos = [KARTEN_MITTE[0] + t.lat, KARTEN_MITTE[1] + t.lng]
       const icon = L.divIcon({
         className: '',
-        html: `<div style="background:${t.frei ? accent : '#aab0c8'};color:white;border-radius:50%;width:52px;height:52px;font-size:13px;font-weight:800;font-family:system-ui;box-shadow:0 3px 10px rgba(0,0,0,0.3);border:3px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;"><span style="font-size:15px;">★</span><span>${t.bewertung}</span></div>`,
-        iconAnchor: [26, 26],
+        html: `<div style="background:${t.frei ? accent : '#aab0c8'};color:white;border-radius:50%;width:38px;height:38px;font-size:11px;font-weight:800;font-family:system-ui;box-shadow:0 2px 8px rgba(0,0,0,0.25);border:2px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;"><span style="font-size:12px;">★</span><span>${t.bewertung}</span></div>`,
+        iconAnchor: [19, 19],
       })
       const marker = L.marker(pos, { icon }).addTo(map)
       marker.on('click', () => setAusgewählt(t))

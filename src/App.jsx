@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import lottie from 'lottie-web'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 const colors = {
   primary: '#2D6A4F',
@@ -1600,13 +1602,191 @@ function Tagebuch({ onZurueck, startAnsicht }) {
   return null
 }
 
-function TherapeutenPlatzhalter() {
+const DEMO_THERAPEUTEN = [
+  { id: 1, name: 'Dr. Sarah Müller', titel: 'Psychologische Psychotherapeutin', spezial: ['Depression', 'Angststörungen'], bewertung: 4.8, bewertungen: 34, frei: true, wartezeit: 'ca. 2 Wochen', lat: 0.002, lng: 0.003 },
+  { id: 2, name: 'Thomas Becker', titel: 'Verhaltenstherapeut', spezial: ['Burnout', 'Stress'], bewertung: 4.5, bewertungen: 21, frei: true, wartezeit: 'ca. 4 Wochen', lat: -0.003, lng: -0.002 },
+  { id: 3, name: 'Dr. Anna Fischer', titel: 'Tiefenpsychologin', spezial: ['Trauma', 'ADHS'], bewertung: 4.9, bewertungen: 52, frei: false, wartezeit: 'ca. 3 Monate', lat: 0.005, lng: -0.004 },
+  { id: 4, name: 'Michael Weber', titel: 'Systemischer Therapeut', spezial: ['Beziehungen', 'Angst'], bewertung: 4.3, bewertungen: 18, frei: true, wartezeit: 'ca. 1 Woche', lat: -0.005, lng: 0.006 },
+  { id: 5, name: 'Dr. Julia Schneider', titel: 'Kognitive Verhaltenstherapie', spezial: ['Depression', 'Zwang'], bewertung: 4.7, bewertungen: 41, frei: false, wartezeit: 'ca. 6 Wochen', lat: 0.001, lng: -0.007 },
+]
+
+function SterneBewertung({ wert }) {
   return (
-    <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-      <p style={{ fontSize: '40px', margin: '0 0 16px' }}>🗺️</p>
-      <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 10px' }}>Therapeutensuche</h2>
-      <p style={{ fontSize: '15px', color: colors.textMuted, lineHeight: '1.6' }}>Hier findest du bald Psychologen und Therapeuten in deiner Nähe.</p>
-      <p style={{ fontSize: '13px', color: colors.textLight, marginTop: '16px' }}>Kommt in Version 2</p>
+    <span style={{ display: 'inline-flex', gap: '2px', alignItems: 'center' }}>
+      {[1,2,3,4,5].map(i => (
+        <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={i <= Math.round(wert) ? '#f5a623' : '#dde1ee'}>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      ))}
+    </span>
+  )
+}
+
+function TherapeutenPlatzhalter() {
+  const accent = '#5B6BC8'
+  const textP = '#2a2a3e'
+  const textS = '#8a8faa'
+  const mapRef = useRef(null)
+  const mapObjRef = useRef(null)
+  const markersRef = useRef([])
+  const [ausgewählt, setAusgewählt] = useState(null)
+  const [userPos, setUserPos] = useState(null)
+  const [filter, setFilter] = useState('alle') // 'alle' | 'frei'
+
+  // Karte initialisieren
+  useEffect(() => {
+    if (!mapRef.current || mapObjRef.current) return
+
+    // Leaflet Default-Icon-Bug fixen
+    delete L.Icon.Default.prototype._getIconUrl
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    })
+
+    const startPos = [48.1374, 11.5755] // München als Fallback
+    const map = L.map(mapRef.current, { zoomControl: false, attributionControl: false }).setView(startPos, 14)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+    }).addTo(map)
+
+    // Attribution klein unten rechts
+    L.control.attribution({ prefix: '© OpenStreetMap' }).addTo(map)
+
+    mapObjRef.current = map
+
+    // Geolocation versuchen
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords
+          setUserPos([latitude, longitude])
+          map.setView([latitude, longitude], 14)
+          // User-Marker
+          L.circleMarker([latitude, longitude], {
+            radius: 10, fillColor: accent, color: '#fff', weight: 3, fillOpacity: 1
+          }).addTo(map)
+        },
+        () => {} // Kein Fehler zeigen wenn abgelehnt
+      )
+    }
+
+    return () => { map.remove(); mapObjRef.current = null }
+  }, [])
+
+  // Therapeuten-Marker setzen
+  useEffect(() => {
+    const map = mapObjRef.current
+    if (!map) return
+
+    // Alte Marker entfernen
+    markersRef.current.forEach(m => m.remove())
+    markersRef.current = []
+
+    const basis = userPos || [48.1374, 11.5755]
+    const gefilterteT = filter === 'frei' ? DEMO_THERAPEUTEN.filter(t => t.frei) : DEMO_THERAPEUTEN
+
+    gefilterteT.forEach((t) => {
+      const pos = [basis[0] + t.lat, basis[1] + t.lng]
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="
+          background: ${t.frei ? accent : '#aab0c8'};
+          color: white;
+          border-radius: 20px;
+          padding: 5px 10px;
+          font-size: 12px;
+          font-weight: 700;
+          font-family: system-ui;
+          white-space: nowrap;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+          border: 2px solid #fff;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        ">★ ${t.bewertung}</div>`,
+        iconAnchor: [30, 20],
+      })
+      const marker = L.marker(pos, { icon }).addTo(map)
+      marker.on('click', () => setAusgewählt(t))
+      markersRef.current.push(marker)
+    })
+  }, [userPos, filter])
+
+  const gefilterteT = filter === 'frei' ? DEMO_THERAPEUTEN.filter(t => t.frei) : DEMO_THERAPEUTEN
+
+  return (
+    <div style={{ position: 'relative', height: 'calc(100vh - 70px)', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+
+      {/* ── Filter-Bar ───────────────────────────────────────────── */}
+      <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', zIndex: 500, display: 'flex', gap: '8px', background: '#fff', borderRadius: '100px', padding: '4px', boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
+        {['alle', 'frei'].map(f => (
+          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 18px', borderRadius: '100px', border: 'none', background: filter === f ? accent : 'transparent', color: filter === f ? '#fff' : textS, fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+            {f === 'alle' ? 'Alle' : 'Termine frei'}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Karte ────────────────────────────────────────────────── */}
+      <div ref={mapRef} style={{ flex: 1, width: '100%' }} />
+
+      {/* ── Bottom Sheet ─────────────────────────────────────────── */}
+      <div style={{ background: '#fff', borderTop: '1px solid rgba(91,107,200,0.1)', padding: '0 0 8px' }}>
+        {/* Zieh-Indikator */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
+          <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: '#dde1ee' }} />
+        </div>
+
+        {ausgewählt ? (
+          /* Detail eines ausgewählten Therapeuten */
+          <div style={{ padding: '4px 16px 16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <div>
+                <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: '0 0 2px' }}>{ausgewählt.name}</p>
+                <p style={{ fontSize: '13px', color: textS, margin: 0 }}>{ausgewählt.titel}</p>
+              </div>
+              <button onClick={() => setAusgewählt(null)} style={{ background: '#f0f1f8', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', color: textS, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>×</button>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
+              <SterneBewertung wert={ausgewählt.bewertung} />
+              <span style={{ fontSize: '13px', fontWeight: '600', color: textP }}>{ausgewählt.bewertung}</span>
+              <span style={{ fontSize: '12px', color: textS }}>({ausgewählt.bewertungen} Bewertungen)</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+              {ausgewählt.spezial.map(s => (
+                <span key={s} style={{ padding: '4px 10px', background: '#eef0fa', borderRadius: '100px', fontSize: '12px', color: accent, fontWeight: '500' }}>{s}</span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <div style={{ flex: 1, padding: '10px 12px', background: ausgewählt.frei ? '#eef9f2' : '#fef2f2', borderRadius: '10px' }}>
+                <p style={{ fontSize: '12px', fontWeight: '700', color: ausgewählt.frei ? '#2d7a4f' : '#b71c1c', margin: '0 0 2px' }}>{ausgewählt.frei ? 'Termin verfügbar' : 'Warteliste'}</p>
+                <p style={{ fontSize: '12px', color: textS, margin: 0 }}>Wartezeit: {ausgewählt.wartezeit}</p>
+              </div>
+              <button style={{ padding: '10px 18px', background: accent, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Kontakt</button>
+            </div>
+          </div>
+        ) : (
+          /* Horizontale Liste aller Therapeuten */
+          <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '4px 16px 8px', scrollbarWidth: 'none' }}>
+            {gefilterteT.map(t => (
+              <div key={t.id} onClick={() => setAusgewählt(t)}
+                style={{ flexShrink: 0, width: '200px', background: '#f8f9fe', borderRadius: '14px', padding: '12px', cursor: 'pointer', border: '1.5px solid rgba(91,107,200,0.1)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: 0, lineHeight: '1.3' }}>{t.name}</p>
+                  <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 6px', background: t.frei ? '#eef9f2' : '#fef2f2', color: t.frei ? '#2d7a4f' : '#b71c1c', borderRadius: '6px', flexShrink: 0, marginLeft: '6px' }}>{t.frei ? 'Frei' : 'Warteliste'}</span>
+                </div>
+                <p style={{ fontSize: '11px', color: textS, margin: '0 0 6px' }}>{t.titel}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <SterneBewertung wert={t.bewertung} />
+                  <span style={{ fontSize: '11px', color: textP, fontWeight: '600' }}>{t.bewertung}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

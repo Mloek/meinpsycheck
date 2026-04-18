@@ -1094,12 +1094,6 @@ function HauptApp() {
     }
   }, [aktiveTab])
 
-  useEffect(() => {
-    const tourAktiv = tourSchritt !== null || therapeutenTourSchritt !== null
-    document.body.style.overflow = tourAktiv ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [tourSchritt, therapeutenTourSchritt])
-
   const handleTourWeiter = () => {
     if (tourSchritt < TOUR_SCHRITTE.length - 1) { setTourSchritt(s => s + 1) }
     else { setTourSchritt(null); localStorage.setItem('tour_completed', 'true') }
@@ -1156,7 +1150,7 @@ function HauptApp() {
 
   return (
     <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflowY: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'hidden' : 'auto', paddingBottom: '70px' }}>
+      <div style={{ flex: 1, overflowY: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'hidden' : 'auto', pointerEvents: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, paddingBottom: '70px' }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
         {aktiveTab === 'home' && screeningOffen && (testErgebnis

@@ -1759,19 +1759,23 @@ function TherapeutenPlatzhalter() {
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '4px 16px 16px', scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '4px 16px 16px', overflowY: 'auto', maxHeight: '260px' }}>
             {gefilterteT.map(t => (
               <div key={t.id} onClick={() => setAusgewählt(t)}
-                style={{ flexShrink: 0, width: '190px', background: '#f8f9fe', borderRadius: '14px', padding: '12px', cursor: 'pointer', border: '1.5px solid rgba(91,107,200,0.1)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                  <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: 0, lineHeight: '1.3' }}>{t.name}</p>
-                  <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 6px', background: t.frei ? '#eef9f2' : '#fef2f2', color: t.frei ? '#2d7a4f' : '#b71c1c', borderRadius: '6px', flexShrink: 0, marginLeft: '6px' }}>{t.frei ? 'Frei' : 'Warteliste'}</span>
+                style={{ background: '#f8f9fe', borderRadius: '14px', padding: '12px 14px', cursor: 'pointer', border: '1.5px solid rgba(91,107,200,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: '700', color: textP, margin: 0 }}>{t.name}</p>
+                    <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', background: t.frei ? '#eef9f2' : '#fef2f2', color: t.frei ? '#2d7a4f' : '#b71c1c', borderRadius: '6px', flexShrink: 0 }}>{t.frei ? 'Frei' : 'Warteliste'}</span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: textS, margin: '0 0 5px' }}>{t.titel}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <SterneBewertung wert={t.bewertung} />
+                    <span style={{ fontSize: '12px', color: textP, fontWeight: '600' }}>{t.bewertung}</span>
+                    <span style={{ fontSize: '11px', color: textS }}>({t.bewertungen})</span>
+                  </div>
                 </div>
-                <p style={{ fontSize: '11px', color: textS, margin: '0 0 6px' }}>{t.titel}</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <SterneBewertung wert={t.bewertung} />
-                  <span style={{ fontSize: '11px', color: textP, fontWeight: '600' }}>{t.bewertung}</span>
-                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" stroke="#aab0c8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
             ))}
           </div>

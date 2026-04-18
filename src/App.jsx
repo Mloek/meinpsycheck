@@ -1787,8 +1787,14 @@ function TherapeutenPlatzhalter() {
 
 function Einstellungen() {
   const [offen, setOffen] = useState(null)
-
   const [detailAnsicht, setDetailAnsicht] = useState(null)
+  const [email, setEmail] = useState(localStorage.getItem('user_email') || '')
+  const [emailGespeichert, setEmailGespeichert] = useState(false)
+
+  const accent = '#5B6BC8'
+  const textP = '#2a2a3e'
+  const textS = '#8a8faa'
+  const bg = '#dde1ee'
 
   const sektionen = [
     { titel: 'Konto', items: ['E-Mail-Adresse hinterlegen', 'App bewerten'] },
@@ -1877,44 +1883,188 @@ function Einstellungen() {
     },
   ]
 
-  if (detailAnsicht === 'wissenschaft') {
+  const zurueck = () => { setDetailAnsicht(null); setOffen(null) }
+  const ZurueckBtn = () => (
+    <button onClick={zurueck} style={{ background: 'none', border: 'none', color: accent, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>← Zurück</button>
+  )
+  const KardBox = ({ children }) => (
+    <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden', marginBottom: '16px' }}>{children}</div>
+  )
+  const TextBlock = ({ children }) => (
+    <p style={{ fontSize: '14px', color: textS, lineHeight: '1.75', margin: 0, whiteSpace: 'pre-line' }}>{children}</p>
+  )
+
+  // ── E-Mail ────────────────────────────────────────────────────
+  if (detailAnsicht === 'email') {
     return (
-      <div style={{ padding: '24px 16px 0' }}>
-        <button onClick={() => { setDetailAnsicht(null); setOffen(null) }} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
-        <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 24px' }}>Wissenschaftliche Grundlagen</h1>
-        <div style={{ backgroundColor: colors.background, borderRadius: '14px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-          {wissenschaft.map((item, i) => {
-            const istOffen = offen === item.id
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>E-Mail hinterlegen</h1>
+        <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Hinterlege deine E-Mail-Adresse, um bei neuen Funktionen und wichtigen Updates benachrichtigt zu werden. Deine Adresse wird nur auf deinem Gerät gespeichert.</p>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <input
+              type="email"
+              placeholder="deine@email.de"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setEmailGespeichert(false) }}
+              style={{ width: '100%', padding: '12px 14px', border: '1.5px solid rgba(91,107,200,0.2)', borderRadius: '12px', fontSize: '15px', color: textP, outline: 'none', boxSizing: 'border-box', background: '#f8f9fe', fontFamily: 'system-ui' }}
+            />
+            <button
+              onClick={() => { localStorage.setItem('user_email', email); setEmailGespeichert(true) }}
+              style={{ width: '100%', marginTop: '12px', padding: '14px', background: accent, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}
+            >
+              {emailGespeichert ? '✓ Gespeichert' : 'Speichern'}
+            </button>
+          </div>
+        </KardBox>
+        <p style={{ fontSize: '12px', color: textS, textAlign: 'center', lineHeight: '1.6' }}>Deine E-Mail wird ausschließlich lokal auf deinem Gerät gespeichert und nicht an Server übertragen.</p>
+      </div>
+    )
+  }
+
+  // ── App bewerten ──────────────────────────────────────────────
+  if (detailAnsicht === 'bewerten') {
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>App bewerten</h1>
+        <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Dein Feedback hilft dabei, MeinPsyCheck besser zu machen — für dich und für alle, die psychische Unterstützung suchen.</p>
+        <KardBox>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <p style={{ fontSize: '40px', margin: '0 0 12px' }}>⭐</p>
+            <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: '0 0 6px' }}>MeinPsyCheck bewerten</p>
+            <p style={{ fontSize: '13px', color: textS, margin: '0 0 16px', lineHeight: '1.5' }}>Die App ist aktuell als Web-App verfügbar. Eine native App für iOS & Android ist in Planung.</p>
+            <a href="https://www.meinpsycheck.de" target="_blank" rel="noopener noreferrer"
+              style={{ display: 'block', padding: '13px', background: accent, color: '#fff', borderRadius: '12px', fontSize: '15px', fontWeight: '600', textDecoration: 'none', marginBottom: '10px' }}>
+              Zur Website
+            </a>
+          </div>
+        </KardBox>
+      </div>
+    )
+  }
+
+  // ── Neuigkeiten & Updates ─────────────────────────────────────
+  if (detailAnsicht === 'neuigkeiten') {
+    const updates = [
+      { version: '1.2', datum: 'April 2026', neu: ['Therapeutensuche mit interaktiver Karte', 'Ergebnisseite neu gestaltet mit Hero-Banner', 'Screening-Fortschritt wird gespeichert – du kannst jederzeit weitermachen', 'Ressourcen-Overlay auf der Hauptseite'] },
+      { version: '1.1', datum: 'März 2026', neu: ['Onboarding-Flow überarbeitet', 'Tagebuch-Widget auf der Hauptseite', 'Neue Farbwelt & Berg-Animation', 'Fragebogen-Farben angepasst'] },
+      { version: '1.0', datum: 'Februar 2026', neu: ['Erster Launch von MeinPsyCheck', 'Screening mit PHQ-9, GAD-7 und ASRS', 'Tagestagebuch', 'Wissenschaftliche Grundlagen'] },
+    ]
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>Neuigkeiten & Updates</h1>
+        <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Was ist neu in MeinPsyCheck?</p>
+        {updates.map((u, i) => (
+          <KardBox key={u.version}>
+            <div style={{ padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '14px', fontWeight: '800', color: accent }}>Version {u.version}</span>
+                <span style={{ fontSize: '12px', color: textS }}>{u.datum}</span>
+              </div>
+              {u.neu.map((n, j) => (
+                <div key={j} style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ color: accent, fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✦</span>
+                  <p style={{ fontSize: '13px', color: textP, margin: 0, lineHeight: '1.5' }}>{n}</p>
+                </div>
+              ))}
+            </div>
+          </KardBox>
+        ))}
+      </div>
+    )
+  }
+
+  // ── Datenschutz ───────────────────────────────────────────────
+  if (detailAnsicht === 'datenschutz') {
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Datenschutzerklärung</h1>
+        {[
+          { titel: 'Deine Daten bleiben auf deinem Gerät', text: 'MeinPsyCheck speichert alle Daten ausschließlich lokal auf deinem Gerät (localStorage des Browsers). Es werden keine personenbezogenen Daten an Server übertragen, gespeichert oder verarbeitet. Es gibt keine Nutzerkonten, keine Registrierung und keine Cloud-Synchronisation.' },
+          { titel: 'Welche Daten werden gespeichert?', text: 'Lokal auf deinem Gerät werden gespeichert:\n• Dein Vorname (freiwillig, aus dem Onboarding)\n• Dein ungefähres Alter (aus dem Onboarding)\n• Tagebucheinträge (Befinden, Energie, Schlaf, Freitext)\n• Screening-Ergebnisse und -Datum\n• Relevante Ressourcen aus dem letzten Screening\n• E-Mail-Adresse (falls freiwillig hinterlegt)\n\nAlle Daten können jederzeit durch Löschen des Browser-Caches entfernt werden.' },
+          { titel: 'Keine Weitergabe an Dritte', text: 'Da keine Daten das Gerät verlassen, findet keine Weitergabe an Dritte statt. Es werden keine Analyse-Tools, Tracking-Dienste oder Werbenetzwerke eingesetzt.' },
+          { titel: 'Hosting', text: 'Diese Web-App wird über Netlify (Netlify Inc., 44 Montgomery Street, Suite 300, San Francisco, CA 94104, USA) bereitgestellt. Beim Aufruf der Website werden durch Netlify serverseitig Standard-Logfiles (IP-Adresse, Zeitstempel, aufgerufene URL) gespeichert. Diese Verarbeitung erfolgt auf Basis von Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am sicheren Betrieb). Weitere Infos: netlify.com/privacy' },
+          { titel: 'Karte (Therapeutensuche)', text: 'Die Karte in der Therapeutensuche verwendet OpenStreetMap-Kartendaten, die über Leaflet.js eingebunden werden. Beim Laden der Karte werden Kartenkacheln von openstreetmap.org abgerufen. Dabei kann die IP-Adresse des Nutzers übertragen werden. Datenschutzerklärung OpenStreetMap: osmfoundation.org/wiki/Privacy_Policy' },
+          { titel: 'Deine Rechte', text: 'Da keine personenbezogenen Daten auf Servern gespeichert werden, sind klassische DSGVO-Auskunfts- und Löschrechte gegenüber dem Betreiber nicht anwendbar. Du kannst deine Daten jederzeit selbst durch Löschen des Browser-Caches entfernen.' },
+          { titel: 'Kontakt', text: 'Bei Fragen zum Datenschutz wende dich an: info@meinpsycheck.de' },
+        ].map(({ titel, text }) => (
+          <KardBox key={titel}>
+            <div style={{ padding: '16px' }}>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: textP, margin: '0 0 8px' }}>{titel}</p>
+              <TextBlock>{text}</TextBlock>
+            </div>
+          </KardBox>
+        ))}
+      </div>
+    )
+  }
+
+  // ── Impressum ─────────────────────────────────────────────────
+  if (detailAnsicht === 'impressum') {
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Impressum</h1>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Angaben gemäß § 5 TMG</p>
+            <TextBlock>{'Midhad Lök\n[Straße und Hausnummer]\n[PLZ] [Stadt]\nDeutschland'}</TextBlock>
+          </div>
+        </KardBox>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Kontakt</p>
+            <TextBlock>{'E-Mail: info@meinpsycheck.de\nWebsite: www.meinpsycheck.de'}</TextBlock>
+          </div>
+        </KardBox>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Haftungsausschluss</p>
+            <TextBlock>{'MeinPsyCheck ist kein Medizinprodukt und stellt keine medizinische Diagnose. Die App dient ausschließlich der Orientierung und ersetzt keine professionelle psychologische oder ärztliche Beratung.\n\nBei akuten psychischen Krisen wende dich an die Telefonseelsorge: 0800 111 0 111 (kostenlos, 24/7).'}</TextBlock>
+          </div>
+        </KardBox>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Urheberrecht</p>
+            <TextBlock>{'Die verwendeten Fragebögen (PHQ-9, GAD-7, ASRS v1.1) stehen unter Public Domain (Pfizer Inc. / WHO). Alle übrigen Inhalte dieser App sind urheberrechtlich geschützt.'}</TextBlock>
+          </div>
+        </KardBox>
+      </div>
+    )
+  }
+
+  // ── Hilfe & FAQ ───────────────────────────────────────────────
+  if (detailAnsicht === 'faq') {
+    const faqs = [
+      { f: 'Was ist MeinPsyCheck?', a: 'MeinPsyCheck ist ein kostenloser, anonymer Screening-Test für psychische Gesundheit. Die App verwendet wissenschaftlich validierte Fragebögen (PHQ-9, GAD-7, ASRS), um einzuschätzen, ob deine Beschwerden eine professionelle Abklärung rechtfertigen.' },
+      { f: 'Stellt die App eine Diagnose?', a: 'Nein. Die App stellt keine Diagnose. Sie zeigt an, ob deine Angaben oberhalb klinischer Grenzwerte liegen – das ist ein Hinweis, keine Diagnose. Eine Diagnose kann nur durch eine Fachkraft gestellt werden.' },
+      { f: 'Wo werden meine Daten gespeichert?', a: 'Alle Daten bleiben ausschließlich auf deinem Gerät. Nichts wird an Server übertragen. Du bist anonym – es gibt kein Konto, keine Registrierung.' },
+      { f: 'Wie oft kann ich das Screening machen?', a: 'Das Screening kann nach 14 Tagen erneut durchgeführt werden. Häufigere Wiederholungen sind möglich, spiegeln aber meist keine echte Veränderung wider.' },
+      { f: 'Was passiert, wenn ich ein Screening abbricht?', a: 'Dein Fortschritt wird automatisch gespeichert. Wenn du zurück zur Hauptseite gehst, siehst du oben einen Banner "Screening fortsetzen". Du kannst auch neu anfangen.' },
+      { f: 'Was tun, wenn ich mich in einer Krise befinde?', a: 'Ruf sofort die Telefonseelsorge an: 0800 111 0 111 (kostenlos, 24 Stunden, 7 Tage die Woche, anonym). Bei akuter Gefahr: Notruf 112.' },
+      { f: 'Wann kommt die native App?', a: 'Eine native App für iOS und Android ist geplant. Du kannst die Web-App jetzt schon auf deinem Startbildschirm speichern – sie funktioniert dann wie eine App.' },
+    ]
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>Hilfe & FAQ</h1>
+        <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Häufig gestellte Fragen</p>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
+          {faqs.map((item, i) => {
+            const istOffen = offen === i
             return (
-              <div key={item.id} style={{ borderBottom: i < wissenschaft.length - 1 ? `1px solid ${colors.border}` : 'none' }}>
-                <div onClick={() => setOffen(istOffen ? null : item.id)} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '15px', color: colors.text, fontWeight: '600' }}>{item.titel}</span>
-                  <span style={{ color: colors.textLight, fontSize: '16px', flexShrink: 0, marginLeft: '8px' }}>{istOffen ? '↑' : '↓'}</span>
+              <div key={i} style={{ borderBottom: i < faqs.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none' }}>
+                <div onClick={() => setOffen(istOffen ? null : i)} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '14px', color: textP, fontWeight: '600', lineHeight: '1.4' }}>{item.f}</span>
+                  <span style={{ color: textS, fontSize: '18px', flexShrink: 0, transition: 'transform 0.2s', transform: istOffen ? 'rotate(180deg)' : 'rotate(0)' }}>⌄</span>
                 </div>
                 {istOffen && (
                   <div style={{ padding: '0 16px 14px' }}>
-                    {item.text && (
-                      <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 12px', whiteSpace: 'pre-line' }}>{item.text}</p>
-                    )}
-                    {item.quellen && item.quellen.length > 0 && (
-                      <div style={{ marginTop: '8px' }}>
-                        {item.quellen.map((q, qi) => (
-                          <p key={qi} style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px' }}>{q}</p>
-                        ))}
-                      </div>
-                    )}
-                    {item.instrumente && (
-                      <div>
-                        {item.instrumente.map((inst) => (
-                          <div key={inst.name} style={{ marginBottom: '14px' }}>
-                            <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 6px' }}>{inst.name}</p>
-                            {inst.refs.map((ref, ri) => (
-                              <p key={ri} style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px' }}>{ref}</p>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <p style={{ fontSize: '13px', color: textS, lineHeight: '1.7', margin: 0 }}>{item.a}</p>
                   </div>
                 )}
               </div>
@@ -1925,16 +2075,68 @@ function Einstellungen() {
     )
   }
 
+  // ── Wissenschaftliche Grundlagen ──────────────────────────────
+  if (detailAnsicht === 'wissenschaft') {
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Wissenschaftliche Grundlagen</h1>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
+          {wissenschaft.map((item, i) => {
+            const istOffen = offen === item.id
+            return (
+              <div key={item.id} style={{ borderBottom: i < wissenschaft.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none' }}>
+                <div onClick={() => setOffen(istOffen ? null : item.id)} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: textP, fontWeight: '600', lineHeight: '1.4', flex: 1 }}>{item.titel}</span>
+                  <span style={{ color: textS, fontSize: '18px', flexShrink: 0, marginLeft: '8px', transition: 'transform 0.2s', transform: istOffen ? 'rotate(180deg)' : 'rotate(0)' }}>⌄</span>
+                </div>
+                {istOffen && (
+                  <div style={{ padding: '0 16px 14px' }}>
+                    {item.text && <p style={{ fontSize: '13px', color: textS, lineHeight: '1.75', margin: '0 0 12px', whiteSpace: 'pre-line' }}>{item.text}</p>}
+                    {item.quellen?.length > 0 && item.quellen.map((q, qi) => (
+                      <p key={qi} style={{ fontSize: '11px', color: textS, fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px', opacity: 0.8 }}>{q}</p>
+                    ))}
+                    {item.instrumente && item.instrumente.map((inst) => (
+                      <div key={inst.name} style={{ marginBottom: '14px' }}>
+                        <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 6px' }}>{inst.name}</p>
+                        {inst.refs.map((ref, ri) => (
+                          <p key={ri} style={{ fontSize: '11px', color: textS, fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px', opacity: 0.8 }}>{ref}</p>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Hauptansicht ──────────────────────────────────────────────
+  const itemToDetail = {
+    'E-Mail-Adresse hinterlegen': 'email',
+    'App bewerten': 'bewerten',
+    'Neuigkeiten & Updates': 'neuigkeiten',
+    'Datenschutz': 'datenschutz',
+    'Impressum': 'impressum',
+    'Hilfe & FAQ': 'faq',
+    'Wissenschaftliche Grundlagen': 'wissenschaft',
+  }
+
   return (
-    <div style={{ padding: '24px 16px 0' }}>
-      <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 24px' }}>Einstellungen</h1>
+    <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+      <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Einstellungen</h1>
       {sektionen.map((sektion) => (
         <div key={sektion.titel} style={{ marginBottom: '24px' }}>
-          <p style={{ fontSize: '11px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px 4px' }}>{sektion.titel}</p>
-          <div style={{ backgroundColor: colors.background, borderRadius: '14px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+          <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px 4px' }}>{sektion.titel}</p>
+          <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
             {sektion.items.map((item, i) => (
-              <div key={item} onClick={item === 'Wissenschaftliche Grundlagen' ? () => setDetailAnsicht('wissenschaft') : undefined} style={{ padding: '14px 16px', fontSize: '15px', color: colors.text, borderBottom: i < sektion.items.length - 1 ? `1px solid ${colors.border}` : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {item}<span style={{ color: colors.textLight, fontSize: '16px' }}>›</span>
+              <div key={item} onClick={() => setDetailAnsicht(itemToDetail[item])}
+                style={{ padding: '14px 16px', fontSize: '15px', color: textP, borderBottom: i < sektion.items.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {item}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={textS} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
             ))}
           </div>

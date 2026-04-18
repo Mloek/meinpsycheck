@@ -553,7 +553,7 @@ function ScreeningFlow({ onZurueck }) {
 
   const handleDisclaimerWeiter = () => {
     setErgebnisse(berechneErgebnisse(alleAntworten))
-    setPhase('ergebnis')
+    setPhase('laden')
   }
 
   if (phase === 'einstieg') {
@@ -592,11 +592,48 @@ function ScreeningFlow({ onZurueck }) {
     return <DisclaimerScreen onWeiter={handleDisclaimerWeiter} />
   }
 
+  if (phase === 'laden') {
+    return <LadeScreen onFertig={() => setPhase('ergebnis')} />
+  }
+
   if (phase === 'ergebnis') {
     return <ScreeningErgebnis ergebnisse={ergebnisse} suizidItem={suizidWert} onNeustart={() => { setPhase('einstieg'); setAlleAntworten({}); setSymptomAuswahl([]); setSuizidWert(0) }} onZurueck={onZurueck} />
   }
 
   return null
+}
+
+function LadeScreen({ onFertig }) {
+  const [textPhase, setTextPhase] = useState(1)
+  const [textSichtbar, setTextSichtbar] = useState(true)
+
+  useEffect(() => {
+    const t1 = setTimeout(() => {
+      setTextSichtbar(false)
+      setTimeout(() => { setTextPhase(2); setTextSichtbar(true) }, 280)
+    }, 1500)
+    const t2 = setTimeout(onFertig, 3000)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(160deg, #dde1ee 0%, #c9b8e8 60%, #b8a0d4 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <style>{`
+        @keyframes dotPulse { 0%,60%,100%{transform:translateY(0);opacity:0.3} 30%{transform:translateY(-9px);opacity:1} }
+        @keyframes ladeFade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+      <div style={{ marginBottom: '36px', textAlign: 'center', padding: '0 40px' }}>
+        <p key={textPhase} style={{ fontSize: '18px', fontWeight: '600', color: '#2a2a3e', margin: 0, lineHeight: '1.5', opacity: textSichtbar ? 1 : 0, transition: 'opacity 0.25s ease', animation: 'ladeFade 0.4s ease forwards' }}>
+          {textPhase === 1 ? 'Deine Angaben werden ausgewertet\u2026' : 'Ergebnisse werden erstellt\u2026'}
+        </p>
+      </div>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#5B6BC8', animation: `dotPulse 1.3s ease-in-out ${i * 0.22}s infinite` }} />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function DisclaimerScreen({ onWeiter }) {
@@ -805,6 +842,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
       <style>{`
         @keyframes bergDrift1 { 0%{transform:translateX(0)} 50%{transform:translateX(-18px)} 100%{transform:translateX(0)} }
         @keyframes bergDrift2 { 0%{transform:translateX(0)} 50%{transform:translateX(12px)} 100%{transform:translateX(0)} }
+        @keyframes ergebnisEin { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
       {/* ── Suizid-Hinweis ───────────────────────────────────────── */}
@@ -820,7 +858,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
       )}
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <div style={{ height: '230px', background: hero.grad, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: '80px' }}>
+      <div style={{ height: '230px', background: hero.grad, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: '80px', animation: 'ergebnisEin 0.4s ease-out 0ms both' }}>
         <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: '-10px', width: 'calc(100% + 20px)', height: '70px', display: 'block', animation: 'bergDrift1 14s ease-in-out infinite', opacity: 0.6 }}>
           <polygon points="0,100 55,38 110,72 170,18 230,55 295,8 355,46 430,28 440,100" fill={bg} />
         </svg>
@@ -838,7 +876,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
 
         {/* ── Diagnosen-Karten (horizontal swipebar) ──────────────── */}
         {karten.length > 0 && (
-          <>
+          <div style={{ animation: 'ergebnisEin 0.4s ease-out 150ms both' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 4px 10px' }}>
               <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
                 {hatStufe1 ? 'Auffällige Bereiche' : 'Leicht erhöhte Bereiche'}
@@ -874,12 +912,12 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
 
         {/* ── Ressourcen ──────────────────────────────────────────── */}
         {relevanteRessourcen.length > 0 && (
-          <>
+          <div style={{ animation: 'ergebnisEin 0.4s ease-out 300ms both' }}>
             <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 10px' }}>Passende Ressourcen</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {relevanteRessourcen.map((res) => (
@@ -892,11 +930,11 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
 
         {/* ── Disclaimer ──────────────────────────────────────────── */}
-        <div style={{ background: 'rgba(91,107,200,0.06)', borderRadius: '12px', padding: '14px', margin: '20px 0 0', border: '1px solid rgba(91,107,200,0.1)' }}>
+        <div style={{ background: 'rgba(91,107,200,0.06)', borderRadius: '12px', padding: '14px', margin: '20px 0 0', border: '1px solid rgba(91,107,200,0.1)', animation: 'ergebnisEin 0.4s ease-out 450ms both' }}>
           <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.65' }}>
             {höchsteStufe === 1
               ? 'Diese Einschätzung basiert auf Selbstangaben und validierten Screening-Fragen. Sie ist keine Diagnose und ersetzt keine fachliche Abklärung.'
@@ -907,8 +945,10 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
         </div>
 
         {/* ── Buttons ─────────────────────────────────────────────── */}
-        <button onClick={onZurueck} style={{ width: '100%', padding: '16px', background: accent, color: '#fff', border: 'none', borderRadius: '14px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginTop: '16px' }}>Zur Startseite</button>
-        <button onClick={onNeustart} style={{ width: '100%', padding: '14px', background: 'transparent', color: textS, border: '1px solid rgba(91,107,200,0.2)', borderRadius: '14px', fontSize: '14px', cursor: 'pointer', marginTop: '10px' }}>Neues Screening starten</button>
+        <div style={{ animation: 'ergebnisEin 0.4s ease-out 600ms both' }}>
+          <button onClick={onZurueck} style={{ width: '100%', padding: '16px', background: accent, color: '#fff', border: 'none', borderRadius: '14px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginTop: '16px' }}>Zur Startseite</button>
+          <button onClick={onNeustart} style={{ width: '100%', padding: '14px', background: 'transparent', color: textS, border: '1px solid rgba(91,107,200,0.2)', borderRadius: '14px', fontSize: '14px', cursor: 'pointer', marginTop: '10px' }}>Neues Screening starten</button>
+        </div>
       </div>
 
       {/* ── Diagnose Detail Overlay ──────────────────────────────── */}

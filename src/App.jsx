@@ -136,7 +136,7 @@ const ONBOARDING_SCREENS = [
   {
     label: 'Wie es funktioniert',
     titel: 'Validierte Fragebögen. Klare Einschätzung.',
-    text: 'MeinPsyCheck nutzt PHQ-9, GAD-7 und ASRS v1.1 – international standardisierte Instrumente aus der klinischen Praxis. Du beantwortest 26 Fragen. Das Ergebnis zeigt dir, ob deine Beschwerden eine professionelle Abklärung rechtfertigen.',
+    text: 'MeinPsyCheck nutzt PHQ-9, GAD-7 und ASRS v1.1 – international standardisierte Instrumente aus der klinischen Praxis. Du beantwortest 26 Fragen. Das Ergebnis zeigt dir, ob Unterstützung für dich sinnvoll wäre.',
   },
   {
     label: 'Deine Privatsphäre',
@@ -423,7 +423,7 @@ function SuizidScreen({ onAntwort }) {
 
       <div style={{ backgroundColor: colors.crisisBg, borderRadius: '10px', padding: '12px 14px', marginBottom: '24px' }}>
         <p style={{ fontSize: '13px', color: colors.crisis, margin: 0, lineHeight: '1.5' }}>
-          Bitte beantworten Sie die Frage bezogen auf die letzten 2 Wochen.
+          Bitte beantworte die Frage mit Blick auf die letzten 2 Wochen.
         </p>
       </div>
 
@@ -664,7 +664,7 @@ function KrisenScreen() {
       <div style={{ textAlign: 'center', marginBottom: '32px' }}>
         <div style={{ width: '64px', height: '64px', backgroundColor: '#FFCDD2', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: '700', color: colors.crisis }}>!</div>
         <h2 style={{ fontSize: '22px', fontWeight: '700', color: colors.crisis, margin: '0 0 12px' }}>Hinweis zur Sicherheit</h2>
-        <p style={{ fontSize: '15px', color: '#5D2D2D', lineHeight: '1.7', margin: 0 }}>Du hast angegeben, dass du in den letzten 2 Wochen Gedanken hattest, dir selbst Schaden zuzufügen. Das Screening endet an dieser Stelle. Bitte nutze jetzt eine der folgenden Kontaktmöglichkeiten.</p>
+        <p style={{ fontSize: '15px', color: '#5D2D2D', lineHeight: '1.7', margin: 0 }}>Du hast angegeben, dass dich solche Gedanken beschäftigen. Bitte ruf jetzt an – du musst das nicht alleine tragen.</p>
       </div>
       <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '24px', marginBottom: '16px', border: '1px solid #FFCDD2' }}>
         <p style={{ fontSize: '14px', fontWeight: '700', color: colors.crisis, margin: '0 0 6px' }}>Telefonseelsorge</p>
@@ -683,7 +683,7 @@ function KrisenScreen() {
 const STOERUNGSBILDER = {
   'PHQ-9': {
     kurz: 'Deine Angaben im Bereich Stimmung & Antrieb überschreiten den klinischen Grenzwert. Das deutet auf depressive Symptome hin.',
-    lang: 'Der PHQ-9 ist einer der weltweit am häufigsten eingesetzten Fragebögen zur Erkennung depressiver Störungen. Die Fragen erfassen, wie oft du in den letzten zwei Wochen typische Symptome einer Depression erlebt hast – wie Antriebslosigkeit, Freudlosigkeit, Schlafprobleme oder das Gefühl, wertlos zu sein. Ein Wert über 10 bedeutet nicht, dass du „krank" bist. Er bedeutet, dass deine Beschwerden ein Ausmaß erreicht haben, bei dem professionelle Unterstützung sinnvoll und wirksam ist. Depressionen gehören zu den am besten behandelbaren psychischen Erkrankungen – mit Therapie sprechen über 60% der Betroffenen gut auf Behandlung an.',
+    lang: 'Der PHQ-9 ist einer der weltweit am häufigsten eingesetzten Fragebögen zur Erkennung depressiver Störungen. Die Fragen erfassen, wie oft du in den letzten zwei Wochen typische Symptome einer Depression erlebt hast – wie Antriebslosigkeit, Freudlosigkeit, Schlafprobleme oder das Gefühl, wertlos zu sein. Ein Wert über 10 bedeutet nicht, dass du „krank" bist. Er bedeutet, dass deine Beschwerden ein Ausmaß erreicht haben, bei dem professionelle Unterstützung sinnvoll und wirksam ist. Depressionen gehören zu den am besten behandelbaren psychischen Erkrankungen – über 60% aller Betroffenen fühlen sich mit Therapie deutlich besser.',
   },
   'GAD-7': {
     kurz: 'Deine Angaben im Bereich Angst & innere Anspannung überschreiten den klinischen Grenzwert. Das deutet auf eine generalisierte Angststörung hin.',
@@ -691,7 +691,7 @@ const STOERUNGSBILDER = {
   },
   'ASRS v1.1': {
     kurz: 'Deine Angaben im Bereich Konzentration & Impulsivität überschreiten den klinischen Grenzwert. Das deutet auf ADHS-Symptome im Erwachsenenalter hin.',
-    lang: 'Der ASRS v1.1 wurde von der Weltgesundheitsorganisation entwickelt und erfasst typische ADHS-Symptome bei Erwachsenen – Schwierigkeiten beim Abschließen von Aufgaben, Probleme mit Organisation und Planung sowie motorische Unruhe. ADHS im Erwachsenenalter wird oft spät erkannt, weil die Symptome sich anders zeigen als bei Kindern. Viele Betroffene haben jahrelang das Gefühl, sich einfach „mehr anstrengen" zu müssen – ohne zu wissen, dass ein neurobiologischer Unterschied dahintersteckt. Eine Abklärung beim Psychiater oder einem spezialisierten Psychologen kann Klarheit bringen.',
+    lang: 'Der ASRS v1.1 wurde von der Weltgesundheitsorganisation entwickelt und erfasst typische ADHS-Symptome bei Erwachsenen – Schwierigkeiten beim Abschließen von Aufgaben, Probleme mit Organisation und Planung sowie motorische Unruhe. ADHS im Erwachsenenalter wird oft spät erkannt, weil die Symptome sich anders zeigen als bei Kindern. Viele Betroffene haben jahrelang das Gefühl, sich einfach „mehr anstrengen" zu müssen – ohne zu wissen, dass ein neurobiologischer Unterschied dahintersteckt. Ein Gespräch mit einem Psychiater oder spezialisierten Psychologen kann Klarheit bringen.',
   },
   'WHO-5 (aus PHQ-9)': {
     kurz: 'Deine Angaben deuten auf ein reduziertes allgemeines Wohlbefinden hin, das auf chronischen Stress oder emotionale Erschöpfung hinweisen kann.',
@@ -806,10 +806,10 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
 
   // Hero config
   const hero = hatStufe1
-    ? { grad: 'linear-gradient(to bottom, #9b7ec8 0%, #7b5ea7 45%, #2d1f4a 100%)', badge: 'AUFFÄLLIG', titel: 'Erhöhte Belastung erkannt', sub: 'Deine Angaben überschreiten in mindestens einem Bereich den klinischen Grenzwert validierter Screening-Instrumente. Wir empfehlen dir, das Gespräch mit einer psychologischen oder ärztlichen Fachkraft zu suchen.' }
+    ? { grad: 'linear-gradient(to bottom, #9b7ec8 0%, #7b5ea7 45%, #2d1f4a 100%)', badge: 'AUFFÄLLIG', titel: 'Erhöhte Belastung erkannt', sub: 'Deine Antworten überschreiten in mindestens einem Bereich den klinischen Schwellenwert. Ein Gespräch mit einer psychologischen oder ärztlichen Fachkraft wäre sinnvoll.' }
     : höchsteStufe === 2
-    ? { grad: 'linear-gradient(to bottom, #8b9ed8 0%, #5B6BC8 50%, #3a4a9a 100%)', badge: 'LEICHT ERHÖHT', titel: 'Leichte Auffälligkeiten', sub: 'Deine Werte liegen unterhalb des klinischen Grenzwerts, zeigen aber in einzelnen Bereichen subklinisch erhöhte Belastung. Bei anhaltenden Beschwerden empfehlen wir eine fachliche Abklärung.' }
-    : { grad: 'linear-gradient(to bottom, #5a9e82 0%, #3d8068 45%, #1f4d3e 100%)', badge: 'UNAUFFÄLLIG', titel: 'Keine klinischen Hinweise', sub: 'Deine Angaben ergeben anhand der validierten Screening-Instrumente aktuell keine Hinweise auf eine behandlungsbedürftige psychische Störung. Das Screening kann nach 14 Tagen wiederholt werden.' }
+    ? { grad: 'linear-gradient(to bottom, #8b9ed8 0%, #5B6BC8 50%, #3a4a9a 100%)', badge: 'LEICHT ERHÖHT', titel: 'Leichte Auffälligkeiten', sub: 'Deine Werte liegen unterhalb des klinischen Grenzwerts, zeigen aber in einzelnen Bereichen leicht erhöhte Belastung. Bei anhaltenden Beschwerden lohnt sich ein Gespräch mit einer Fachkraft.' }
+    : { grad: 'linear-gradient(to bottom, #5a9e82 0%, #3d8068 45%, #1f4d3e 100%)', badge: 'UNAUFFÄLLIG', titel: 'Alles im grünen Bereich', sub: 'Deine Antworten zeigen aktuell keine auffälligen Muster – das ist eine gute Nachricht. Du kannst den Check nach 14 Tagen wiederholen.' }
 
   // Welche Karten anzeigen
   const karten = hatStufe1 ? stufe1 : stufe2
@@ -937,10 +937,10 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
         <div style={{ background: 'rgba(91,107,200,0.06)', borderRadius: '12px', padding: '14px', margin: '20px 0 0', border: '1px solid rgba(91,107,200,0.1)', animation: 'ergebnisEin 0.4s ease-out 450ms both' }}>
           <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.65' }}>
             {höchsteStufe === 1
-              ? 'Diese Einschätzung basiert auf Selbstangaben und validierten Screening-Fragen. Sie ist keine Diagnose und ersetzt keine fachliche Abklärung.'
+              ? 'Dies ist kein Urteil, sondern ein Hinweis. Nur eine Fachkraft kann das wirklich einschätzen.'
               : höchsteStufe === 2
-              ? 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei anhaltenden Beschwerden ist eine fachliche Abklärung sinnvoll.'
-              : 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei Bedarf kannst du das Screening nach 14 Tagen erneut durchführen.'}
+              ? 'Das ist ein Momentbild – kein dauerhaftes Urteil. Wenn die Beschwerden bleiben, lohnt sich ein Gespräch mit einer Fachkraft.'
+              : 'Das ist ein Momentbild – kein dauerhaftes Urteil. Du kannst den Check nach 14 Tagen wiederholen.'}
           </p>
         </div>
 
@@ -1636,7 +1636,7 @@ function Tagebuch({ onZurueck, startAnsicht }) {
         <button onClick={() => setAnsicht('kalender')} style={{ width: '100%', padding: '16px', backgroundColor: colors.background, color: colors.primary, border: `1.5px solid ${colors.primary}`, borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
           Mein Tagebuch
         </button>
-        {!alleAusgewaehlt && <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '8px' }}>Bitte alle drei Ratings ausfüllen</p>}
+        {!alleAusgewaehlt && <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '8px' }}>Bitte alle drei Bereiche ausfüllen</p>}
       </div>
     )
   }
@@ -1859,7 +1859,7 @@ function TherapeutenPlatzhalter() {
       <div style={{ padding: '20px 16px 16px', background: '#dde1ee' }}>
         <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px' }}>Kommt in Version 2</p>
         <h2 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 6px' }}>Therapeuten finden</h2>
-        <p style={{ fontSize: '13px', color: textS, margin: 0, lineHeight: '1.5' }}>Finde geprüfte Psychologen und Therapeuten in deiner Nähe — mit echten Bewertungen und freien Terminen.</p>
+        <p style={{ fontSize: '13px', color: textS, margin: 0, lineHeight: '1.5' }}>Psychologen und Therapeuten in deiner Nähe – mit Bewertungen und Terminverfügbarkeit.</p>
       </div>
 
       {/* ── Karte ────────────────────────────────────────────────── */}
@@ -2190,8 +2190,8 @@ function Einstellungen({ onTourNeuStarten }) {
   // ── Hilfe & FAQ ───────────────────────────────────────────────
   if (detailAnsicht === 'faq') {
     const faqs = [
-      { f: 'Was ist MeinPsyCheck?', a: 'MeinPsyCheck ist ein kostenloser, anonymer Screening-Test für psychische Gesundheit. Die App verwendet wissenschaftlich validierte Fragebögen (PHQ-9, GAD-7, ASRS), um einzuschätzen, ob deine Beschwerden eine professionelle Abklärung rechtfertigen.' },
-      { f: 'Stellt die App eine Diagnose?', a: 'Nein. Die App stellt keine Diagnose. Sie zeigt an, ob deine Angaben oberhalb klinischer Grenzwerte liegen – das ist ein Hinweis, keine Diagnose. Eine Diagnose kann nur durch eine Fachkraft gestellt werden.' },
+      { f: 'Was ist MeinPsyCheck?', a: 'MeinPsyCheck ist ein kostenloser, anonymer Screening-Test für psychische Gesundheit. Die App verwendet wissenschaftlich validierte Fragebögen (PHQ-9, GAD-7, ASRS), um einzuschätzen, ob professionelle Unterstützung für dich sinnvoll sein könnte.' },
+      { f: 'Stellt die App eine Diagnose?', a: 'Nein. Die App stellt keine Diagnose. Sie zeigt, ob deine Antworten auf eine Belastung hindeuten, die es lohnt, mit einer Fachkraft zu besprechen – das ist ein Hinweis, keine Diagnose.' },
       { f: 'Wo werden meine Daten gespeichert?', a: 'Alle Daten bleiben ausschließlich auf deinem Gerät. Nichts wird an Server übertragen. Du bist anonym – es gibt kein Konto, keine Registrierung.' },
       { f: 'Wie oft kann ich das Screening machen?', a: 'Das Screening kann nach 14 Tagen erneut durchgeführt werden. Häufigere Wiederholungen sind möglich, spiegeln aber meist keine echte Veränderung wider.' },
       { f: 'Was passiert, wenn ich ein Screening abbricht?', a: 'Dein Fortschritt wird automatisch gespeichert. Wenn du zurück zur Hauptseite gehst, siehst du oben einen Banner "Screening fortsetzen". Du kannst auch neu anfangen.' },

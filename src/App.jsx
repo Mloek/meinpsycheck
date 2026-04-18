@@ -1094,6 +1094,12 @@ function HauptApp() {
     }
   }, [aktiveTab])
 
+  useEffect(() => {
+    const tourAktiv = tourSchritt !== null || therapeutenTourSchritt !== null
+    document.body.style.overflow = tourAktiv ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [tourSchritt, therapeutenTourSchritt])
+
   const handleTourWeiter = () => {
     if (tourSchritt < TOUR_SCHRITTE.length - 1) { setTourSchritt(s => s + 1) }
     else { setTourSchritt(null); localStorage.setItem('tour_completed', 'true') }
@@ -1673,6 +1679,49 @@ function Tagebuch({ onZurueck, startAnsicht }) {
       }
     }
 
+    const exportierePDF = async () => {
+      const { jsPDF } = await import('jspdf')
+      const { default: autoTable } = await import('jspdf-autotable')
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text(`MeinPsyCheck \u2013 Tagebuchverlauf ${monatName}`, 14, 20)
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(120, 120, 120)
+      doc.text('Zur pers\u00f6nlichen Orientierung erstellt. Kein medizinisches Dokument.', 14, 27)
+      doc.setTextColor(0, 0, 0)
+      const punkte = (wert) => wert > 0 ? '\u25cf'.repeat(wert) + '\u25cb'.repeat(5 - wert) : ''
+      const rows = []
+      for (let d = 1; d <= anzahlTage; d++) {
+        const datum = `${kalenderJahr}-${padZwei(kalenderMonat + 1)}-${padZwei(d)}`
+        const datumText = new Date(datum + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })
+        const eintrag = leseEintrag(datum)
+        rows.push({ data: [datumText, punkte(eintrag?.befinden ?? 0), punkte(eintrag?.energie ?? 0), punkte(eintrag?.schlaf ?? 0), eintrag?.notiz || ''], hatEintrag: !!eintrag })
+      }
+      autoTable(doc, {
+        startY: 32,
+        head: [['Datum', 'Befinden', 'Energie', 'Schlaf', 'Notiz']],
+        body: rows.map(r => r.data),
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [91, 107, 200], textColor: 255, fontStyle: 'bold' },
+        columnStyles: { 0: { cellWidth: 30 }, 1: { cellWidth: 22 }, 2: { cellWidth: 22 }, 3: { cellWidth: 22 }, 4: { cellWidth: 'auto' } },
+        didParseCell: (data) => {
+          if (data.section === 'body' && !rows[data.row.index].hatEintrag) {
+            data.cell.styles.fillColor = [245, 245, 245]
+            data.cell.styles.textColor = [180, 180, 180]
+          }
+        },
+        didDrawPage: (data) => {
+          doc.setFontSize(8)
+          doc.setTextColor(150, 150, 150)
+          doc.text('Alle Daten lokal auf deinem Ger\u00e4t gespeichert. Keine \u00dcbertragung an Server.', data.settings.margin.left, doc.internal.pageSize.height - 8)
+          doc.setTextColor(0, 0, 0)
+        },
+      })
+      doc.save(`MeinPsyCheck_Tagebuch_${monatName.replace(' ', '_')}.pdf`)
+    }
+
     return (
       <div style={{ padding: '16px' }}>
         <button onClick={() => setAnsicht('eintrag')} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
@@ -1709,6 +1758,9 @@ function Tagebuch({ onZurueck, startAnsicht }) {
             )
           })}
         </div>
+        <button onClick={exportierePDF} style={{ width: '100%', padding: '14px', backgroundColor: colors.background, color: '#5B6BC8', border: '1.5px solid #5B6BC8', borderRadius: '12px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginTop: '20px' }}>
+          Monat als PDF exportieren
+        </button>
       </div>
     )
   }
@@ -2162,13 +2214,19 @@ function Einstellungen({ onTourNeuStarten }) {
         <KardBox>
           <div style={{ padding: '16px' }}>
             <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Angaben gemäß § 5 TMG</p>
-            <TextBlock>{'Midhad Lök\n[Straße und Hausnummer]\n[PLZ] [Stadt]\nDeutschland'}</TextBlock>
+            <TextBlock>{'Midhad L\u00f6k\nErich-Ollenhauer Stra\u00dfe 6b\n65203 Wiesbaden\nDeutschland'}</TextBlock>
           </div>
         </KardBox>
         <KardBox>
           <div style={{ padding: '16px' }}>
             <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Kontakt</p>
-            <TextBlock>{'E-Mail: info@meinpsycheck.de\nWebsite: www.meinpsycheck.de'}</TextBlock>
+            <TextBlock>{'kontakt@meinpsycheck.de'}</TextBlock>
+          </div>
+        </KardBox>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Verantwortlich f\u00fcr den Inhalt nach § 18 Abs. 2 MStV</p>
+            <TextBlock>{'Midhad L\u00f6k\nErich-Ollenhauer Stra\u00dfe 6b\n65203 Wiesbaden'}</TextBlock>
           </div>
         </KardBox>
         <KardBox>
@@ -2280,12 +2338,12 @@ function Einstellungen({ onTourNeuStarten }) {
     <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
       <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Einstellungen</h1>
       {sektionen.map((sektion) => (
-        <div key={sektion.titel} style={{ marginBottom: '24px' }}>
+        <div key={sektion.titel} style={{ marginBottom: '28px' }}>
           <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px 4px' }}>{sektion.titel}</p>
           <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
             {sektion.items.map((item, i) => (
               <div key={item} onClick={() => { if (itemToDetail[item] === 'tour') { onTourNeuStarten?.() } else { setDetailAnsicht(itemToDetail[item]) } }}
-                style={{ padding: '14px 16px', fontSize: '15px', color: textP, borderBottom: i < sektion.items.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                style={{ padding: '16px', fontSize: '15px', color: textP, borderBottom: i < sektion.items.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 {item}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={textS} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
@@ -2293,6 +2351,9 @@ function Einstellungen({ onTourNeuStarten }) {
           </div>
         </div>
       ))}
+      <p style={{ fontSize: '11px', color: textS, textAlign: 'center', marginTop: '8px', lineHeight: '1.7', opacity: 0.7, whiteSpace: 'pre-line' }}>
+        {'\u00a9 2026 Midhad L\u00f6k \u2013 MeinPsyCheck\nAlle Rechte vorbehalten.'}
+      </p>
     </div>
   )
 }

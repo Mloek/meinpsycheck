@@ -1003,13 +1003,116 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
 
 const IS_DEV = import.meta.env.DEV
 
+const TOUR_SCHRITTE = [
+  { tourKey: 'screening-karte', titel: 'Dein persönlicher Check', text: 'Hier beantwortest du 26 wissenschaftlich validierte Fragen. Je ehrlicher du antwortest, desto hilfreicher ist dein Ergebnis – es gibt keine richtigen oder falschen Antworten.' },
+  { tourKey: 'tagebuch-widget', titel: 'Dein Tagebuch', text: 'Trage täglich ein, wie es dir geht. Mit der Zeit erkennst du Muster – und du kannst deinen Verlauf als PDF zum Therapeutengespräch mitbringen.' },
+  { tourKey: 'therapeuten-tab', titel: 'Hilfe & Anlaufstellen', text: 'Hier findest du Therapeuten, Krisentelefone und weitere Anlaufstellen – für den Fall, dass du professionelle Unterstützung suchst.' },
+  { tourKey: 'ressourcen-bereich', titel: 'Deine Ressourcen', text: 'Nach deinem Screening bekommst du passende Ressourcen vorgeschlagen – abgestimmt auf deine Ergebnisse.' },
+]
+
+const THERAPEUTEN_TOUR = [
+  { tourKey: 'therapeuten-karte', titel: 'Therapeuten in deiner Nähe', text: 'Hier siehst du Psychotherapeuten in der Nähe. Filtere nach freien Terminen und tippe auf einen Eintrag für Details.' },
+  { tourKey: 'therapeuten-liste', titel: 'Vergleichen auf einen Blick', text: 'Scrolle durch die Liste, um Bewertungen und Verfügbarkeit zu vergleichen. Tippe auf einen Therapeuten für mehr Details.' },
+]
+
+function TourOverlay({ schritte, schritt, onWeiter, onUeberspringen }) {
+  const [rect, setRect] = useState(null)
+  const elRef = useRef(null)
+  const accent = '#5B6BC8'
+
+  useEffect(() => {
+    if (elRef.current) {
+      elRef.current.style.position = ''
+      elRef.current.style.zIndex = ''
+      elRef.current = null
+      setRect(null)
+    }
+    if (schritt === null) return
+    const aktuell = schritte[schritt]
+    const el = document.querySelector(`[data-tour="${aktuell.tourKey}"]`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const t = setTimeout(() => {
+      const r = el.getBoundingClientRect()
+      setRect({ top: r.top, left: r.left, right: r.right, bottom: r.bottom, width: r.width, height: r.height })
+      elRef.current = el
+      el.style.position = 'relative'
+      el.style.zIndex = '10001'
+    }, 380)
+    return () => clearTimeout(t)
+  }, [schritt])
+
+  useEffect(() => () => {
+    if (elRef.current) { elRef.current.style.position = ''; elRef.current.style.zIndex = '' }
+  }, [])
+
+  if (schritt === null || !rect) return null
+  const aktuell = schritte[schritt]
+  const istLetzte = schritt === schritte.length - 1
+  const ABST = 12
+  const unten = rect.bottom + ABST + 230 < window.innerHeight
+
+  return (
+    <>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)' }} />
+      <div style={{ position: 'fixed', pointerEvents: 'none', top: rect.top - 5, left: rect.left - 5, width: rect.width + 10, height: rect.height + 10, zIndex: 10000, borderRadius: '20px', border: '2px solid rgba(255,255,255,0.5)', boxShadow: '0 0 24px rgba(91,107,200,0.5)', transition: 'all 0.3s ease' }} />
+      <div style={{ position: 'fixed', left: '14px', right: '14px', ...(unten ? { top: rect.bottom + ABST } : { bottom: window.innerHeight - rect.top + ABST }), zIndex: 10002, background: '#fff', borderRadius: '16px', padding: '18px 18px 14px', boxShadow: '0 8px 32px rgba(0,0,0,0.28)' }}>
+        <div style={{ position: 'absolute', ...(unten ? { top: -8 } : { bottom: -8 }), left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', ...(unten ? { borderBottom: '8px solid #fff' } : { borderTop: '8px solid #fff' }) }} />
+        <p style={{ fontSize: '16px', fontWeight: '700', color: '#2a2a3e', margin: '0 0 7px' }}>{aktuell.titel}</p>
+        <p style={{ fontSize: '13px', color: '#8a8faa', margin: '0 0 14px', lineHeight: '1.55' }}>{aktuell.text}</p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '12px' }}>
+          {schritte.map((_, i) => <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === schritt ? accent : 'rgba(91,107,200,0.2)' }} />)}
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={onUeberspringen} style={{ flex: 1, padding: '11px', background: 'none', border: 'none', color: '#aab0c8', fontSize: '14px', cursor: 'pointer' }}>Überspringen</button>
+          <button onClick={onWeiter} style={{ flex: 2, padding: '11px', background: accent, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>{istLetzte ? 'Verstanden' : 'Weiter'}</button>
+        </div>
+      </div>
+    </>
+  )
+}
+
 function HauptApp() {
   const [aktiveTab, setAktiveTab] = useState('home')
   const [tagebuchOffen, setTagebuchOffen] = useState(false)
   const [tagebuchStartAnsicht, setTagebuchStartAnsicht] = useState(null)
   const [screeningOffen, setScreeningOffen] = useState(false)
   const [testErgebnis, setTestErgebnis] = useState(null)
-  const [verlassenDialog, setVerlassenDialog] = useState(null) // ziel-tab-id
+  const [verlassenDialog, setVerlassenDialog] = useState(null)
+  const [tourSchritt, setTourSchritt] = useState(null)
+  const [therapeutenTourSchritt, setTherapeutenTourSchritt] = useState(null)
+
+  useEffect(() => {
+    if (!localStorage.getItem('tour_completed')) {
+      setTimeout(() => setTourSchritt(0), 700)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (aktiveTab === 'therapeuten' && tourSchritt === null && !localStorage.getItem('therapeuten_tour_done')) {
+      setTimeout(() => setTherapeutenTourSchritt(0), 500)
+    }
+  }, [aktiveTab])
+
+  const handleTourWeiter = () => {
+    if (tourSchritt < TOUR_SCHRITTE.length - 1) { setTourSchritt(s => s + 1) }
+    else { setTourSchritt(null); localStorage.setItem('tour_completed', 'true') }
+  }
+  const handleTourUeberspringen = () => { setTourSchritt(null); localStorage.setItem('tour_completed', 'true') }
+
+  const handleTherapeutenTourWeiter = () => {
+    if (therapeutenTourSchritt < THERAPEUTEN_TOUR.length - 1) { setTherapeutenTourSchritt(s => s + 1) }
+    else { setTherapeutenTourSchritt(null); localStorage.setItem('therapeuten_tour_done', 'true') }
+  }
+  const handleTherapeutenTourUeberspringen = () => { setTherapeutenTourSchritt(null); localStorage.setItem('therapeuten_tour_done', 'true') }
+
+  const handleTourNeuStarten = () => {
+    localStorage.removeItem('tour_completed')
+    setAktiveTab('home')
+    setTagebuchOffen(false)
+    setScreeningOffen(false)
+    setTimeout(() => setTourSchritt(0), 300)
+  }
 
   const handleTagebuchOeffnen = (startAnsicht) => {
     setTagebuchStartAnsicht(startAnsicht || null)
@@ -1055,7 +1158,7 @@ function HauptApp() {
           : <ScreeningFlow onZurueck={() => setScreeningOffen(false)} />
         )}
         {aktiveTab === 'therapeuten' && <TherapeutenPlatzhalter />}
-        {aktiveTab === 'einstellungen' && <Einstellungen />}
+        {aktiveTab === 'einstellungen' && <Einstellungen onTourNeuStarten={handleTourNeuStarten} />}
       </div>
 
       {/* ── Tab-Wechsel-Dialog ──────────────────────────────────── */}
@@ -1079,11 +1182,18 @@ function HauptApp() {
 
       <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100 }}>
         {[{ id: 'home', label: 'Hauptseite' }, { id: 'therapeuten', label: 'Therapeuten' }, { id: 'einstellungen', label: 'Einstellungen' }].map((tab) => (
-          <button key={tab.id} onClick={() => handleTabKlick(tab.id)} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
+          <button key={tab.id} onClick={() => handleTabKlick(tab.id)} {...(tab.id === 'therapeuten' ? { 'data-tour': 'therapeuten-tab' } : {})} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
             {tab.label}
           </button>
         ))}
       </div>
+
+      {tourSchritt !== null && (
+        <TourOverlay schritte={TOUR_SCHRITTE} schritt={tourSchritt} onWeiter={handleTourWeiter} onUeberspringen={handleTourUeberspringen} />
+      )}
+      {therapeutenTourSchritt !== null && (
+        <TourOverlay schritte={THERAPEUTEN_TOUR} schritt={therapeutenTourSchritt} onWeiter={handleTherapeutenTourWeiter} onUeberspringen={handleTherapeutenTourUeberspringen} />
+      )}
     </div>
   )
 }
@@ -1241,7 +1351,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
 
         {/* ── Screening ────────────────────────────────────────── */}
         <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Screening</p>
-        <div style={{ background: '#fff', borderRadius: '18px', border: cardBorder, overflow: 'hidden' }}>
+        <div data-tour="screening-karte" style={{ background: '#fff', borderRadius: '18px', border: cardBorder, overflow: 'hidden' }}>
           <div onClick={onScreeningOeffnen} style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
             <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #7b5ea7, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -1267,7 +1377,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
 
         {/* ── Tagebuch ─────────────────────────────────────────── */}
         <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Tagebuch</p>
-        <div style={{ background: '#fff', borderRadius: '18px', border: cardBorder, padding: '20px 16px' }}>
+        <div data-tour="tagebuch-widget" style={{ background: '#fff', borderRadius: '18px', border: cardBorder, padding: '20px 16px' }}>
           <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: '0 0 2px', textAlign: 'center' }}>Mein Tagebuch</p>
           <p style={{ fontSize: '11px', color: textS, margin: '0 0 14px', textAlign: 'center' }}>Befinden · Energie · Schlaf</p>
           <p style={{ fontSize: '13px', fontWeight: '600', color: textP, margin: '0 0 10px', textAlign: 'center' }}>{monatsName}</p>
@@ -1297,7 +1407,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
 
         {/* ── Ressourcen ───────────────────────────────────────── */}
         <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Ressourcen für dich</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+        <div data-tour="ressourcen-bereich" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
           {ressourcen.map((res) => {
             const istRelevant = relevantChips && relevantChips.includes(res.name)
             const istGedimmt = hatScreening && relevantChips && !istRelevant
@@ -1753,7 +1863,7 @@ function TherapeutenPlatzhalter() {
       </div>
 
       {/* ── Karte ────────────────────────────────────────────────── */}
-      <div style={{ position: 'relative', margin: '0 16px', borderRadius: '18px', overflow: 'hidden', height: '240px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+      <div data-tour="therapeuten-karte" style={{ position: 'relative', margin: '0 16px', borderRadius: '18px', overflow: 'hidden', height: '240px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
         <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
         {/* Filter-Bar über der Karte */}
         <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 500, display: 'flex', gap: '6px', background: '#fff', borderRadius: '100px', padding: '3px', boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }}>
@@ -1766,7 +1876,7 @@ function TherapeutenPlatzhalter() {
       </div>
 
       {/* ── Therapeuten-Liste ────────────────────────────────────── */}
-      <div style={{ flex: 1, background: '#fff', margin: '12px 16px 0', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(91,107,200,0.1)' }}>
+      <div data-tour="therapeuten-liste" style={{ flex: 1, background: '#fff', margin: '12px 16px 0', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(91,107,200,0.1)' }}>
         <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
           <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: '#dde1ee' }} />
         </div>
@@ -1825,7 +1935,7 @@ function TherapeutenPlatzhalter() {
   )
 }
 
-function Einstellungen() {
+function Einstellungen({ onTourNeuStarten }) {
   const [offen, setOffen] = useState(null)
   const [detailAnsicht, setDetailAnsicht] = useState(null)
   const [email, setEmail] = useState(localStorage.getItem('user_email') || '')
@@ -1837,7 +1947,7 @@ function Einstellungen() {
   const bg = '#dde1ee'
 
   const sektionen = [
-    { titel: 'Konto', items: ['E-Mail-Adresse hinterlegen', 'App bewerten'] },
+    { titel: 'Konto', items: ['E-Mail-Adresse hinterlegen', 'App bewerten', 'App-Tour wiederholen'] },
     { titel: 'Info', items: ['Neuigkeiten & Updates', 'Datenschutz', 'Impressum', 'Hilfe & FAQ', 'Wissenschaftliche Grundlagen'] },
   ]
 
@@ -2158,6 +2268,7 @@ function Einstellungen() {
   const itemToDetail = {
     'E-Mail-Adresse hinterlegen': 'email',
     'App bewerten': 'bewerten',
+    'App-Tour wiederholen': 'tour',
     'Neuigkeiten & Updates': 'neuigkeiten',
     'Datenschutz': 'datenschutz',
     'Impressum': 'impressum',
@@ -2173,7 +2284,7 @@ function Einstellungen() {
           <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px 4px' }}>{sektion.titel}</p>
           <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
             {sektion.items.map((item, i) => (
-              <div key={item} onClick={() => setDetailAnsicht(itemToDetail[item])}
+              <div key={item} onClick={() => { if (itemToDetail[item] === 'tour') { onTourNeuStarten?.() } else { setDetailAnsicht(itemToDetail[item]) } }}
                 style={{ padding: '14px 16px', fontSize: '15px', color: textP, borderBottom: i < sektion.items.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 {item}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={textS} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>

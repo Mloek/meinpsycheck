@@ -1054,7 +1054,7 @@ function TourOverlay({ schritte, schritt, onWeiter, onUeberspringen }) {
 
   return (
     <>
-      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)' }} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', touchAction: 'none' }} />
       <div style={{ position: 'fixed', pointerEvents: 'none', top: rect.top - 5, left: rect.left - 5, width: rect.width + 10, height: rect.height + 10, zIndex: 10000, borderRadius: '20px', border: '2px solid rgba(255,255,255,0.5)', boxShadow: '0 0 24px rgba(91,107,200,0.5)', transition: 'all 0.3s ease' }} />
       <div style={{ position: 'fixed', left: '14px', right: '14px', ...(unten ? { top: rect.bottom + ABST } : { bottom: window.innerHeight - rect.top + ABST }), zIndex: 10002, background: '#fff', borderRadius: '16px', padding: '18px 18px 14px', boxShadow: '0 8px 32px rgba(0,0,0,0.28)' }}>
         <div style={{ position: 'absolute', ...(unten ? { top: -8 } : { bottom: -8 }), left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', ...(unten ? { borderBottom: '8px solid #fff' } : { borderTop: '8px solid #fff' }) }} />
@@ -1150,7 +1150,7 @@ function HauptApp() {
 
   return (
     <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflowY: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'hidden' : 'auto', pointerEvents: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, paddingBottom: '70px' }}>
+      <div style={{ flex: 1, overflowY: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'hidden' : 'auto', pointerEvents: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, touchAction: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, paddingBottom: '70px' }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
         {aktiveTab === 'home' && screeningOffen && (testErgebnis

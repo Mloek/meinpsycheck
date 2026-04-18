@@ -2214,7 +2214,7 @@ function Einstellungen({ onTourNeuStarten }) {
         <KardBox>
           <div style={{ padding: '16px' }}>
             <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Angaben gemäß § 5 TMG</p>
-            <TextBlock>{'Midhad L\u00f6k\nErich-Ollenhauer Stra\u00dfe 6b\n65203 Wiesbaden\nDeutschland'}</TextBlock>
+            <TextBlock>{'Midhad Lök\nErich-Ollenhauer Straße 6b\n65203 Wiesbaden\nDeutschland'}</TextBlock>
           </div>
         </KardBox>
         <KardBox>
@@ -2225,8 +2225,8 @@ function Einstellungen({ onTourNeuStarten }) {
         </KardBox>
         <KardBox>
           <div style={{ padding: '16px' }}>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Verantwortlich f\u00fcr den Inhalt nach § 18 Abs. 2 MStV</p>
-            <TextBlock>{'Midhad L\u00f6k\nErich-Ollenhauer Stra\u00dfe 6b\n65203 Wiesbaden'}</TextBlock>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</p>
+            <TextBlock>{'Midhad Lök\nErich-Ollenhauer Straße 6b\n65203 Wiesbaden'}</TextBlock>
           </div>
         </KardBox>
         <KardBox>

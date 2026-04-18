@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import lottie from 'lottie-web'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 const colors = {
   primary: '#2D6A4F',
@@ -134,7 +136,7 @@ const ONBOARDING_SCREENS = [
   {
     label: 'Wie es funktioniert',
     titel: 'Validierte Fragebögen. Klare Einschätzung.',
-    text: 'MeinPsyCheck nutzt PHQ-9, GAD-7 und ASRS v1.1 – international standardisierte Instrumente aus der klinischen Praxis. Du beantwortest 26 Fragen. Das Ergebnis zeigt dir, ob deine Beschwerden eine professionelle Abklärung rechtfertigen.',
+    text: 'MeinPsyCheck nutzt PHQ-9, GAD-7 und ASRS v1.1 – international standardisierte Instrumente aus der klinischen Praxis. Du beantwortest 26 Fragen. Das Ergebnis zeigt dir, ob Unterstützung für dich sinnvoll wäre.',
   },
   {
     label: 'Deine Privatsphäre',
@@ -421,7 +423,7 @@ function SuizidScreen({ onAntwort }) {
 
       <div style={{ backgroundColor: colors.crisisBg, borderRadius: '10px', padding: '12px 14px', marginBottom: '24px' }}>
         <p style={{ fontSize: '13px', color: colors.crisis, margin: 0, lineHeight: '1.5' }}>
-          Bitte beantworten Sie die Frage bezogen auf die letzten 2 Wochen.
+          Bitte beantworte die Frage mit Blick auf die letzten 2 Wochen.
         </p>
       </div>
 
@@ -482,13 +484,30 @@ function SuizidHinweisScreen({ wert, onWeiter }) {
 
 // ─── SCREENING FLOW ───────────────────────────────────────────────────────────
 // Ablauf: einstieg → phq4 → vertiefung (PHQ9, GAD7, ASRS) → suizid → ergebnis ODER krise
+const SCREENING_SPEICHER_KEY = 'screening_fortschritt'
+
 function ScreeningFlow({ onZurueck }) {
-  const [phase, setPhase] = useState('einstieg')
-  const [symptomAuswahl, setSymptomAuswahl] = useState([])
-  const [alleAntworten, setAlleAntworten] = useState({})
-  const [aktuellesInstrument, setAktuellesInstrument] = useState(0)
+  // Gespeicherten Fortschritt laden
+  const gespeichert = (() => {
+    try { return JSON.parse(localStorage.getItem(SCREENING_SPEICHER_KEY)) } catch { return null }
+  })()
+
+  const [phase, setPhase] = useState(gespeichert?.phase ?? 'einstieg')
+  const [symptomAuswahl, setSymptomAuswahl] = useState(gespeichert?.symptomAuswahl ?? [])
+  const [alleAntworten, setAlleAntworten] = useState(gespeichert?.alleAntworten ?? {})
+  const [aktuellesInstrument, setAktuellesInstrument] = useState(gespeichert?.aktuellesInstrument ?? 0)
   const [ergebnisse, setErgebnisse] = useState([])
-  const [suizidWert, setSuizidWert] = useState(0)
+  const [suizidWert, setSuizidWert] = useState(gespeichert?.suizidWert ?? 0)
+
+  // Fortschritt bei jeder Änderung speichern
+  useEffect(() => {
+    if (phase !== 'einstieg' && phase !== 'ergebnis' && phase !== 'disclaimer') {
+      localStorage.setItem(SCREENING_SPEICHER_KEY, JSON.stringify({ phase, symptomAuswahl, alleAntworten, aktuellesInstrument, suizidWert }))
+    }
+    if (phase === 'einstieg' || phase === 'ergebnis') {
+      localStorage.removeItem(SCREENING_SPEICHER_KEY)
+    }
+  }, [phase, alleAntworten, aktuellesInstrument, suizidWert])
 
   // Wie viele Fragen waren schon vor diesem Instrument?
   // PHQ4=4 Fragen, dann PHQ9 startet bei Frage 5 (bisherFragen=4)
@@ -534,7 +553,7 @@ function ScreeningFlow({ onZurueck }) {
 
   const handleDisclaimerWeiter = () => {
     setErgebnisse(berechneErgebnisse(alleAntworten))
-    setPhase('ergebnis')
+    setPhase('laden')
   }
 
   if (phase === 'einstieg') {
@@ -573,11 +592,48 @@ function ScreeningFlow({ onZurueck }) {
     return <DisclaimerScreen onWeiter={handleDisclaimerWeiter} />
   }
 
+  if (phase === 'laden') {
+    return <LadeScreen onFertig={() => setPhase('ergebnis')} />
+  }
+
   if (phase === 'ergebnis') {
     return <ScreeningErgebnis ergebnisse={ergebnisse} suizidItem={suizidWert} onNeustart={() => { setPhase('einstieg'); setAlleAntworten({}); setSymptomAuswahl([]); setSuizidWert(0) }} onZurueck={onZurueck} />
   }
 
   return null
+}
+
+function LadeScreen({ onFertig }) {
+  const [textPhase, setTextPhase] = useState(1)
+  const [textSichtbar, setTextSichtbar] = useState(true)
+
+  useEffect(() => {
+    const t1 = setTimeout(() => {
+      setTextSichtbar(false)
+      setTimeout(() => { setTextPhase(2); setTextSichtbar(true) }, 280)
+    }, 1500)
+    const t2 = setTimeout(onFertig, 3000)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(160deg, #dde1ee 0%, #c9b8e8 60%, #b8a0d4 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <style>{`
+        @keyframes dotPulse { 0%,60%,100%{transform:translateY(0);opacity:0.3} 30%{transform:translateY(-9px);opacity:1} }
+        @keyframes ladeFade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+      <div style={{ marginBottom: '36px', textAlign: 'center', padding: '0 40px' }}>
+        <p key={textPhase} style={{ fontSize: '18px', fontWeight: '600', color: '#2a2a3e', margin: 0, lineHeight: '1.5', opacity: textSichtbar ? 1 : 0, transition: 'opacity 0.25s ease', animation: 'ladeFade 0.4s ease forwards' }}>
+          {textPhase === 1 ? 'Deine Angaben werden ausgewertet\u2026' : 'Ergebnisse werden erstellt\u2026'}
+        </p>
+      </div>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#5B6BC8', animation: `dotPulse 1.3s ease-in-out ${i * 0.22}s infinite` }} />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function DisclaimerScreen({ onWeiter }) {
@@ -608,7 +664,7 @@ function KrisenScreen() {
       <div style={{ textAlign: 'center', marginBottom: '32px' }}>
         <div style={{ width: '64px', height: '64px', backgroundColor: '#FFCDD2', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: '700', color: colors.crisis }}>!</div>
         <h2 style={{ fontSize: '22px', fontWeight: '700', color: colors.crisis, margin: '0 0 12px' }}>Hinweis zur Sicherheit</h2>
-        <p style={{ fontSize: '15px', color: '#5D2D2D', lineHeight: '1.7', margin: 0 }}>Du hast angegeben, dass du in den letzten 2 Wochen Gedanken hattest, dir selbst Schaden zuzufügen. Das Screening endet an dieser Stelle. Bitte nutze jetzt eine der folgenden Kontaktmöglichkeiten.</p>
+        <p style={{ fontSize: '15px', color: '#5D2D2D', lineHeight: '1.7', margin: 0 }}>Du hast angegeben, dass dich solche Gedanken beschäftigen. Bitte ruf jetzt an – du musst das nicht alleine tragen.</p>
       </div>
       <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '24px', marginBottom: '16px', border: '1px solid #FFCDD2' }}>
         <p style={{ fontSize: '14px', fontWeight: '700', color: colors.crisis, margin: '0 0 6px' }}>Telefonseelsorge</p>
@@ -627,7 +683,7 @@ function KrisenScreen() {
 const STOERUNGSBILDER = {
   'PHQ-9': {
     kurz: 'Deine Angaben im Bereich Stimmung & Antrieb überschreiten den klinischen Grenzwert. Das deutet auf depressive Symptome hin.',
-    lang: 'Der PHQ-9 ist einer der weltweit am häufigsten eingesetzten Fragebögen zur Erkennung depressiver Störungen. Die Fragen erfassen, wie oft du in den letzten zwei Wochen typische Symptome einer Depression erlebt hast – wie Antriebslosigkeit, Freudlosigkeit, Schlafprobleme oder das Gefühl, wertlos zu sein. Ein Wert über 10 bedeutet nicht, dass du „krank" bist. Er bedeutet, dass deine Beschwerden ein Ausmaß erreicht haben, bei dem professionelle Unterstützung sinnvoll und wirksam ist. Depressionen gehören zu den am besten behandelbaren psychischen Erkrankungen – mit Therapie sprechen über 60% der Betroffenen gut auf Behandlung an.',
+    lang: 'Der PHQ-9 ist einer der weltweit am häufigsten eingesetzten Fragebögen zur Erkennung depressiver Störungen. Die Fragen erfassen, wie oft du in den letzten zwei Wochen typische Symptome einer Depression erlebt hast – wie Antriebslosigkeit, Freudlosigkeit, Schlafprobleme oder das Gefühl, wertlos zu sein. Ein Wert über 10 bedeutet nicht, dass du „krank" bist. Er bedeutet, dass deine Beschwerden ein Ausmaß erreicht haben, bei dem professionelle Unterstützung sinnvoll und wirksam ist. Depressionen gehören zu den am besten behandelbaren psychischen Erkrankungen – über 60% aller Betroffenen fühlen sich mit Therapie deutlich besser.',
   },
   'GAD-7': {
     kurz: 'Deine Angaben im Bereich Angst & innere Anspannung überschreiten den klinischen Grenzwert. Das deutet auf eine generalisierte Angststörung hin.',
@@ -635,7 +691,7 @@ const STOERUNGSBILDER = {
   },
   'ASRS v1.1': {
     kurz: 'Deine Angaben im Bereich Konzentration & Impulsivität überschreiten den klinischen Grenzwert. Das deutet auf ADHS-Symptome im Erwachsenenalter hin.',
-    lang: 'Der ASRS v1.1 wurde von der Weltgesundheitsorganisation entwickelt und erfasst typische ADHS-Symptome bei Erwachsenen – Schwierigkeiten beim Abschließen von Aufgaben, Probleme mit Organisation und Planung sowie motorische Unruhe. ADHS im Erwachsenenalter wird oft spät erkannt, weil die Symptome sich anders zeigen als bei Kindern. Viele Betroffene haben jahrelang das Gefühl, sich einfach „mehr anstrengen" zu müssen – ohne zu wissen, dass ein neurobiologischer Unterschied dahintersteckt. Eine Abklärung beim Psychiater oder einem spezialisierten Psychologen kann Klarheit bringen.',
+    lang: 'Der ASRS v1.1 wurde von der Weltgesundheitsorganisation entwickelt und erfasst typische ADHS-Symptome bei Erwachsenen – Schwierigkeiten beim Abschließen von Aufgaben, Probleme mit Organisation und Planung sowie motorische Unruhe. ADHS im Erwachsenenalter wird oft spät erkannt, weil die Symptome sich anders zeigen als bei Kindern. Viele Betroffene haben jahrelang das Gefühl, sich einfach „mehr anstrengen" zu müssen – ohne zu wissen, dass ein neurobiologischer Unterschied dahintersteckt. Ein Gespräch mit einem Psychiater oder spezialisierten Psychologen kann Klarheit bringen.',
   },
   'WHO-5 (aus PHQ-9)': {
     kurz: 'Deine Angaben deuten auf ein reduziertes allgemeines Wohlbefinden hin, das auf chronischen Stress oder emotionale Erschöpfung hinweisen kann.',
@@ -727,48 +783,16 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
   const stufe2 = ergebnisse.filter(e => e.stufe === 2)
   const hatStufe1 = stufe1.length > 0
   const [aufgeklappt, setAufgeklappt] = useState(null)
-  const [openChipId, setOpenChipId] = useState(null)
+  const [openResKatalog, setOpenResKatalog] = useState(null)
 
-  const renderChips = (chips) => {
-    if (chips.length === 0) return null
-    const klickbareChips = chips.filter(c => RESSOURCEN_KATALOG[c])
-    const nichtKlickbar = chips.filter(c => !RESSOURCEN_KATALOG[c])
-    return (
-      <>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {klickbareChips.map((chip) => (
-            <div key={chip} onClick={(e) => { e.stopPropagation(); setOpenChipId(openChipId === chip ? null : chip) }} style={{ padding: '8px 14px', backgroundColor: openChipId === chip ? colors.primary : colors.primaryLight, borderRadius: '20px', fontSize: '13px', color: openChipId === chip ? '#fff' : colors.primary, fontWeight: '500', border: `1px solid ${colors.primary}30`, cursor: 'pointer', transition: 'all 0.2s' }}>{chip}</div>
-          ))}
-          {nichtKlickbar.map((chip) => (
-            <div key={chip} style={{ padding: '8px 14px', backgroundColor: colors.primaryLight, borderRadius: '20px', fontSize: '13px', color: colors.primary, fontWeight: '500', border: `1px solid ${colors.primary}30` }}>{chip}</div>
-          ))}
-        </div>
-        {openChipId && chips.includes(openChipId) && RESSOURCEN_KATALOG[openChipId] && (
-          <div style={{ marginTop: '12px', padding: '16px', backgroundColor: colors.background, borderRadius: '14px', border: `1px solid ${colors.border}` }}>
-            <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 16px' }}>
-              {RESSOURCEN_KATALOG[openChipId].erklaerung}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {RESSOURCEN_KATALOG[openChipId].interventionen.map((inv) => (
-                <div key={inv.titel} style={{ backgroundColor: '#f5f5f5', borderRadius: '12px', padding: '12px' }}>
-                  <p style={{ fontSize: '14px', fontWeight: '700', color: colors.text, margin: '0 0 4px' }}>{inv.titel}</p>
-                  <p style={{ fontSize: '13px', color: colors.textMuted, margin: 0, lineHeight: '1.5' }}>{inv.text}</p>
-                  {inv.video && (
-                    <a href={inv.video} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', color: colors.primary, textDecoration: 'none', marginTop: '6px', display: 'inline-block' }}>Video ansehen</a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </>
-    )
-  }
+  const accent = '#5B6BC8'
+  const bg = '#dde1ee'
+  const textP = '#2a2a3e'
+  const textS = '#8a8faa'
 
   useEffect(() => {
     localStorage.setItem('screening_datum', new Date().toISOString())
     localStorage.setItem('screening_ergebnis', JSON.stringify(ergebnisse))
-    // Relevante Ressourcen für Hauptseite-Chips speichern
     const katalogToChip = {
       'Schlafprobleme': 'Schlaf', 'Grübeln': 'Grübeln', 'Grübeln / Sorgen': 'Grübeln',
       'Antriebslosigkeit': 'Antrieb', 'Konzentration': 'Konzentration',
@@ -780,103 +804,273 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
     localStorage.setItem('screening_relevant_resources', JSON.stringify(mapped))
   }, [])
 
-  return (
-    <div style={{ padding: '16px', paddingBottom: '40px' }}>
-      <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 20px' }}>Dein Ergebnis</h2>
+  // Hero config
+  const hero = hatStufe1
+    ? { grad: 'linear-gradient(to bottom, #9b7ec8 0%, #7b5ea7 45%, #2d1f4a 100%)', badge: 'AUFFÄLLIG', titel: 'Erhöhte Belastung erkannt', sub: 'Deine Antworten überschreiten in mindestens einem Bereich den klinischen Schwellenwert. Ein Gespräch mit einer psychologischen oder ärztlichen Fachkraft wäre sinnvoll.' }
+    : höchsteStufe === 2
+    ? { grad: 'linear-gradient(to bottom, #8b9ed8 0%, #5B6BC8 50%, #3a4a9a 100%)', badge: 'LEICHT ERHÖHT', titel: 'Leichte Auffälligkeiten', sub: 'Deine Werte liegen unterhalb des klinischen Grenzwerts, zeigen aber in einzelnen Bereichen leicht erhöhte Belastung. Bei anhaltenden Beschwerden lohnt sich ein Gespräch mit einer Fachkraft.' }
+    : { grad: 'linear-gradient(to bottom, #5a9e82 0%, #3d8068 45%, #1f4d3e 100%)', badge: 'UNAUFFÄLLIG', titel: 'Alles im grünen Bereich', sub: 'Deine Antworten zeigen aktuell keine auffälligen Muster – das ist eine gute Nachricht. Du kannst den Check nach 14 Tagen wiederholen.' }
 
+  // Welche Karten anzeigen
+  const karten = hatStufe1 ? stufe1 : stufe2
+
+  // Chip → Katalog-Mapping für Ressourcen
+  const chipToKatalog = {
+    'Schlafprobleme': 'Schlafprobleme', 'Grübeln': 'Grübeln', 'Grübeln / Sorgen': 'Grübeln',
+    'Antriebslosigkeit': 'Antriebslosigkeit', 'Konzentration': 'Konzentration',
+    'Innere Unruhe': 'Innere Unruhe', 'Reizbarkeit': 'Reizbarkeit',
+    'Chronischer Stress': 'Chronischer Stress', 'Sozialer Rückzug': 'Sozialer Rückzug',
+    'Freudlosigkeit': 'Grübeln',
+  }
+  const alleRelevantChips = [...new Set(karten.flatMap(r => r.chips ?? []))]
+  const relevanteKatalogKeys = [...new Set(alleRelevantChips.map(c => chipToKatalog[c]).filter(k => k && RESSOURCEN_KATALOG[k]))]
+
+  const ressourcenConfig = [
+    { katalog: 'Schlafprobleme', label: 'Schlaf', farbe: '#b8d4f0', icon: 'moon' },
+    { katalog: 'Grübeln', label: 'Grübeln', farbe: '#d4b8e8', icon: 'bulb' },
+    { katalog: 'Antriebslosigkeit', label: 'Antrieb', farbe: '#b8e4d0', icon: 'bolt' },
+    { katalog: 'Konzentration', label: 'Konzentration', farbe: '#c8d8f0', icon: 'target' },
+    { katalog: 'Innere Unruhe', label: 'Innere Unruhe', farbe: '#f0b8c8', icon: 'wave' },
+    { katalog: 'Reizbarkeit', label: 'Reizbarkeit', farbe: '#f0d4b8', icon: 'flame' },
+    { katalog: 'Chronischer Stress', label: 'Stress', farbe: '#a8c8e0', icon: 'spiral' },
+    { katalog: 'Sozialer Rückzug', label: 'Sozialer Rückzug', farbe: '#c8b8e8', icon: 'person' },
+  ]
+  const relevanteRessourcen = ressourcenConfig.filter(r => relevanteKatalogKeys.includes(r.katalog))
+
+  return (
+    <div style={{ background: bg, minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', paddingBottom: '40px' }}>
+      <style>{`
+        @keyframes bergDrift1 { 0%{transform:translateX(0)} 50%{transform:translateX(-18px)} 100%{transform:translateX(0)} }
+        @keyframes bergDrift2 { 0%{transform:translateX(0)} 50%{transform:translateX(12px)} 100%{transform:translateX(0)} }
+        @keyframes ergebnisEin { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+
+      {/* ── Suizid-Hinweis ───────────────────────────────────────── */}
       {suizidItem > 0 && (
-        <div style={{ backgroundColor: colors.crisisBg, borderRadius: '14px', padding: '16px', border: '1px solid #FFCDD2', marginBottom: '16px' }}>
-          <p style={{ fontSize: '14px', fontWeight: '700', color: colors.crisis, margin: '0 0 6px' }}>Wichtiger Hinweis</p>
-          <p style={{ fontSize: '13px', color: '#5D2D2D', margin: '0 0 12px', lineHeight: '1.6' }}>Du hast angegeben, dass dich Gedanken, dir selbst Schaden zuzufügen, in den letzten 2 Wochen beschäftigt haben. Bitte such dir Unterstützung.</p>
-          <a href="tel:08001110111" style={{ display: 'block', padding: '12px', backgroundColor: colors.crisis, color: '#fff', borderRadius: '10px', fontSize: '15px', fontWeight: '700', textAlign: 'center', textDecoration: 'none' }}>Telefonseelsorge: 0800 111 0 111</a>
+        <div style={{ background: '#B71C1C', padding: '16px 16px 14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: '1px' }}><circle cx="12" cy="12" r="10" fill="rgba(255,255,255,0.25)"/><path d="M12 8v4M12 16h.01" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/></svg>
+          <div>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: '#fff', margin: '0 0 4px' }}>Wichtiger Hinweis</p>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.88)', margin: '0 0 10px', lineHeight: '1.5' }}>Du hast Gedanken angegeben, dir selbst Schaden zuzufügen. Bitte such dir Unterstützung.</p>
+            <a href="tel:08001110111" style={{ display: 'inline-block', padding: '8px 16px', background: '#fff', color: '#B71C1C', borderRadius: '8px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>Telefonseelsorge: 0800 111 0 111</a>
+          </div>
         </div>
       )}
 
-      {hatStufe1 && (
-        <p style={{ fontSize: '17px', fontWeight: '600', color: colors.text, lineHeight: '1.6', margin: '0 0 20px' }}>
-          Deine Angaben zeigen in mindestens einem Bereich Werte, die auf klinisch relevante Beschwerden hinweisen. Das ist ein Hinweis, den es wert ist, ernst zu nehmen.
-        </p>
-      )}
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <div style={{ height: '230px', background: hero.grad, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: '80px', animation: 'ergebnisEin 0.4s ease-out 0ms both' }}>
+        <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: '-10px', width: 'calc(100% + 20px)', height: '70px', display: 'block', animation: 'bergDrift1 14s ease-in-out infinite', opacity: 0.6 }}>
+          <polygon points="0,100 55,38 110,72 170,18 230,55 295,8 355,46 430,28 440,100" fill={bg} />
+        </svg>
+        <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: '-10px', width: 'calc(100% + 20px)', height: '70px', display: 'block', animation: 'bergDrift2 18s ease-in-out infinite' }}>
+          <polygon points="0,100 35,52 75,70 125,32 175,58 225,22 285,52 335,18 385,42 440,32 440,100" fill={bg} opacity="0.85" />
+        </svg>
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 24px' }}>
+          <span style={{ display: 'inline-block', padding: '4px 12px', background: 'rgba(255,255,255,0.22)', borderRadius: '100px', fontSize: '11px', letterSpacing: '2px', color: 'rgba(255,255,255,0.9)', fontWeight: '700', marginBottom: '10px' }}>{hero.badge}</span>
+          <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#fff', margin: '0 0 10px', textShadow: '0 1px 12px rgba(0,0,0,0.35)', lineHeight: '1.15' }}>{hero.titel}</h1>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: '#fff', margin: 0, lineHeight: '1.55' }}>{hero.sub}</p>
+        </div>
+      </div>
 
-      {stufe1.map((res) => {
-        const info = STOERUNGSBILDER[res.instrument]
-        const istOffen = aufgeklappt === res.instrument
-        return (
-          <div key={res.instrument} onClick={() => setAufgeklappt(istOffen ? null : res.instrument)} style={{ backgroundColor: '#FFEBEE', borderRadius: '14px', padding: '16px', border: `1px solid #FFCDD2`, marginBottom: '10px', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: info ? '10px' : '0' }}>
-              <p style={{ fontSize: '14px', color: colors.text, lineHeight: '1.6', margin: 0, flex: 1, paddingRight: '12px' }}>
-                {info?.kurz ?? 'Deine Angaben liegen oberhalb des Schwellenwerts.'}
+      <div style={{ padding: '0 14px' }}>
+
+        {/* ── Diagnosen-Karten (horizontal swipebar) ──────────────── */}
+        {karten.length > 0 && (
+          <div style={{ animation: 'ergebnisEin 0.4s ease-out 150ms both' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 4px 10px' }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
+                {hatStufe1 ? 'Auffällige Bereiche' : 'Leicht erhöhte Bereiche'}
               </p>
-              <span style={{ fontSize: '18px', color: colors.crisis, flexShrink: 0, marginTop: '2px' }}>{istOffen ? '↑' : '↓'}</span>
+              {karten.length > 1 && <p style={{ fontSize: '11px', color: textS, margin: 0 }}>← swipen →</p>}
             </div>
-            {istOffen && info?.lang && (
-              <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.7', margin: '12px 0 0', borderTop: '1px solid #FFCDD2', paddingTop: '12px' }}>
-                {info.lang}
-              </p>
-            )}
-          </div>
-        )
-      })}
-
-      {stufe2.length > 0 && !hatStufe1 && (() => {
-        const alleChips = [...new Set(stufe2.flatMap(res => res.chips ?? []))]
-        return (
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{ fontSize: '16px', fontWeight: '600', color: colors.text, lineHeight: '1.6', margin: '0 0 6px' }}>
-              Deine Angaben erreichen keinen klinischen Grenzwert. Laut den validierten Fragebögen liegen aktuell keine Hinweise auf eine behandlungsbedürftige psychische Störung vor.
-            </p>
-            <p style={{ fontSize: '13px', color: colors.textMuted, margin: '0 0 16px', lineHeight: '1.5' }}>
-              Das ist eine Momentaufnahme – kein Gesundheitszeugnis.
-            </p>
-            {alleChips.length > 0 && (
-              <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}` }}>
-                <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.6', margin: '0 0 12px' }}>
-                  In diesen Bereichen hattest du erhöhte Werte:
-                </p>
-                {renderChips(alleChips)}
+            <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none', margin: '0 -14px', padding: '0 14px 8px' }}>
+              <style>{`.diagnose-scroll::-webkit-scrollbar{display:none}`}</style>
+              {karten.map((res) => {
+                const info = STOERUNGSBILDER[res.instrument]
+                return (
+                  <div key={res.instrument} onClick={() => setAufgeklappt(res.instrument)}
+                    className="diagnose-scroll"
+                    style={{ background: '#fff', borderRadius: '16px', border: hatStufe1 ? '1px solid rgba(180,80,80,0.18)' : '1px solid rgba(91,107,200,0.12)', cursor: 'pointer', overflow: 'hidden', flexShrink: 0, width: karten.length === 1 ? '100%' : 'calc(85vw)', maxWidth: '340px', scrollSnapAlign: 'start' }}>
+                    <div style={{ padding: '16px', display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: hatStufe1 ? 'linear-gradient(135deg, #c87070, #9b3a3a)' : 'linear-gradient(135deg, #8b9ed8, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: '13px', fontWeight: '700', color: hatStufe1 ? '#9b3a3a' : accent, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{res.label}</p>
+                        <p style={{ fontSize: '14px', color: textP, margin: 0, lineHeight: '1.5' }}>{info?.kurz ?? 'Deine Angaben liegen oberhalb des Schwellenwerts.'}</p>
+                      </div>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: '14px' }}><path d="M9 18l6-6-6-6" stroke={textS} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            {karten.length > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', margin: '4px 0 0' }}>
+                {karten.map((_, i) => (
+                  <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === 0 ? accent : 'rgba(91,107,200,0.25)' }} />
+                ))}
               </div>
             )}
           </div>
-        )
-      })()}
+        )}
 
-      {hatStufe1 && (() => {
-        const alleStufe1Chips = [...new Set(stufe1.flatMap(res => res.chips ?? []))]
-        return alleStufe1Chips.length > 0 && (
-          <div style={{ backgroundColor: colors.background, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
-            <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.6', margin: '0 0 12px' }}>
-              In diesen Bereichen hattest du erhöhte Werte:
-            </p>
-            {renderChips(alleStufe1Chips)}
+        {/* ── Ressourcen ──────────────────────────────────────────── */}
+        {relevanteRessourcen.length > 0 && (
+          <div style={{ animation: 'ergebnisEin 0.4s ease-out 300ms both' }}>
+            <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 10px' }}>Passende Ressourcen</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {relevanteRessourcen.map((res) => (
+                <div key={res.katalog} onClick={() => setOpenResKatalog(openResKatalog === res.katalog ? null : res.katalog)}
+                  style={{ background: '#fff', borderRadius: '14px', padding: '12px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'pointer', border: '1px solid rgba(91,107,200,0.1)', outline: openResKatalog === res.katalog ? `2px solid ${accent}` : 'none' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: res.farbe, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <RessourceIcon typ={res.icon} />
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: textP, textAlign: 'center' }}>{res.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        )
-      })()}
+        )}
 
-      {hatStufe1 && (
-        <div style={{ backgroundColor: colors.surface, borderRadius: '14px', padding: '16px', border: `1px solid ${colors.border}`, marginBottom: '16px' }}>
-          <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 6px' }}>Therapeuten finden</p>
-          <p style={{ fontSize: '13px', color: colors.textMuted, margin: '0 0 12px', lineHeight: '1.5' }}>Wir helfen dir bald, einen passenden Therapeuten zu finden.</p>
-          <button onClick={() => alert('Die Therapeutensuche ist in Version 2 verfügbar.')} style={{ width: '100%', padding: '13px', backgroundColor: colors.surface, color: colors.primary, border: `1.5px solid ${colors.primary}`, borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
-            Therapeutensuche – Kommt bald
-          </button>
+        {/* ── Disclaimer ──────────────────────────────────────────── */}
+        <div style={{ background: 'rgba(91,107,200,0.06)', borderRadius: '12px', padding: '14px', margin: '20px 0 0', border: '1px solid rgba(91,107,200,0.1)', animation: 'ergebnisEin 0.4s ease-out 450ms both' }}>
+          <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.65' }}>
+            {höchsteStufe === 1
+              ? 'Dies ist kein Urteil, sondern ein Hinweis. Nur eine Fachkraft kann das wirklich einschätzen.'
+              : höchsteStufe === 2
+              ? 'Das ist ein Momentbild – kein dauerhaftes Urteil. Wenn die Beschwerden bleiben, lohnt sich ein Gespräch mit einer Fachkraft.'
+              : 'Das ist ein Momentbild – kein dauerhaftes Urteil. Du kannst den Check nach 14 Tagen wiederholen.'}
+          </p>
         </div>
-      )}
 
-      <div style={{ backgroundColor: colors.surface, borderRadius: '12px', padding: '14px', marginBottom: '20px', borderLeft: `3px solid ${colors.border}` }}>
-        <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0, lineHeight: '1.6' }}>
-          {höchsteStufe === 1 ? 'Diese Einschätzung basiert auf Selbstangaben und validierten Screening-Fragen. Sie ist keine Diagnose und ersetzt keine fachliche Abklärung.'
-            : höchsteStufe === 2 ? 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei anhaltenden oder zunehmenden Beschwerden ist eine fachliche Abklärung sinnvoll.'
-            : 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei Bedarf kannst du das Screening nach 14 Tagen erneut durchführen.'}
-        </p>
+        {/* ── Buttons ─────────────────────────────────────────────── */}
+        <div style={{ animation: 'ergebnisEin 0.4s ease-out 600ms both' }}>
+          <button onClick={onZurueck} style={{ width: '100%', padding: '16px', background: accent, color: '#fff', border: 'none', borderRadius: '14px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginTop: '16px' }}>Zur Startseite</button>
+          <button onClick={onNeustart} style={{ width: '100%', padding: '14px', background: 'transparent', color: textS, border: '1px solid rgba(91,107,200,0.2)', borderRadius: '14px', fontSize: '14px', cursor: 'pointer', marginTop: '10px' }}>Neues Screening starten</button>
+        </div>
       </div>
 
-      <button onClick={onZurueck} style={{ width: '100%', padding: '16px', backgroundColor: colors.primary, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '12px' }}>Zur Startseite</button>
-      <button onClick={onNeustart} style={{ width: '100%', padding: '14px', backgroundColor: 'transparent', color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: '12px', fontSize: '14px', cursor: 'pointer' }}>Neues Screening starten</button>
+      {/* ── Diagnose Detail Overlay ──────────────────────────────── */}
+      {aufgeklappt && (() => {
+        const res = karten.find(r => r.instrument === aufgeklappt)
+        const info = res ? STOERUNGSBILDER[res.instrument] : null
+        if (!res || !info?.lang) return null
+        return (
+          <>
+            <div onClick={() => setAufgeklappt(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(20,15,40,0.55)', zIndex: 200 }} />
+            <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 28px)', maxWidth: '400px', background: '#fff', borderRadius: '20px', zIndex: 201, padding: '20px', maxHeight: '80vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: hatStufe1 ? 'linear-gradient(135deg, #c87070, #9b3a3a)' : 'linear-gradient(135deg, #8b9ed8, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <p style={{ fontSize: '15px', fontWeight: '700', color: textP, margin: 0 }}>{res.label}</p>
+                </div>
+                <button onClick={() => setAufgeklappt(null)} style={{ background: '#f0f0f5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', fontSize: '16px', cursor: 'pointer', color: textS, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+              </div>
+              <p style={{ fontSize: '13px', color: textS, lineHeight: '1.75', margin: 0 }}>{info.lang}</p>
+            </div>
+          </>
+        )
+      })()}
+
+      {/* ── Ressource Detail Overlay ─────────────────────────────── */}
+      {openResKatalog && RESSOURCEN_KATALOG[openResKatalog] && (
+        <>
+          <div onClick={() => setOpenResKatalog(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(20,15,40,0.55)', zIndex: 200 }} />
+          <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '400px', background: '#fff', borderRadius: '20px', zIndex: 201, padding: '20px', maxHeight: '80vh', overflowY: 'auto', margin: '0 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: 0 }}>{openResKatalog}</p>
+              <button onClick={() => setOpenResKatalog(null)} style={{ background: '#f0f0f5', border: 'none', borderRadius: '50%', width: '28px', height: '28px', fontSize: '16px', cursor: 'pointer', color: textS, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+            </div>
+            <p style={{ fontSize: '13px', color: textS, lineHeight: '1.7', margin: '0 0 14px' }}>{RESSOURCEN_KATALOG[openResKatalog].erklaerung}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {RESSOURCEN_KATALOG[openResKatalog].interventionen.map((inv) => (
+                <div key={inv.titel} style={{ background: '#f6f7fb', borderRadius: '12px', padding: '12px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 4px' }}>{inv.titel}</p>
+                  <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.55' }}>{inv.text}</p>
+                  {inv.video && <a href={inv.video} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: accent, textDecoration: 'none', marginTop: '6px', display: 'inline-block' }}>Video ansehen</a>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
 
 const IS_DEV = import.meta.env.DEV
+
+const TOUR_SCHRITTE = [
+  { tourKey: 'screening-karte', titel: 'Dein persönlicher Check', text: 'Hier beantwortest du 26 wissenschaftlich validierte Fragen. Je ehrlicher du antwortest, desto hilfreicher ist dein Ergebnis – es gibt keine richtigen oder falschen Antworten.' },
+  { tourKey: 'tagebuch-widget', titel: 'Dein Tagebuch', text: 'Trage täglich ein, wie es dir geht. Mit der Zeit erkennst du Muster – und du kannst deinen Verlauf als PDF zum Therapeutengespräch mitbringen.' },
+  { tourKey: 'therapeuten-tab', titel: 'Hilfe & Anlaufstellen', text: 'Hier findest du Therapeuten, Krisentelefone und weitere Anlaufstellen – für den Fall, dass du professionelle Unterstützung suchst.' },
+  { tourKey: 'ressourcen-bereich', titel: 'Deine Ressourcen', text: 'Nach deinem Screening bekommst du passende Ressourcen vorgeschlagen – abgestimmt auf deine Ergebnisse.' },
+]
+
+const THERAPEUTEN_TOUR = [
+  { tourKey: 'therapeuten-karte', titel: 'Therapeuten in deiner Nähe', text: 'Hier siehst du Psychotherapeuten in der Nähe. Filtere nach freien Terminen und tippe auf einen Eintrag für Details.' },
+  { tourKey: 'therapeuten-liste', titel: 'Vergleichen auf einen Blick', text: 'Scrolle durch die Liste, um Bewertungen und Verfügbarkeit zu vergleichen. Tippe auf einen Therapeuten für mehr Details.' },
+]
+
+function TourOverlay({ schritte, schritt, onWeiter, onUeberspringen }) {
+  const [rect, setRect] = useState(null)
+  const elRef = useRef(null)
+  const accent = '#5B6BC8'
+
+  useEffect(() => {
+    if (elRef.current) {
+      elRef.current.style.position = ''
+      elRef.current.style.zIndex = ''
+      elRef.current = null
+      setRect(null)
+    }
+    if (schritt === null) return
+    const aktuell = schritte[schritt]
+    const el = document.querySelector(`[data-tour="${aktuell.tourKey}"]`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const t = setTimeout(() => {
+      const r = el.getBoundingClientRect()
+      setRect({ top: r.top, left: r.left, right: r.right, bottom: r.bottom, width: r.width, height: r.height })
+      elRef.current = el
+      el.style.position = 'relative'
+      el.style.zIndex = '10001'
+    }, 380)
+    return () => clearTimeout(t)
+  }, [schritt])
+
+  useEffect(() => () => {
+    if (elRef.current) { elRef.current.style.position = ''; elRef.current.style.zIndex = '' }
+  }, [])
+
+  if (schritt === null || !rect) return null
+  const aktuell = schritte[schritt]
+  const istLetzte = schritt === schritte.length - 1
+  const ABST = 12
+  const unten = rect.bottom + ABST + 230 < window.innerHeight
+
+  return (
+    <>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)' }} />
+      <div style={{ position: 'fixed', pointerEvents: 'none', top: rect.top - 5, left: rect.left - 5, width: rect.width + 10, height: rect.height + 10, zIndex: 10000, borderRadius: '20px', border: '2px solid rgba(255,255,255,0.5)', boxShadow: '0 0 24px rgba(91,107,200,0.5)', transition: 'all 0.3s ease' }} />
+      <div style={{ position: 'fixed', left: '14px', right: '14px', ...(unten ? { top: rect.bottom + ABST } : { bottom: window.innerHeight - rect.top + ABST }), zIndex: 10002, background: '#fff', borderRadius: '16px', padding: '18px 18px 14px', boxShadow: '0 8px 32px rgba(0,0,0,0.28)' }}>
+        <div style={{ position: 'absolute', ...(unten ? { top: -8 } : { bottom: -8 }), left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', ...(unten ? { borderBottom: '8px solid #fff' } : { borderTop: '8px solid #fff' }) }} />
+        <p style={{ fontSize: '16px', fontWeight: '700', color: '#2a2a3e', margin: '0 0 7px' }}>{aktuell.titel}</p>
+        <p style={{ fontSize: '13px', color: '#8a8faa', margin: '0 0 14px', lineHeight: '1.55' }}>{aktuell.text}</p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '12px' }}>
+          {schritte.map((_, i) => <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === schritt ? accent : 'rgba(91,107,200,0.2)' }} />)}
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={onUeberspringen} style={{ flex: 1, padding: '11px', background: 'none', border: 'none', color: '#aab0c8', fontSize: '14px', cursor: 'pointer' }}>Überspringen</button>
+          <button onClick={onWeiter} style={{ flex: 2, padding: '11px', background: accent, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>{istLetzte ? 'Verstanden' : 'Weiter'}</button>
+        </div>
+      </div>
+    </>
+  )
+}
 
 function HauptApp() {
   const [aktiveTab, setAktiveTab] = useState('home')
@@ -884,6 +1078,41 @@ function HauptApp() {
   const [tagebuchStartAnsicht, setTagebuchStartAnsicht] = useState(null)
   const [screeningOffen, setScreeningOffen] = useState(false)
   const [testErgebnis, setTestErgebnis] = useState(null)
+  const [verlassenDialog, setVerlassenDialog] = useState(null)
+  const [tourSchritt, setTourSchritt] = useState(null)
+  const [therapeutenTourSchritt, setTherapeutenTourSchritt] = useState(null)
+
+  useEffect(() => {
+    if (!localStorage.getItem('tour_completed')) {
+      setTimeout(() => setTourSchritt(0), 700)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (aktiveTab === 'therapeuten' && tourSchritt === null && !localStorage.getItem('therapeuten_tour_done')) {
+      setTimeout(() => setTherapeutenTourSchritt(0), 500)
+    }
+  }, [aktiveTab])
+
+  const handleTourWeiter = () => {
+    if (tourSchritt < TOUR_SCHRITTE.length - 1) { setTourSchritt(s => s + 1) }
+    else { setTourSchritt(null); localStorage.setItem('tour_completed', 'true') }
+  }
+  const handleTourUeberspringen = () => { setTourSchritt(null); localStorage.setItem('tour_completed', 'true') }
+
+  const handleTherapeutenTourWeiter = () => {
+    if (therapeutenTourSchritt < THERAPEUTEN_TOUR.length - 1) { setTherapeutenTourSchritt(s => s + 1) }
+    else { setTherapeutenTourSchritt(null); localStorage.setItem('therapeuten_tour_done', 'true') }
+  }
+  const handleTherapeutenTourUeberspringen = () => { setTherapeutenTourSchritt(null); localStorage.setItem('therapeuten_tour_done', 'true') }
+
+  const handleTourNeuStarten = () => {
+    localStorage.removeItem('tour_completed')
+    setAktiveTab('home')
+    setTagebuchOffen(false)
+    setScreeningOffen(false)
+    setTimeout(() => setTourSchritt(0), 300)
+  }
 
   const handleTagebuchOeffnen = (startAnsicht) => {
     setTagebuchStartAnsicht(startAnsicht || null)
@@ -895,9 +1124,33 @@ function HauptApp() {
     setScreeningOffen(true)
   }
 
+  const handleTabKlick = (tabId) => {
+    if (screeningOffen && !testErgebnis) {
+      setVerlassenDialog(tabId)
+    } else {
+      setAktiveTab(tabId)
+      setTagebuchOffen(false)
+      setScreeningOffen(false)
+    }
+  }
+
+  const handleSpeichern = () => {
+    // Fortschritt bleibt in localStorage (ScreeningFlow hat bereits gespeichert)
+    setScreeningOffen(false)
+    setAktiveTab(verlassenDialog)
+    setVerlassenDialog(null)
+  }
+
+  const handleVerwerfen = () => {
+    localStorage.removeItem(SCREENING_SPEICHER_KEY)
+    setScreeningOffen(false)
+    setAktiveTab(verlassenDialog)
+    setVerlassenDialog(null)
+  }
+
   return (
     <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '70px' }}>
+      <div style={{ flex: 1, overflowY: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'hidden' : 'auto', paddingBottom: '70px' }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
         {aktiveTab === 'home' && screeningOffen && (testErgebnis
@@ -905,15 +1158,42 @@ function HauptApp() {
           : <ScreeningFlow onZurueck={() => setScreeningOffen(false)} />
         )}
         {aktiveTab === 'therapeuten' && <TherapeutenPlatzhalter />}
-        {aktiveTab === 'einstellungen' && <Einstellungen />}
+        {aktiveTab === 'einstellungen' && <Einstellungen onTourNeuStarten={handleTourNeuStarten} />}
       </div>
+
+      {/* ── Tab-Wechsel-Dialog ──────────────────────────────────── */}
+      {verlassenDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,20,60,0.55)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', padding: '28px 20px 36px', width: '100%', maxWidth: '430px' }}>
+            <p style={{ fontSize: '17px', fontWeight: '700', color: '#2a2a3e', margin: '0 0 8px', textAlign: 'center' }}>Fragebogen pausieren?</p>
+            <p style={{ fontSize: '14px', color: '#8a8faa', margin: '0 0 24px', textAlign: 'center', lineHeight: '1.5' }}>Dein Fortschritt wird gespeichert. Du kannst später weitermachen.</p>
+            <button onClick={handleSpeichern} style={{ width: '100%', padding: '14px', background: '#5B6BC8', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '10px' }}>
+              Speichern &amp; später weitermachen
+            </button>
+            <button onClick={handleVerwerfen} style={{ width: '100%', padding: '14px', background: '#f0f1f8', color: '#5B6BC8', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '10px' }}>
+              Neu anfangen (Fortschritt löschen)
+            </button>
+            <button onClick={() => setVerlassenDialog(null)} style={{ width: '100%', padding: '14px', background: 'none', color: '#8a8faa', border: 'none', fontSize: '15px', cursor: 'pointer' }}>
+              Zurück zum Fragebogen
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100 }}>
         {[{ id: 'home', label: 'Hauptseite' }, { id: 'therapeuten', label: 'Therapeuten' }, { id: 'einstellungen', label: 'Einstellungen' }].map((tab) => (
-          <button key={tab.id} onClick={() => { setAktiveTab(tab.id); setTagebuchOffen(false); setScreeningOffen(false) }} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
+          <button key={tab.id} onClick={() => handleTabKlick(tab.id)} {...(tab.id === 'therapeuten' ? { 'data-tour': 'therapeuten-tab' } : {})} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
             {tab.label}
           </button>
         ))}
       </div>
+
+      {tourSchritt !== null && (
+        <TourOverlay schritte={TOUR_SCHRITTE} schritt={tourSchritt} onWeiter={handleTourWeiter} onUeberspringen={handleTourUeberspringen} />
+      )}
+      {therapeutenTourSchritt !== null && (
+        <TourOverlay schritte={THERAPEUTEN_TOUR} schritt={therapeutenTourSchritt} onWeiter={handleTherapeutenTourWeiter} onUeberspringen={handleTherapeutenTourUeberspringen} />
+      )}
     </div>
   )
 }
@@ -944,6 +1224,7 @@ function RessourceIcon({ typ }) {
 
 function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
   const [openResName, setOpenResName] = useState(null)
+  const hatFortschritt = !!localStorage.getItem(SCREENING_SPEICHER_KEY)
 
   const now = new Date()
   const hour = now.getHours()
@@ -1052,9 +1333,25 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
 
       <div style={{ padding: '0 14px 40px' }}>
 
+        {/* ── Fortschritt-Banner ───────────────────────────────── */}
+        {hatFortschritt && (
+          <div onClick={onScreeningOeffnen} style={{ margin: '14px 0 0', background: 'linear-gradient(135deg, #5B6BC8, #7b5ea7)', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12l7 7 7-7" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#fff', margin: '0 0 2px' }}>Screening fortsetzen</p>
+              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', margin: 0 }}>Du hast noch einen offenen Fragebogen</p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.8)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
+        )}
+
         {/* ── Screening ────────────────────────────────────────── */}
         <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Screening</p>
-        <div style={{ background: '#fff', borderRadius: '18px', border: cardBorder, overflow: 'hidden' }}>
+        <div data-tour="screening-karte" style={{ background: '#fff', borderRadius: '18px', border: cardBorder, overflow: 'hidden' }}>
           <div onClick={onScreeningOeffnen} style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer' }}>
             <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg, #7b5ea7, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -1080,7 +1377,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
 
         {/* ── Tagebuch ─────────────────────────────────────────── */}
         <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Tagebuch</p>
-        <div style={{ background: '#fff', borderRadius: '18px', border: cardBorder, padding: '20px 16px' }}>
+        <div data-tour="tagebuch-widget" style={{ background: '#fff', borderRadius: '18px', border: cardBorder, padding: '20px 16px' }}>
           <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: '0 0 2px', textAlign: 'center' }}>Mein Tagebuch</p>
           <p style={{ fontSize: '11px', color: textS, margin: '0 0 14px', textAlign: 'center' }}>Befinden · Energie · Schlaf</p>
           <p style={{ fontSize: '13px', fontWeight: '600', color: textP, margin: '0 0 10px', textAlign: 'center' }}>{monatsName}</p>
@@ -1110,7 +1407,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
 
         {/* ── Ressourcen ───────────────────────────────────────── */}
         <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 8px' }}>Ressourcen für dich</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+        <div data-tour="ressourcen-bereich" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
           {ressourcen.map((res) => {
             const istRelevant = relevantChips && relevantChips.includes(res.name)
             const istGedimmt = hatScreening && relevantChips && !istRelevant
@@ -1339,7 +1636,7 @@ function Tagebuch({ onZurueck, startAnsicht }) {
         <button onClick={() => setAnsicht('kalender')} style={{ width: '100%', padding: '16px', backgroundColor: colors.background, color: colors.primary, border: `1.5px solid ${colors.primary}`, borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
           Mein Tagebuch
         </button>
-        {!alleAusgewaehlt && <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '8px' }}>Bitte alle drei Ratings ausfüllen</p>}
+        {!alleAusgewaehlt && <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '8px' }}>Bitte alle drei Bereiche ausfüllen</p>}
       </div>
     )
   }
@@ -1455,24 +1752,202 @@ function Tagebuch({ onZurueck, startAnsicht }) {
   return null
 }
 
-function TherapeutenPlatzhalter() {
+const DEMO_THERAPEUTEN = [
+  { id: 1, name: 'Dr. Sarah Müller', titel: 'Psychologische Psychotherapeutin', spezial: ['Depression', 'Angststörungen'], bewertung: 4.8, bewertungen: 34, frei: true, wartezeit: 'ca. 2 Wochen', lat: 0.002, lng: 0.003 },
+  { id: 2, name: 'Thomas Becker', titel: 'Verhaltenstherapeut', spezial: ['Burnout', 'Stress'], bewertung: 4.5, bewertungen: 21, frei: true, wartezeit: 'ca. 4 Wochen', lat: -0.003, lng: -0.002 },
+  { id: 3, name: 'Dr. Anna Fischer', titel: 'Tiefenpsychologin', spezial: ['Trauma', 'ADHS'], bewertung: 4.9, bewertungen: 52, frei: false, wartezeit: 'ca. 3 Monate', lat: 0.005, lng: -0.004 },
+  { id: 4, name: 'Michael Weber', titel: 'Systemischer Therapeut', spezial: ['Beziehungen', 'Angst'], bewertung: 4.3, bewertungen: 18, frei: true, wartezeit: 'ca. 1 Woche', lat: -0.005, lng: 0.006 },
+  { id: 5, name: 'Dr. Julia Schneider', titel: 'Kognitive Verhaltenstherapie', spezial: ['Depression', 'Zwang'], bewertung: 4.7, bewertungen: 41, frei: false, wartezeit: 'ca. 6 Wochen', lat: 0.001, lng: -0.007 },
+]
+
+function SterneBewertung({ wert }) {
   return (
-    <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-      <p style={{ fontSize: '40px', margin: '0 0 16px' }}>🗺️</p>
-      <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 10px' }}>Therapeutensuche</h2>
-      <p style={{ fontSize: '15px', color: colors.textMuted, lineHeight: '1.6' }}>Hier findest du bald Psychologen und Therapeuten in deiner Nähe.</p>
-      <p style={{ fontSize: '13px', color: colors.textLight, marginTop: '16px' }}>Kommt in Version 2</p>
+    <span style={{ display: 'inline-flex', gap: '2px', alignItems: 'center' }}>
+      {[1,2,3,4,5].map(i => (
+        <svg key={i} width="12" height="12" viewBox="0 0 24 24" fill={i <= Math.round(wert) ? '#f5a623' : '#dde1ee'}>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      ))}
+    </span>
+  )
+}
+
+function TherapeutenPlatzhalter() {
+  const accent = '#5B6BC8'
+  const textP = '#2a2a3e'
+  const textS = '#8a8faa'
+  const mapRef = useRef(null)
+  const mapObjRef = useRef(null)
+  const markersRef = useRef([])
+  const [ausgewählt, setAusgewählt] = useState(null)
+  const [filter, setFilter] = useState('alle')
+
+  const KARTEN_MITTE = [48.1374, 11.5755] // München, fest
+
+  useEffect(() => {
+    if (!mapRef.current || mapObjRef.current) return
+
+    delete L.Icon.Default.prototype._getIconUrl
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    })
+
+    const map = L.map(mapRef.current, {
+      zoomControl: false,
+      attributionControl: false,
+      dragging: true,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      maxBounds: L.latLngBounds(
+        [KARTEN_MITTE[0] - 0.02, KARTEN_MITTE[1] - 0.03],
+        [KARTEN_MITTE[0] + 0.02, KARTEN_MITTE[1] + 0.03]
+      ),
+      maxBoundsViscosity: 1.0,
+      minZoom: 13,
+      maxZoom: 15,
+    }).setView(KARTEN_MITTE, 14)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map)
+    L.control.attribution({ prefix: '© OpenStreetMap' }).addTo(map)
+
+    // Statischer User-Punkt in der Mitte
+    L.circleMarker(KARTEN_MITTE, {
+      radius: 10, fillColor: accent, color: '#fff', weight: 3, fillOpacity: 1,
+      className: 'user-dot'
+    }).addTo(map)
+    // Blauer Pulsring
+    const pulseIcon = L.divIcon({
+      className: '',
+      html: `<div style="width:32px;height:32px;border-radius:50%;background:rgba(91,107,200,0.18);border:2px solid rgba(91,107,200,0.4);"></div>`,
+      iconAnchor: [16, 16],
+    })
+    L.marker(KARTEN_MITTE, { icon: pulseIcon, interactive: false }).addTo(map)
+
+    mapObjRef.current = map
+    return () => { map.remove(); mapObjRef.current = null }
+  }, [])
+
+  useEffect(() => {
+    const map = mapObjRef.current
+    if (!map) return
+
+    markersRef.current.forEach(m => m.remove())
+    markersRef.current = []
+
+    const gefilterteT = filter === 'frei' ? DEMO_THERAPEUTEN.filter(t => t.frei) : DEMO_THERAPEUTEN
+    gefilterteT.forEach((t) => {
+      const pos = [KARTEN_MITTE[0] + t.lat, KARTEN_MITTE[1] + t.lng]
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="background:${t.frei ? accent : '#aab0c8'};color:white;border-radius:50%;width:38px;height:38px;font-size:11px;font-weight:800;font-family:system-ui;box-shadow:0 2px 8px rgba(0,0,0,0.25);border:2px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;"><span style="font-size:12px;">★</span><span>${t.bewertung}</span></div>`,
+        iconAnchor: [19, 19],
+      })
+      const marker = L.marker(pos, { icon }).addTo(map)
+      marker.on('click', () => setAusgewählt(t))
+      markersRef.current.push(marker)
+    })
+  }, [filter])
+
+  const gefilterteT = filter === 'frei' ? DEMO_THERAPEUTEN.filter(t => t.frei) : DEMO_THERAPEUTEN
+
+  return (
+    <div style={{ background: '#dde1ee', minHeight: 'calc(100vh - 70px)', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
+
+      {/* ── Header ───────────────────────────────────────────────── */}
+      <div style={{ padding: '20px 16px 16px', background: '#dde1ee' }}>
+        <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px' }}>Kommt in Version 2</p>
+        <h2 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 6px' }}>Therapeuten finden</h2>
+        <p style={{ fontSize: '13px', color: textS, margin: 0, lineHeight: '1.5' }}>Psychologen und Therapeuten in deiner Nähe – mit Bewertungen und Terminverfügbarkeit.</p>
+      </div>
+
+      {/* ── Karte ────────────────────────────────────────────────── */}
+      <div data-tour="therapeuten-karte" style={{ position: 'relative', margin: '0 16px', borderRadius: '18px', overflow: 'hidden', height: '240px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+        <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
+        {/* Filter-Bar über der Karte */}
+        <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 500, display: 'flex', gap: '6px', background: '#fff', borderRadius: '100px', padding: '3px', boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }}>
+          {['alle', 'frei'].map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 16px', borderRadius: '100px', border: 'none', background: filter === f ? accent : 'transparent', color: filter === f ? '#fff' : textS, fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+              {f === 'alle' ? 'Alle' : 'Termine frei'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Therapeuten-Liste ────────────────────────────────────── */}
+      <div data-tour="therapeuten-liste" style={{ flex: 1, background: '#fff', margin: '12px 16px 0', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(91,107,200,0.1)' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
+          <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: '#dde1ee' }} />
+        </div>
+
+        {ausgewählt ? (
+          <div style={{ padding: '4px 16px 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <div>
+                <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: '0 0 2px' }}>{ausgewählt.name}</p>
+                <p style={{ fontSize: '13px', color: textS, margin: 0 }}>{ausgewählt.titel}</p>
+              </div>
+              <button onClick={() => setAusgewählt(null)} style={{ background: '#f0f1f8', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', color: textS, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>×</button>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
+              <SterneBewertung wert={ausgewählt.bewertung} />
+              <span style={{ fontSize: '13px', fontWeight: '600', color: textP }}>{ausgewählt.bewertung}</span>
+              <span style={{ fontSize: '12px', color: textS }}>({ausgewählt.bewertungen} Bewertungen)</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+              {ausgewählt.spezial.map(s => (
+                <span key={s} style={{ padding: '4px 10px', background: '#eef0fa', borderRadius: '100px', fontSize: '12px', color: accent, fontWeight: '500' }}>{s}</span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <div style={{ flex: 1, padding: '10px 12px', background: ausgewählt.frei ? '#eef9f2' : '#fef2f2', borderRadius: '10px' }}>
+                <p style={{ fontSize: '12px', fontWeight: '700', color: ausgewählt.frei ? '#2d7a4f' : '#b71c1c', margin: '0 0 2px' }}>{ausgewählt.frei ? 'Termin verfügbar' : 'Warteliste'}</p>
+                <p style={{ fontSize: '12px', color: textS, margin: 0 }}>Wartezeit: {ausgewählt.wartezeit}</p>
+              </div>
+              <button style={{ padding: '10px 18px', background: accent, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>Kontakt</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '4px 16px 16px', overflowY: 'auto', maxHeight: '260px' }}>
+            {gefilterteT.map(t => (
+              <div key={t.id} onClick={() => setAusgewählt(t)}
+                style={{ background: '#f8f9fe', borderRadius: '14px', padding: '12px 14px', cursor: 'pointer', border: '1.5px solid rgba(91,107,200,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                    <p style={{ fontSize: '14px', fontWeight: '700', color: textP, margin: 0 }}>{t.name}</p>
+                    <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', background: t.frei ? '#eef9f2' : '#fef2f2', color: t.frei ? '#2d7a4f' : '#b71c1c', borderRadius: '6px', flexShrink: 0 }}>{t.frei ? 'Frei' : 'Warteliste'}</span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: textS, margin: '0 0 5px' }}>{t.titel}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <SterneBewertung wert={t.bewertung} />
+                    <span style={{ fontSize: '12px', color: textP, fontWeight: '600' }}>{t.bewertung}</span>
+                    <span style={{ fontSize: '11px', color: textS }}>({t.bewertungen})</span>
+                  </div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6" stroke="#aab0c8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-function Einstellungen() {
+function Einstellungen({ onTourNeuStarten }) {
   const [offen, setOffen] = useState(null)
-
   const [detailAnsicht, setDetailAnsicht] = useState(null)
+  const [email, setEmail] = useState(localStorage.getItem('user_email') || '')
+  const [emailGespeichert, setEmailGespeichert] = useState(false)
+
+  const accent = '#5B6BC8'
+  const textP = '#2a2a3e'
+  const textS = '#8a8faa'
+  const bg = '#dde1ee'
 
   const sektionen = [
-    { titel: 'Konto', items: ['E-Mail-Adresse hinterlegen', 'App bewerten'] },
+    { titel: 'Konto', items: ['E-Mail-Adresse hinterlegen', 'App bewerten', 'App-Tour wiederholen'] },
     { titel: 'Info', items: ['Neuigkeiten & Updates', 'Datenschutz', 'Impressum', 'Hilfe & FAQ', 'Wissenschaftliche Grundlagen'] },
   ]
 
@@ -1558,44 +2033,188 @@ function Einstellungen() {
     },
   ]
 
-  if (detailAnsicht === 'wissenschaft') {
+  const zurueck = () => { setDetailAnsicht(null); setOffen(null) }
+  const ZurueckBtn = () => (
+    <button onClick={zurueck} style={{ background: 'none', border: 'none', color: accent, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>← Zurück</button>
+  )
+  const KardBox = ({ children }) => (
+    <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden', marginBottom: '16px' }}>{children}</div>
+  )
+  const TextBlock = ({ children }) => (
+    <p style={{ fontSize: '14px', color: textS, lineHeight: '1.75', margin: 0, whiteSpace: 'pre-line' }}>{children}</p>
+  )
+
+  // ── E-Mail ────────────────────────────────────────────────────
+  if (detailAnsicht === 'email') {
     return (
-      <div style={{ padding: '24px 16px 0' }}>
-        <button onClick={() => { setDetailAnsicht(null); setOffen(null) }} style={{ background: 'none', border: 'none', color: colors.primary, fontSize: '15px', cursor: 'pointer', padding: '0 0 20px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
-        <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 24px' }}>Wissenschaftliche Grundlagen</h1>
-        <div style={{ backgroundColor: colors.background, borderRadius: '14px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
-          {wissenschaft.map((item, i) => {
-            const istOffen = offen === item.id
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>E-Mail hinterlegen</h1>
+        <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Hinterlege deine E-Mail-Adresse, um bei neuen Funktionen und wichtigen Updates benachrichtigt zu werden. Deine Adresse wird nur auf deinem Gerät gespeichert.</p>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <input
+              type="email"
+              placeholder="deine@email.de"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setEmailGespeichert(false) }}
+              style={{ width: '100%', padding: '12px 14px', border: '1.5px solid rgba(91,107,200,0.2)', borderRadius: '12px', fontSize: '15px', color: textP, outline: 'none', boxSizing: 'border-box', background: '#f8f9fe', fontFamily: 'system-ui' }}
+            />
+            <button
+              onClick={() => { localStorage.setItem('user_email', email); setEmailGespeichert(true) }}
+              style={{ width: '100%', marginTop: '12px', padding: '14px', background: accent, color: '#fff', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}
+            >
+              {emailGespeichert ? '✓ Gespeichert' : 'Speichern'}
+            </button>
+          </div>
+        </KardBox>
+        <p style={{ fontSize: '12px', color: textS, textAlign: 'center', lineHeight: '1.6' }}>Deine E-Mail wird ausschließlich lokal auf deinem Gerät gespeichert und nicht an Server übertragen.</p>
+      </div>
+    )
+  }
+
+  // ── App bewerten ──────────────────────────────────────────────
+  if (detailAnsicht === 'bewerten') {
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>App bewerten</h1>
+        <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Dein Feedback hilft dabei, MeinPsyCheck besser zu machen — für dich und für alle, die psychische Unterstützung suchen.</p>
+        <KardBox>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <p style={{ fontSize: '40px', margin: '0 0 12px' }}>⭐</p>
+            <p style={{ fontSize: '16px', fontWeight: '700', color: textP, margin: '0 0 6px' }}>MeinPsyCheck bewerten</p>
+            <p style={{ fontSize: '13px', color: textS, margin: '0 0 16px', lineHeight: '1.5' }}>Die App ist aktuell als Web-App verfügbar. Eine native App für iOS & Android ist in Planung.</p>
+            <a href="https://www.meinpsycheck.de" target="_blank" rel="noopener noreferrer"
+              style={{ display: 'block', padding: '13px', background: accent, color: '#fff', borderRadius: '12px', fontSize: '15px', fontWeight: '600', textDecoration: 'none', marginBottom: '10px' }}>
+              Zur Website
+            </a>
+          </div>
+        </KardBox>
+      </div>
+    )
+  }
+
+  // ── Neuigkeiten & Updates ─────────────────────────────────────
+  if (detailAnsicht === 'neuigkeiten') {
+    const updates = [
+      { version: '1.2', datum: 'April 2026', neu: ['Therapeutensuche mit interaktiver Karte', 'Ergebnisseite neu gestaltet mit Hero-Banner', 'Screening-Fortschritt wird gespeichert – du kannst jederzeit weitermachen', 'Ressourcen-Overlay auf der Hauptseite'] },
+      { version: '1.1', datum: 'März 2026', neu: ['Onboarding-Flow überarbeitet', 'Tagebuch-Widget auf der Hauptseite', 'Neue Farbwelt & Berg-Animation', 'Fragebogen-Farben angepasst'] },
+      { version: '1.0', datum: 'Februar 2026', neu: ['Erster Launch von MeinPsyCheck', 'Screening mit PHQ-9, GAD-7 und ASRS', 'Tagestagebuch', 'Wissenschaftliche Grundlagen'] },
+    ]
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>Neuigkeiten & Updates</h1>
+        <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Was ist neu in MeinPsyCheck?</p>
+        {updates.map((u, i) => (
+          <KardBox key={u.version}>
+            <div style={{ padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '14px', fontWeight: '800', color: accent }}>Version {u.version}</span>
+                <span style={{ fontSize: '12px', color: textS }}>{u.datum}</span>
+              </div>
+              {u.neu.map((n, j) => (
+                <div key={j} style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ color: accent, fontSize: '13px', flexShrink: 0, marginTop: '1px' }}>✦</span>
+                  <p style={{ fontSize: '13px', color: textP, margin: 0, lineHeight: '1.5' }}>{n}</p>
+                </div>
+              ))}
+            </div>
+          </KardBox>
+        ))}
+      </div>
+    )
+  }
+
+  // ── Datenschutz ───────────────────────────────────────────────
+  if (detailAnsicht === 'datenschutz') {
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Datenschutzerklärung</h1>
+        {[
+          { titel: 'Deine Daten bleiben auf deinem Gerät', text: 'MeinPsyCheck speichert alle Daten ausschließlich lokal auf deinem Gerät (localStorage des Browsers). Es werden keine personenbezogenen Daten an Server übertragen, gespeichert oder verarbeitet. Es gibt keine Nutzerkonten, keine Registrierung und keine Cloud-Synchronisation.' },
+          { titel: 'Welche Daten werden gespeichert?', text: 'Lokal auf deinem Gerät werden gespeichert:\n• Dein Vorname (freiwillig, aus dem Onboarding)\n• Dein ungefähres Alter (aus dem Onboarding)\n• Tagebucheinträge (Befinden, Energie, Schlaf, Freitext)\n• Screening-Ergebnisse und -Datum\n• Relevante Ressourcen aus dem letzten Screening\n• E-Mail-Adresse (falls freiwillig hinterlegt)\n\nAlle Daten können jederzeit durch Löschen des Browser-Caches entfernt werden.' },
+          { titel: 'Keine Weitergabe an Dritte', text: 'Da keine Daten das Gerät verlassen, findet keine Weitergabe an Dritte statt. Es werden keine Analyse-Tools, Tracking-Dienste oder Werbenetzwerke eingesetzt.' },
+          { titel: 'Hosting', text: 'Diese Web-App wird über Netlify (Netlify Inc., 44 Montgomery Street, Suite 300, San Francisco, CA 94104, USA) bereitgestellt. Beim Aufruf der Website werden durch Netlify serverseitig Standard-Logfiles (IP-Adresse, Zeitstempel, aufgerufene URL) gespeichert. Diese Verarbeitung erfolgt auf Basis von Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am sicheren Betrieb). Weitere Infos: netlify.com/privacy' },
+          { titel: 'Karte (Therapeutensuche)', text: 'Die Karte in der Therapeutensuche verwendet OpenStreetMap-Kartendaten, die über Leaflet.js eingebunden werden. Beim Laden der Karte werden Kartenkacheln von openstreetmap.org abgerufen. Dabei kann die IP-Adresse des Nutzers übertragen werden. Datenschutzerklärung OpenStreetMap: osmfoundation.org/wiki/Privacy_Policy' },
+          { titel: 'Deine Rechte', text: 'Da keine personenbezogenen Daten auf Servern gespeichert werden, sind klassische DSGVO-Auskunfts- und Löschrechte gegenüber dem Betreiber nicht anwendbar. Du kannst deine Daten jederzeit selbst durch Löschen des Browser-Caches entfernen.' },
+          { titel: 'Kontakt', text: 'Bei Fragen zum Datenschutz wende dich an: info@meinpsycheck.de' },
+        ].map(({ titel, text }) => (
+          <KardBox key={titel}>
+            <div style={{ padding: '16px' }}>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: textP, margin: '0 0 8px' }}>{titel}</p>
+              <TextBlock>{text}</TextBlock>
+            </div>
+          </KardBox>
+        ))}
+      </div>
+    )
+  }
+
+  // ── Impressum ─────────────────────────────────────────────────
+  if (detailAnsicht === 'impressum') {
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Impressum</h1>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Angaben gemäß § 5 TMG</p>
+            <TextBlock>{'Midhad Lök\n[Straße und Hausnummer]\n[PLZ] [Stadt]\nDeutschland'}</TextBlock>
+          </div>
+        </KardBox>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Kontakt</p>
+            <TextBlock>{'E-Mail: info@meinpsycheck.de\nWebsite: www.meinpsycheck.de'}</TextBlock>
+          </div>
+        </KardBox>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Haftungsausschluss</p>
+            <TextBlock>{'MeinPsyCheck ist kein Medizinprodukt und stellt keine medizinische Diagnose. Die App dient ausschließlich der Orientierung und ersetzt keine professionelle psychologische oder ärztliche Beratung.\n\nBei akuten psychischen Krisen wende dich an die Telefonseelsorge: 0800 111 0 111 (kostenlos, 24/7).'}</TextBlock>
+          </div>
+        </KardBox>
+        <KardBox>
+          <div style={{ padding: '16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 10px' }}>Urheberrecht</p>
+            <TextBlock>{'Die verwendeten Fragebögen (PHQ-9, GAD-7, ASRS v1.1) stehen unter Public Domain (Pfizer Inc. / WHO). Alle übrigen Inhalte dieser App sind urheberrechtlich geschützt.'}</TextBlock>
+          </div>
+        </KardBox>
+      </div>
+    )
+  }
+
+  // ── Hilfe & FAQ ───────────────────────────────────────────────
+  if (detailAnsicht === 'faq') {
+    const faqs = [
+      { f: 'Was ist MeinPsyCheck?', a: 'MeinPsyCheck ist ein kostenloser, anonymer Screening-Test für psychische Gesundheit. Die App verwendet wissenschaftlich validierte Fragebögen (PHQ-9, GAD-7, ASRS), um einzuschätzen, ob professionelle Unterstützung für dich sinnvoll sein könnte.' },
+      { f: 'Stellt die App eine Diagnose?', a: 'Nein. Die App stellt keine Diagnose. Sie zeigt, ob deine Antworten auf eine Belastung hindeuten, die es lohnt, mit einer Fachkraft zu besprechen – das ist ein Hinweis, keine Diagnose.' },
+      { f: 'Wo werden meine Daten gespeichert?', a: 'Alle Daten bleiben ausschließlich auf deinem Gerät. Nichts wird an Server übertragen. Du bist anonym – es gibt kein Konto, keine Registrierung.' },
+      { f: 'Wie oft kann ich das Screening machen?', a: 'Das Screening kann nach 14 Tagen erneut durchgeführt werden. Häufigere Wiederholungen sind möglich, spiegeln aber meist keine echte Veränderung wider.' },
+      { f: 'Was passiert, wenn ich ein Screening abbricht?', a: 'Dein Fortschritt wird automatisch gespeichert. Wenn du zurück zur Hauptseite gehst, siehst du oben einen Banner "Screening fortsetzen". Du kannst auch neu anfangen.' },
+      { f: 'Was tun, wenn ich mich in einer Krise befinde?', a: 'Ruf sofort die Telefonseelsorge an: 0800 111 0 111 (kostenlos, 24 Stunden, 7 Tage die Woche, anonym). Bei akuter Gefahr: Notruf 112.' },
+      { f: 'Wann kommt die native App?', a: 'Eine native App für iOS und Android ist geplant. Du kannst die Web-App jetzt schon auf deinem Startbildschirm speichern – sie funktioniert dann wie eine App.' },
+    ]
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>Hilfe & FAQ</h1>
+        <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Häufig gestellte Fragen</p>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
+          {faqs.map((item, i) => {
+            const istOffen = offen === i
             return (
-              <div key={item.id} style={{ borderBottom: i < wissenschaft.length - 1 ? `1px solid ${colors.border}` : 'none' }}>
-                <div onClick={() => setOffen(istOffen ? null : item.id)} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '15px', color: colors.text, fontWeight: '600' }}>{item.titel}</span>
-                  <span style={{ color: colors.textLight, fontSize: '16px', flexShrink: 0, marginLeft: '8px' }}>{istOffen ? '↑' : '↓'}</span>
+              <div key={i} style={{ borderBottom: i < faqs.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none' }}>
+                <div onClick={() => setOffen(istOffen ? null : i)} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '14px', color: textP, fontWeight: '600', lineHeight: '1.4' }}>{item.f}</span>
+                  <span style={{ color: textS, fontSize: '18px', flexShrink: 0, transition: 'transform 0.2s', transform: istOffen ? 'rotate(180deg)' : 'rotate(0)' }}>⌄</span>
                 </div>
                 {istOffen && (
                   <div style={{ padding: '0 16px 14px' }}>
-                    {item.text && (
-                      <p style={{ fontSize: '14px', color: colors.textMuted, lineHeight: '1.7', margin: '0 0 12px', whiteSpace: 'pre-line' }}>{item.text}</p>
-                    )}
-                    {item.quellen && item.quellen.length > 0 && (
-                      <div style={{ marginTop: '8px' }}>
-                        {item.quellen.map((q, qi) => (
-                          <p key={qi} style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px' }}>{q}</p>
-                        ))}
-                      </div>
-                    )}
-                    {item.instrumente && (
-                      <div>
-                        {item.instrumente.map((inst) => (
-                          <div key={inst.name} style={{ marginBottom: '14px' }}>
-                            <p style={{ fontSize: '14px', fontWeight: '600', color: colors.text, margin: '0 0 6px' }}>{inst.name}</p>
-                            {inst.refs.map((ref, ri) => (
-                              <p key={ri} style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px' }}>{ref}</p>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <p style={{ fontSize: '13px', color: textS, lineHeight: '1.7', margin: 0 }}>{item.a}</p>
                   </div>
                 )}
               </div>
@@ -1606,16 +2225,69 @@ function Einstellungen() {
     )
   }
 
+  // ── Wissenschaftliche Grundlagen ──────────────────────────────
+  if (detailAnsicht === 'wissenschaft') {
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+        <ZurueckBtn />
+        <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Wissenschaftliche Grundlagen</h1>
+        <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
+          {wissenschaft.map((item, i) => {
+            const istOffen = offen === item.id
+            return (
+              <div key={item.id} style={{ borderBottom: i < wissenschaft.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none' }}>
+                <div onClick={() => setOffen(istOffen ? null : item.id)} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: textP, fontWeight: '600', lineHeight: '1.4', flex: 1 }}>{item.titel}</span>
+                  <span style={{ color: textS, fontSize: '18px', flexShrink: 0, marginLeft: '8px', transition: 'transform 0.2s', transform: istOffen ? 'rotate(180deg)' : 'rotate(0)' }}>⌄</span>
+                </div>
+                {istOffen && (
+                  <div style={{ padding: '0 16px 14px' }}>
+                    {item.text && <p style={{ fontSize: '13px', color: textS, lineHeight: '1.75', margin: '0 0 12px', whiteSpace: 'pre-line' }}>{item.text}</p>}
+                    {item.quellen?.length > 0 && item.quellen.map((q, qi) => (
+                      <p key={qi} style={{ fontSize: '11px', color: textS, fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px', opacity: 0.8 }}>{q}</p>
+                    ))}
+                    {item.instrumente && item.instrumente.map((inst) => (
+                      <div key={inst.name} style={{ marginBottom: '14px' }}>
+                        <p style={{ fontSize: '13px', fontWeight: '700', color: textP, margin: '0 0 6px' }}>{inst.name}</p>
+                        {inst.refs.map((ref, ri) => (
+                          <p key={ri} style={{ fontSize: '11px', color: textS, fontStyle: 'italic', lineHeight: '1.6', margin: '0 0 4px', opacity: 0.8 }}>{ref}</p>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Hauptansicht ──────────────────────────────────────────────
+  const itemToDetail = {
+    'E-Mail-Adresse hinterlegen': 'email',
+    'App bewerten': 'bewerten',
+    'App-Tour wiederholen': 'tour',
+    'Neuigkeiten & Updates': 'neuigkeiten',
+    'Datenschutz': 'datenschutz',
+    'Impressum': 'impressum',
+    'Hilfe & FAQ': 'faq',
+    'Wissenschaftliche Grundlagen': 'wissenschaft',
+  }
+
   return (
-    <div style={{ padding: '24px 16px 0' }}>
-      <h1 style={{ fontSize: '22px', fontWeight: '700', color: colors.text, margin: '0 0 24px' }}>Einstellungen</h1>
+    <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+      <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Einstellungen</h1>
       {sektionen.map((sektion) => (
         <div key={sektion.titel} style={{ marginBottom: '24px' }}>
-          <p style={{ fontSize: '11px', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px 4px' }}>{sektion.titel}</p>
-          <div style={{ backgroundColor: colors.background, borderRadius: '14px', border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+          <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px 4px' }}>{sektion.titel}</p>
+          <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
             {sektion.items.map((item, i) => (
-              <div key={item} onClick={item === 'Wissenschaftliche Grundlagen' ? () => setDetailAnsicht('wissenschaft') : undefined} style={{ padding: '14px 16px', fontSize: '15px', color: colors.text, borderBottom: i < sektion.items.length - 1 ? `1px solid ${colors.border}` : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {item}<span style={{ color: colors.textLight, fontSize: '16px' }}>›</span>
+              <div key={item} onClick={() => { if (itemToDetail[item] === 'tour') { onTourNeuStarten?.() } else { setDetailAnsicht(itemToDetail[item]) } }}
+                style={{ padding: '14px 16px', fontSize: '15px', color: textP, borderBottom: i < sektion.items.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {item}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={textS} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
             ))}
           </div>

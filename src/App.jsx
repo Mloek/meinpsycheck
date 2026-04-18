@@ -1903,9 +1903,11 @@ function TherapeutenPlatzhalter() {
 
       {/* ── Header ───────────────────────────────────────────────── */}
       <div style={{ padding: '20px 16px 16px', background: '#dde1ee' }}>
-        <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px' }}>Kommt in Version 2</p>
-        <h2 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 6px' }}>Therapeuten finden</h2>
-        <p style={{ fontSize: '13px', color: textS, margin: 0, lineHeight: '1.5' }}>Psychologen und Therapeuten in deiner Nähe – mit Bewertungen und Terminverfügbarkeit.</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '6px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: 0 }}>Therapeuten finden</h2>
+          <span style={{ fontSize: '11px', fontWeight: '700', color: '#5B6BC8', background: 'rgba(91,107,200,0.12)', padding: '4px 10px', borderRadius: '100px', whiteSpace: 'nowrap', flexShrink: 0 }}>Kommt in V2</span>
+        </div>
+        <p style={{ fontSize: '13px', color: textS, margin: 0, lineHeight: '1.5' }}>Vorschau · Die Daten sind Beispieldaten und noch nicht live.</p>
       </div>
 
       {/* ── Karte ────────────────────────────────────────────────── */}
@@ -1919,6 +1921,13 @@ function TherapeutenPlatzhalter() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Demo-Hinweis zwischen Karte und Liste */}
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '8px 0 0' }}>
+        <span style={{ fontSize: '11px', fontWeight: '600', color: textS, background: 'rgba(138,143,170,0.15)', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.2px' }}>
+          Demo-Vorschau · keine echten Daten
+        </span>
       </div>
 
       {/* ── Therapeuten-Liste ────────────────────────────────────── */}

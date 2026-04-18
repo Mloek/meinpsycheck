@@ -806,10 +806,10 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
 
   // Hero config
   const hero = hatStufe1
-    ? { grad: 'linear-gradient(to bottom, #9b7ec8 0%, #7b5ea7 45%, #2d1f4a 100%)', badge: 'AUFFÄLLIG', titel: 'Erhöhte Belastung erkannt', sub: 'Deine Antworten überschreiten in mindestens einem Bereich den klinischen Schwellenwert. Ein Gespräch mit einer psychologischen oder ärztlichen Fachkraft wäre sinnvoll.' }
+    ? { grad: 'linear-gradient(to bottom, #9b7ec8 0%, #7b5ea7 45%, #2d1f4a 100%)', badge: 'AUFFÄLLIG', titel: 'Erhöhte Belastung erkannt', sub: 'Deine Angaben überschreiten in mindestens einem Bereich den klinischen Grenzwert validierter Screening-Instrumente. Wir empfehlen dir, das Gespräch mit einer psychologischen oder ärztlichen Fachkraft zu suchen.' }
     : höchsteStufe === 2
-    ? { grad: 'linear-gradient(to bottom, #8b9ed8 0%, #5B6BC8 50%, #3a4a9a 100%)', badge: 'LEICHT ERHÖHT', titel: 'Leichte Auffälligkeiten', sub: 'Deine Werte liegen unterhalb des klinischen Grenzwerts, zeigen aber in einzelnen Bereichen leicht erhöhte Belastung. Bei anhaltenden Beschwerden lohnt sich ein Gespräch mit einer Fachkraft.' }
-    : { grad: 'linear-gradient(to bottom, #5a9e82 0%, #3d8068 45%, #1f4d3e 100%)', badge: 'UNAUFFÄLLIG', titel: 'Alles im grünen Bereich', sub: 'Deine Antworten zeigen aktuell keine auffälligen Muster – das ist eine gute Nachricht. Du kannst den Check nach 14 Tagen wiederholen.' }
+    ? { grad: 'linear-gradient(to bottom, #8b9ed8 0%, #5B6BC8 50%, #3a4a9a 100%)', badge: 'LEICHT ERHÖHT', titel: 'Leichte Auffälligkeiten', sub: 'Deine Werte liegen unterhalb des klinischen Grenzwerts, zeigen aber in einzelnen Bereichen subklinisch erhöhte Belastung. Bei anhaltenden Beschwerden empfehlen wir eine fachliche Abklärung.' }
+    : { grad: 'linear-gradient(to bottom, #5a9e82 0%, #3d8068 45%, #1f4d3e 100%)', badge: 'UNAUFFÄLLIG', titel: 'Keine klinischen Hinweise', sub: 'Deine Angaben ergeben anhand der validierten Screening-Instrumente aktuell keine Hinweise auf eine behandlungsbedürftige psychische Störung. Das Screening kann nach 14 Tagen wiederholt werden.' }
 
   // Welche Karten anzeigen
   const karten = hatStufe1 ? stufe1 : stufe2
@@ -842,7 +842,6 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
       <style>{`
         @keyframes bergDrift1 { 0%{transform:translateX(0)} 50%{transform:translateX(-18px)} 100%{transform:translateX(0)} }
         @keyframes bergDrift2 { 0%{transform:translateX(0)} 50%{transform:translateX(12px)} 100%{transform:translateX(0)} }
-        @keyframes ergebnisEin { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
       {/* ── Suizid-Hinweis ───────────────────────────────────────── */}
@@ -858,7 +857,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
       )}
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <div style={{ height: '230px', background: hero.grad, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: '80px', animation: 'ergebnisEin 0.4s ease-out 0ms both' }}>
+      <div style={{ height: '230px', background: hero.grad, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', paddingBottom: '80px' }}>
         <svg viewBox="0 0 430 100" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 0, left: '-10px', width: 'calc(100% + 20px)', height: '70px', display: 'block', animation: 'bergDrift1 14s ease-in-out infinite', opacity: 0.6 }}>
           <polygon points="0,100 55,38 110,72 170,18 230,55 295,8 355,46 430,28 440,100" fill={bg} />
         </svg>
@@ -876,7 +875,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
 
         {/* ── Diagnosen-Karten (horizontal swipebar) ──────────────── */}
         {karten.length > 0 && (
-          <div style={{ animation: 'ergebnisEin 0.4s ease-out 150ms both' }}>
+          <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '20px 4px 10px' }}>
               <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>
                 {hatStufe1 ? 'Auffällige Bereiche' : 'Leicht erhöhte Bereiche'}
@@ -912,12 +911,12 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
                 ))}
               </div>
             )}
-          </div>
+          </>
         )}
 
         {/* ── Ressourcen ──────────────────────────────────────────── */}
         {relevanteRessourcen.length > 0 && (
-          <div style={{ animation: 'ergebnisEin 0.4s ease-out 300ms both' }}>
+          <>
             <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '20px 4px 10px' }}>Passende Ressourcen</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {relevanteRessourcen.map((res) => (
@@ -930,25 +929,23 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
                 </div>
               ))}
             </div>
-          </div>
+          </>
         )}
 
         {/* ── Disclaimer ──────────────────────────────────────────── */}
-        <div style={{ background: 'rgba(91,107,200,0.06)', borderRadius: '12px', padding: '14px', margin: '20px 0 0', border: '1px solid rgba(91,107,200,0.1)', animation: 'ergebnisEin 0.4s ease-out 450ms both' }}>
+        <div style={{ background: 'rgba(91,107,200,0.06)', borderRadius: '12px', padding: '14px', margin: '20px 0 0', border: '1px solid rgba(91,107,200,0.1)' }}>
           <p style={{ fontSize: '12px', color: textS, margin: 0, lineHeight: '1.65' }}>
             {höchsteStufe === 1
-              ? 'Dies ist kein Urteil, sondern ein Hinweis. Nur eine Fachkraft kann das wirklich einschätzen.'
+              ? 'Diese Einschätzung basiert auf Selbstangaben und validierten Screening-Fragen. Sie ist keine Diagnose und ersetzt keine fachliche Abklärung.'
               : höchsteStufe === 2
-              ? 'Das ist ein Momentbild – kein dauerhaftes Urteil. Wenn die Beschwerden bleiben, lohnt sich ein Gespräch mit einer Fachkraft.'
-              : 'Das ist ein Momentbild – kein dauerhaftes Urteil. Du kannst den Check nach 14 Tagen wiederholen.'}
+              ? 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei anhaltenden Beschwerden ist eine fachliche Abklärung sinnvoll.'
+              : 'Diese Einschätzung basiert auf Selbstangaben und ist eine Momentaufnahme. Bei Bedarf kannst du das Screening nach 14 Tagen erneut durchführen.'}
           </p>
         </div>
 
         {/* ── Buttons ─────────────────────────────────────────────── */}
-        <div style={{ animation: 'ergebnisEin 0.4s ease-out 600ms both' }}>
-          <button onClick={onZurueck} style={{ width: '100%', padding: '16px', background: accent, color: '#fff', border: 'none', borderRadius: '14px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginTop: '16px' }}>Zur Startseite</button>
-          <button onClick={onNeustart} style={{ width: '100%', padding: '14px', background: 'transparent', color: textS, border: '1px solid rgba(91,107,200,0.2)', borderRadius: '14px', fontSize: '14px', cursor: 'pointer', marginTop: '10px' }}>Neues Screening starten</button>
-        </div>
+        <button onClick={onZurueck} style={{ width: '100%', padding: '16px', background: accent, color: '#fff', border: 'none', borderRadius: '14px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginTop: '16px' }}>Zur Startseite</button>
+        <button onClick={onNeustart} style={{ width: '100%', padding: '14px', background: 'transparent', color: textS, border: '1px solid rgba(91,107,200,0.2)', borderRadius: '14px', fontSize: '14px', cursor: 'pointer', marginTop: '10px' }}>Neues Screening starten</button>
       </div>
 
       {/* ── Diagnose Detail Overlay ──────────────────────────────── */}

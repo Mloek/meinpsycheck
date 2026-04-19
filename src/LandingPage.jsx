@@ -77,15 +77,30 @@ function InstallModal({ onClose }) {
 
         {/* Tabs */}
         <div style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 4, marginBottom: 22 }}>
-          {['ios', 'android'].map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{
-              flex: 1, padding: '11px 0', borderRadius: 11, border: 'none', cursor: 'pointer',
-              fontWeight: 700, fontSize: 15, transition: 'background 0.2s',
-              background: tab === t ? '#6d28d9' : 'transparent', color: '#fff',
-            }}>
-              {t === 'ios' ? '🍎  iPhone' : '🤖  Android'}
-            </button>
-          ))}
+          <button onClick={() => setTab('ios')} style={{
+            flex: 1, padding: '10px 0', borderRadius: 11, border: 'none', cursor: 'pointer',
+            fontWeight: 700, fontSize: 15, transition: 'background 0.2s',
+            background: tab === 'ios' ? '#6d28d9' : 'transparent', color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+          }}>
+            {/* Apple-style icon – generic apple silhouette, not Apple Inc. trademark */}
+            <svg width="15" height="18" viewBox="0 0 15 18" fill="currentColor">
+              <path d="M12.27 9.54c-.02-2.07 1.7-3.07 1.78-3.12-0.97-1.42-2.48-1.61-3.02-1.63-1.29-.13-2.52.76-3.17.76-.65 0-1.66-.74-2.73-.72-1.4.02-2.7.82-3.42 2.08-1.46 2.53-.37 6.28 1.05 8.33.7 1.01 1.53 2.14 2.62 2.1 1.05-.04 1.45-.68 2.72-.68 1.27 0 1.63.68 2.74.66 1.13-.02 1.85-1.03 2.54-2.04.8-1.17 1.13-2.3 1.15-2.36-.03-.01-2.24-.86-2.26-3.38zM10.18 3.17c.58-.71.97-1.69.86-2.67-.83.03-1.84.55-2.43 1.25-.53.62-.99 1.62-.87 2.57.93.07 1.87-.47 2.44-1.15z"/>
+            </svg>
+            iPhone
+          </button>
+          <button onClick={() => setTab('android')} style={{
+            flex: 1, padding: '10px 0', borderRadius: 11, border: 'none', cursor: 'pointer',
+            fontWeight: 700, fontSize: 15, transition: 'background 0.2s',
+            background: tab === 'android' ? '#6d28d9' : 'transparent', color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+          }}>
+            {/* Android robot – CC BY 3.0 Google */}
+            <svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor">
+              <path d="M1.5 6.5C.67 6.5 0 7.17 0 8v4c0 .83.67 1.5 1.5 1.5S3 12.83 3 12V8c0-.83-.67-1.5-1.5-1.5zm13 0C13.67 6.5 13 7.17 13 8v4c0 .83.67 1.5 1.5 1.5S16 12.83 16 12V8c0-.83-.67-1.5-1.5-1.5zM3.5 14c0 .55.45 1 1 1h.5v2.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V15h1v2.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V15h.5c.55 0 1-.45 1-1V6.5h-9V14zM8 0C5.24 0 2.92 1.66 2.06 4h11.88C13.08 1.66 10.76 0 8 0zm-1.5 2.75c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zm3 0c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5z"/>
+            </svg>
+            Android
+          </button>
         </div>
 
         {/* Steps */}

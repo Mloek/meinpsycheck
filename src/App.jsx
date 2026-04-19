@@ -16,14 +16,7 @@ const colors = {
   crisisBg: '#FFEBEE',
 }
 
-const PHQ4_FRAGEN = [
-  { id: 'phq4_1', text: 'Wenig Interesse oder Freude an Ihren Tätigkeiten' },
-  { id: 'phq4_2', text: 'Niedergeschlagenheit, Schwermut oder Hoffnungslosigkeit' },
-  { id: 'phq4_3', text: 'Gefühle der Nervosität, Ängstlichkeit oder Anspannung' },
-  { id: 'phq4_4', text: 'Unfähigkeit, Sorgen zu stoppen oder zu kontrollieren' },
-]
-
-// PHQ9 hat jetzt nur noch 8 Fragen – die Suizid-Frage (Item 9) ist ein eigener Screen
+// PHQ9: 8 Fragen (Item 9 = Suizid ist ein eigener Screen)
 const PHQ9_FRAGEN = [
   { id: 'phq9_1', text: 'Wenig Interesse oder Freude an Ihren Tätigkeiten' },
   { id: 'phq9_2', text: 'Niedergeschlagenheit, Schwermut oder Hoffnungslosigkeit' },
@@ -61,12 +54,8 @@ const ANTWORTEN_STANDARD = [
   { wert: 3, label: 'Beinahe jeden Tag' },
 ]
 
-const ANTWORTEN_GAD7 = [
-  { wert: 0, label: 'Nie' },
-  { wert: 1, label: 'An manchen Tagen' },
-  { wert: 2, label: 'An mehr als der Hälfte der Tage' },
-  { wert: 3, label: 'Beinahe jeden Tag' },
-]
+// GAD-7 verwendet laut Löwe et al. 2008 dieselben Labels wie PHQ-9
+const ANTWORTEN_GAD7 = ANTWORTEN_STANDARD
 
 const ANTWORTEN_ASRS = [
   { wert: 0, label: 'Niemals' },
@@ -84,19 +73,19 @@ const INSTRUMENT_CONFIG = {
   ASRS: { fragen: ASRS_FRAGEN, antworten: ANTWORTEN_ASRS, zeitrahmen: 'In den letzten 6 Monaten:' },
 }
 
-// 4 (PHQ4) + 8 (PHQ9 ohne Suizid) + 7 (GAD7) + 6 (ASRS) + 1 (Suizid-Screen) = 26
-const GESAMT_FRAGEN = 26
+// 8 (PHQ-9) + 7 (GAD-7) + 6 (ASRS) + 1 (Suizid) = 22
+const GESAMT_FRAGEN = 22
 
 function berechneErgebnisse(antworten) {
   const ergebnisse = []
 
   const phq9Score = PHQ9_FRAGEN.reduce((s, f) => s + (antworten[f.id] ?? 0), 0) + (antworten['phq9_9'] ?? 0)
   const phq9Chips = []
+  if ((antworten['phq9_1'] ?? 0) >= 2) phq9Chips.push('Freudlosigkeit') // Item 1 = Anhedonie – korrektes Mapping
   if ((antworten['phq9_3'] ?? 0) >= 2) phq9Chips.push('Schlafprobleme')
-  if ((antworten['phq9_6'] ?? 0) >= 2) phq9Chips.push('Grübeln')
   if ((antworten['phq9_4'] ?? 0) >= 2) phq9Chips.push('Antriebslosigkeit')
+  if ((antworten['phq9_6'] ?? 0) >= 2) phq9Chips.push('Grübeln')
   if ((antworten['phq9_7'] ?? 0) >= 2) phq9Chips.push('Konzentration')
-  if ((antworten['phq9_2'] ?? 0) >= 2) phq9Chips.push('Freudlosigkeit')
   ergebnisse.push({ instrument: 'PHQ-9', label: 'Depression', score: phq9Score, cutOff: 10, stufe: phq9Score >= 10 ? 1 : phq9Score >= 5 ? 2 : 3, chips: phq9Chips })
 
   const gad7Score = GAD7_FRAGEN.reduce((s, f) => s + (antworten[f.id] ?? 0), 0)
@@ -112,16 +101,8 @@ function berechneErgebnisse(antworten) {
   }, 0)
   ergebnisse.push({ instrument: 'ASRS v1.1', label: 'ADHS', score: graueFelder, cutOff: 4, stufe: graueFelder >= 4 ? 1 : graueFelder >= 2 ? 2 : 3, chips: graueFelder >= 2 ? ['Konzentration', 'Innere Unruhe'] : [] })
 
-  const who5Intern = Math.round((
-    (3 - Math.min(antworten['phq9_1'] ?? 0, 3)) +
-    (3 - Math.min(antworten['phq9_4'] ?? 0, 3)) +
-    (3 - Math.min(antworten['phq9_3'] ?? 0, 3)) +
-    (3 - Math.min(antworten['phq9_2'] ?? 0, 3)) +
-    (3 - Math.min(antworten['phq9_7'] ?? 0, 3))
-  ) * (100 / 15))
-  if (who5Intern <= 52) {
-    ergebnisse.push({ instrument: 'WHO-5 (aus PHQ-9)', label: 'Chronischer Stress', score: who5Intern, cutOff: 52, stufe: who5Intern <= 28 ? 1 : 2, chips: ['Chronischer Stress'] })
-  }
+  // WHO-5 entfernt: kein eigenständiger validerter Fragebogen – war aus invertierten PHQ-9-Items approximiert,
+  // was wissenschaftlich nicht haltbar ist. WHO-5 hat eigene Fragen und wird hier nicht erhoben.
 
   return ergebnisse
 }
@@ -136,7 +117,7 @@ const ONBOARDING_SCREENS = [
   {
     label: 'Wie es funktioniert',
     titel: 'Validierte Fragebögen. Klare Einschätzung.',
-    text: 'MeinPsyCheck nutzt PHQ-9, GAD-7 und ASRS v1.1 – international standardisierte Instrumente aus der klinischen Praxis. Du beantwortest 26 Fragen. Das Ergebnis zeigt dir, ob Unterstützung für dich sinnvoll wäre.',
+    text: 'MeinPsyCheck nutzt PHQ-9, GAD-7 und ASRS v1.1 – international standardisierte Instrumente aus der klinischen Praxis. Du beantwortest 22 Fragen. Das Ergebnis zeigt dir, ob Unterstützung für dich sinnvoll wäre.',
   },
   {
     label: 'Deine Privatsphäre',
@@ -419,7 +400,7 @@ function SuizidScreen({ onAntwort }) {
       <div style={{ height: '4px', backgroundColor: colors.border, borderRadius: '2px', marginBottom: '8px' }}>
         <div style={{ height: '4px', backgroundColor: colors.primary, borderRadius: '2px', width: '100%' }} />
       </div>
-      <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 32px' }}>Frage 26 von 26</p>
+      <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 32px' }}>Frage 22 von 22</p>
 
       <div style={{ backgroundColor: colors.crisisBg, borderRadius: '10px', padding: '12px 14px', marginBottom: '24px' }}>
         <p style={{ fontSize: '13px', color: colors.crisis, margin: 0, lineHeight: '1.5' }}>
@@ -483,7 +464,7 @@ function SuizidHinweisScreen({ wert, onWeiter }) {
 }
 
 // ─── SCREENING FLOW ───────────────────────────────────────────────────────────
-// Ablauf: einstieg → phq4 → vertiefung (PHQ9, GAD7, ASRS) → suizid → ergebnis ODER krise
+// Ablauf: einstieg → vertiefung (PHQ-9, GAD-7, ASRS) → suizid → ergebnis ODER krise
 const SCREENING_SPEICHER_KEY = 'screening_fortschritt'
 
 function ScreeningFlow({ onZurueck }) {
@@ -510,16 +491,10 @@ function ScreeningFlow({ onZurueck }) {
   }, [phase, alleAntworten, aktuellesInstrument, suizidWert])
 
   // Wie viele Fragen waren schon vor diesem Instrument?
-  // PHQ4=4 Fragen, dann PHQ9 startet bei Frage 5 (bisherFragen=4)
-  // GAD7 startet bei Frage 13 (4 + 8 PHQ9-Fragen = 12, bisherFragen=12)
-  // ASRS startet bei Frage 20 (4 + 8 + 7 = 19, bisherFragen=19)
-  const bisherFragenProInstrument = [4, 12, 19]
-
-  const handlePHQ4Fertig = (neueAntworten) => {
-    setAlleAntworten(prev => ({ ...prev, ...neueAntworten }))
-    setAktuellesInstrument(0)
-    setPhase('vertiefung')
-  }
+  // PHQ-9 startet bei Frage 1 (bisherFragen=0)
+  // GAD-7 startet bei Frage 9 (8 PHQ-9 Fragen, bisherFragen=8)
+  // ASRS startet bei Frage 16 (8 + 7 = 15, bisherFragen=15)
+  const bisherFragenProInstrument = [0, 8, 15]
 
   const handleVertiefungFertig = (neueAntworten) => {
     const merged = { ...alleAntworten, ...neueAntworten }
@@ -557,11 +532,7 @@ function ScreeningFlow({ onZurueck }) {
   }
 
   if (phase === 'einstieg') {
-    return <ScreeningEinstieg symptomAuswahl={symptomAuswahl} setSymptomAuswahl={setSymptomAuswahl} onWeiter={() => setPhase('phq4')} onZurueck={onZurueck} />
-  }
-
-  if (phase === 'phq4') {
-    return <ScreeningFragen fragen={PHQ4_FRAGEN} antworten={ANTWORTEN_STANDARD} zeitrahmen="In den letzten 2 Wochen:" onFertig={handlePHQ4Fertig} onZurueck={() => setPhase('einstieg')} bisherFragen={0} />
+    return <ScreeningEinstieg symptomAuswahl={symptomAuswahl} setSymptomAuswahl={setSymptomAuswahl} onWeiter={() => { setAktuellesInstrument(0); setPhase('vertiefung') }} onZurueck={onZurueck} />
   }
 
   if (phase === 'vertiefung') {
@@ -574,7 +545,7 @@ function ScreeningFlow({ onZurueck }) {
       onFertig={handleVertiefungFertig}
       onZurueck={() => {
         if (aktuellesInstrument > 0) setAktuellesInstrument(aktuellesInstrument - 1)
-        else setPhase('phq4')
+        else setPhase('einstieg')
       }}
       bisherFragen={bisherFragenProInstrument[aktuellesInstrument]}
     />
@@ -693,13 +664,18 @@ const STOERUNGSBILDER = {
     kurz: 'Deine Angaben im Bereich Konzentration & Impulsivität überschreiten den klinischen Grenzwert. Das deutet auf ADHS-Symptome im Erwachsenenalter hin.',
     lang: 'Der ASRS v1.1 wurde von der Weltgesundheitsorganisation entwickelt und erfasst typische ADHS-Symptome bei Erwachsenen – Schwierigkeiten beim Abschließen von Aufgaben, Probleme mit Organisation und Planung sowie motorische Unruhe. ADHS im Erwachsenenalter wird oft spät erkannt, weil die Symptome sich anders zeigen als bei Kindern. Viele Betroffene haben jahrelang das Gefühl, sich einfach „mehr anstrengen" zu müssen – ohne zu wissen, dass ein neurobiologischer Unterschied dahintersteckt. Ein Gespräch mit einem Psychiater oder spezialisierten Psychologen kann Klarheit bringen.',
   },
-  'WHO-5 (aus PHQ-9)': {
-    kurz: 'Deine Angaben deuten auf ein reduziertes allgemeines Wohlbefinden hin, das auf chronischen Stress oder emotionale Erschöpfung hinweisen kann.',
-    lang: 'Der WHO-5 Wohlbefindens-Index misst, wie oft du dich in den letzten zwei Wochen aktiv, entspannt und positiv gestimmt gefühlt hast. Ein niedriger Wert ist kein Zeichen einer psychischen Störung – aber er ist ein ernstes Signal, das nicht ignoriert werden sollte. Chronischer Stress ist einer der am besten belegten Auslöser für eine Vielzahl von Erkrankungen – sowohl körperlich als auch psychisch. Dauerhafter Stress erhöht das Risiko für Herz-Kreislauf-Erkrankungen, Schlafstörungen, Immunschwäche und ist gleichzeitig einer der häufigsten Wegbereiter für Depressionen und Angststörungen. Du brauchst keine Diagnose, um dir Unterstützung zu suchen. Wer früh gegensteuert, schützt nicht nur seine psychische Gesundheit, sondern seinen gesamten Körper. Ein Gespräch mit dem Hausarzt oder einem Psychologen kann ein sinnvoller erster Schritt sein. Das Tagebuch in dieser App hilft dir, Muster zu erkennen – wann es dir besser geht, wann schlechter, und was den Unterschied macht.',
-  },
 }
 
 const RESSOURCEN_KATALOG = {
+  'Freudlosigkeit': {
+    erklaerung: 'Wenig Freude oder Interesse an Dingen, die früher Spaß gemacht haben – das ist eines der Kernsymptome einer depressiven Episode. Es ist kein Willensproblem, sondern ein neurobiologisches Signal.',
+    interventionen: [
+      { titel: 'Verhaltensaktivierung', text: 'Kleine angenehme Aktivitäten gezielt einplanen – auch wenn die Motivation fehlt. Der Antrieb folgt der Handlung, nicht umgekehrt.' },
+      { titel: 'Positivtagebuch', text: 'Täglich 1–3 kleine positive Momente notieren – trainiert die Aufmerksamkeit für Freude' },
+      { titel: 'Ausdauersport', text: 'Walking, Schwimmen, Radfahren – erhöht Dopamin und wirkt nachweislich antidepressiv' },
+      { titel: 'Soziale Aktivität', text: 'Einen Menschen kontaktieren – auch wenn es sich nicht danach anfühlt' },
+    ],
+  },
   'Schlafprobleme': {
     erklaerung: 'Du hast angegeben, dass du an mehr als der Hälfte der Tage Schwierigkeiten beim Ein- oder Durchschlafen hast. Schlafprobleme sind eines der häufigsten und am besten behandelbaren Symptome.',
     interventionen: [
@@ -816,23 +792,23 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
 
   // Chip → Katalog-Mapping für Ressourcen
   const chipToKatalog = {
+    'Freudlosigkeit': 'Freudlosigkeit',
     'Schlafprobleme': 'Schlafprobleme', 'Grübeln': 'Grübeln', 'Grübeln / Sorgen': 'Grübeln',
     'Antriebslosigkeit': 'Antriebslosigkeit', 'Konzentration': 'Konzentration',
     'Innere Unruhe': 'Innere Unruhe', 'Reizbarkeit': 'Reizbarkeit',
-    'Chronischer Stress': 'Chronischer Stress', 'Sozialer Rückzug': 'Sozialer Rückzug',
-    'Freudlosigkeit': 'Grübeln',
+    'Sozialer Rückzug': 'Sozialer Rückzug',
   }
   const alleRelevantChips = [...new Set(karten.flatMap(r => r.chips ?? []))]
   const relevanteKatalogKeys = [...new Set(alleRelevantChips.map(c => chipToKatalog[c]).filter(k => k && RESSOURCEN_KATALOG[k]))]
 
   const ressourcenConfig = [
+    { katalog: 'Freudlosigkeit', label: 'Freudlosigkeit', farbe: '#e8d4f0', icon: 'spark' },
     { katalog: 'Schlafprobleme', label: 'Schlaf', farbe: '#b8d4f0', icon: 'moon' },
     { katalog: 'Grübeln', label: 'Grübeln', farbe: '#d4b8e8', icon: 'bulb' },
     { katalog: 'Antriebslosigkeit', label: 'Antrieb', farbe: '#b8e4d0', icon: 'bolt' },
     { katalog: 'Konzentration', label: 'Konzentration', farbe: '#c8d8f0', icon: 'target' },
     { katalog: 'Innere Unruhe', label: 'Innere Unruhe', farbe: '#f0b8c8', icon: 'wave' },
     { katalog: 'Reizbarkeit', label: 'Reizbarkeit', farbe: '#f0d4b8', icon: 'flame' },
-    { katalog: 'Chronischer Stress', label: 'Stress', farbe: '#a8c8e0', icon: 'spiral' },
     { katalog: 'Sozialer Rückzug', label: 'Sozialer Rückzug', farbe: '#c8b8e8', icon: 'person' },
   ]
   const relevanteRessourcen = ressourcenConfig.filter(r => relevanteKatalogKeys.includes(r.katalog))

@@ -261,7 +261,7 @@ export default function LandingPage() {
             {/* Steps below */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 400, margin: '0 auto' }}>
               {[
-                { n: '1', title: '26 validierte Fragen', desc: 'PHQ-9, GAD-7, ASRS – klinisch geprüfte Instrumente' },
+                { n: '1', title: '27 validierte Fragen', desc: 'PHQ-9, GAD-7, WHO-5, ASRS – klinisch geprüfte Instrumente' },
                 { n: '2', title: 'Sofortige Einschätzung', desc: 'Drei Stufen – von unauffällig bis klinisch relevant' },
                 { n: '3', title: 'Passende Ressourcen', desc: 'Konkrete nächste Schritte für deine Situation' },
               ].map(s => (
@@ -288,7 +288,7 @@ export default function LandingPage() {
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 {[
-                  { n: '1', title: '26 validierte Fragen', desc: 'PHQ-9, GAD-7, ASRS – klinisch geprüfte Instrumente aus der Psychiatrie' },
+                  { n: '1', title: '27 validierte Fragen', desc: 'PHQ-9, GAD-7, WHO-5, ASRS – klinisch geprüfte Instrumente aus der Psychiatrie' },
                   { n: '2', title: 'Sofortige Einschätzung', desc: 'Drei Stufen – von unauffällig bis klinisch relevant' },
                   { n: '3', title: 'Passende Ressourcen', desc: 'Schlaf, Antrieb, Stress – konkrete nächste Schritte' },
                 ].map(s => (

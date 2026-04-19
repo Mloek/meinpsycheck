@@ -1,4 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+
+// Platform detection
+function detectPlatform() {
+  const ua = navigator.userAgent
+  if (/iPad|iPhone|iPod/.test(ua)) return 'ios'
+  if (/Android/.test(ua)) return 'android'
+  return 'ios' // Desktop-Fallback: iOS-Tab zeigen
+}
 
 function useWindowWidth() {
   const [w, setW] = useState(window.innerWidth)
@@ -46,8 +54,8 @@ const INSTALL_STEPS = {
   ],
 }
 
-function InstallModal({ onClose }) {
-  const [tab, setTab] = useState('ios')
+function InstallModal({ onClose, defaultTab }) {
+  const [tab, setTab] = useState(defaultTab || 'ios')
   const startY = useRef(0)
   const steps = INSTALL_STEPS[tab]
 
@@ -129,7 +137,7 @@ function InstallModal({ onClose }) {
           ))}
         </div>
 
-        {/* Tip */}
+        {/* Tip / Chrome-Hinweis */}
         <div style={{
           marginTop: 18, padding: '12px 16px',
           background: 'rgba(109,40,217,0.3)', borderRadius: 14,
@@ -137,8 +145,8 @@ function InstallModal({ onClose }) {
         }}>
           <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
             {tab === 'ios'
-              ? 'Nach der Installation startet die App direkt ohne Browser – kein App Store nötig.'
-              : 'Kein Play Store nötig. Die App läuft direkt auf deinem Homebildschirm.'}
+              ? 'Wichtig: Diese Seite muss in Safari geöffnet sein – nicht in Chrome oder Firefox. Sonst erscheint die Option nicht.'
+              : 'Wichtig: Diese Seite muss in Chrome geöffnet sein. Falls die Option nicht erscheint, einfach die Adresse in Chrome eingeben.'}
           </p>
         </div>
       </div>
@@ -151,6 +159,7 @@ export default function LandingPage() {
   const [installPrompt, setInstallPrompt] = useState(null)
   const vw = useWindowWidth()
   const isMobile = vw < 680
+  const platform = useMemo(() => detectPlatform(), [])
 
   const phoneW = isMobile ? `${Math.round(vw * 0.38)}px` : `${Math.round(Math.min(vw * 0.22, 240))}px`
   const phonWTherapie = isMobile ? `${Math.round(vw * 0.7)}px` : `${Math.round(Math.min(vw * 0.26, 280))}px`
@@ -293,7 +302,7 @@ export default function LandingPage() {
         </p>
       </div>
 
-      {showModal && <InstallModal onClose={() => setShowModal(false)} />}
+      {showModal && <InstallModal onClose={() => setShowModal(false)} defaultTab={platform} />}
     </div>
   )
 }

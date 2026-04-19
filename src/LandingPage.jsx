@@ -148,11 +148,34 @@ function InstallModal({ onClose }) {
 
 export default function LandingPage() {
   const [showModal, setShowModal] = useState(false)
+  const [installPrompt, setInstallPrompt] = useState(null)
   const vw = useWindowWidth()
   const isMobile = vw < 680
 
   const phoneW = isMobile ? `${Math.round(vw * 0.38)}px` : `${Math.round(Math.min(vw * 0.22, 240))}px`
   const phonWTherapie = isMobile ? `${Math.round(vw * 0.7)}px` : `${Math.round(Math.min(vw * 0.26, 280))}px`
+
+  // Android: nativer Install-Dialog abfangen
+  useEffect(() => {
+    const handler = e => {
+      e.preventDefault()
+      setInstallPrompt(e)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  const handleInstallClick = async () => {
+    if (installPrompt) {
+      // Android: nativer Dialog direkt auslösen
+      installPrompt.prompt()
+      await installPrompt.userChoice
+      setInstallPrompt(null)
+    } else {
+      // iOS: manuelle Anleitung zeigen
+      setShowModal(true)
+    }
+  }
 
   return (
     <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', overflowX: 'hidden', color: '#fff' }}>
@@ -256,7 +279,7 @@ export default function LandingPage() {
         <p style={{ fontSize: isMobile ? 15 : 17, color: 'rgba(255,255,255,0.6)', marginBottom: 36, lineHeight: 1.6 }}>
           Kein App Store. Kein Konto. Direkt auf deinen Homebildschirm.
         </p>
-        <button onClick={() => setShowModal(true)} style={{
+        <button onClick={handleInstallClick} style={{
           background: '#fff', color: '#3b0764', border: 'none', borderRadius: 100,
           padding: isMobile ? '18px 40px' : '20px 72px',
           fontSize: isMobile ? 18 : 22, fontWeight: 800, cursor: 'pointer',

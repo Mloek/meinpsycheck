@@ -184,7 +184,7 @@ export default function LandingPage() {
         overflow: 'visible',
       }}>
         {/* Left phone */}
-        <PhoneMockup src="/screenshots/hauptseite.png" alt="Hauptseite" tilt={-5} />
+        <PhoneMockup src="/hauptseite.png" alt="Hauptseite" tilt={-5} />
 
         {/* Steps */}
         <div style={{ flex: '1 1 160px', maxWidth: 200, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -209,7 +209,7 @@ export default function LandingPage() {
         </div>
 
         {/* Right phone */}
-        <PhoneMockup src="/screenshots/ergebnis.png" alt="Ergebnis" tilt={5} />
+        <PhoneMockup src="/ergebnis.png" alt="Ergebnis" tilt={5} />
       </div>
 
       {/* CTA */}

@@ -166,12 +166,12 @@ const ANDROID_STEPS = [
           <span style={{ fontSize: 18, color: '#1a73e8', fontWeight: 700 }}>⋮</span>
         </div>
         {/* Dropdown menu */}
-        <div style={{ position: 'absolute', top: 60, right: 8, background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.2)', minWidth: 160, zIndex: 10, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 60, right: 8, background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.2)', minWidth: 180, zIndex: 10, overflow: 'hidden' }}>
           {['Neuer Tab', 'Verlauf', 'Lesezeichen'].map(item => (
             <div key={item} style={{ padding: '11px 16px', fontSize: 13, color: '#333', borderBottom: '1px solid #f0f0f0' }}>{item}</div>
           ))}
           <div style={{ padding: '11px 16px', fontSize: 13, fontWeight: 700, color: '#1a73e8', background: '#e8f0fe' }}>
-            App installieren
+            Zum Startbildschirm hinzufügen
           </div>
           <div style={{ padding: '11px 16px', fontSize: 13, color: '#333' }}>Einstellungen</div>
         </div>
@@ -179,24 +179,23 @@ const ANDROID_STEPS = [
     ),
   },
   {
-    label: '"App installieren" antippen',
+    label: '"Zum Startbildschirm hinzufügen" tippen',
     screen: () => (
       <div style={{ width: '100%', height: '100%', background: '#f8f9fa', display: 'flex', flexDirection: 'column' }}>
         <div style={{ background: '#1a73e8', padding: '10px 14px 8px', display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 11, color: '#fff', fontWeight: 600 }}>9:41</span>
           <span style={{ fontSize: 11, color: '#fff' }}>● WiFi</span>
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          {/* Install dialog */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.15)', textAlign: 'center' }}>
             <div style={{ width: 52, height: 52, borderRadius: 12, background: 'linear-gradient(135deg, #5B21B6, #7c3aed)', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: 24, color: '#fff' }}>🧠</span>
             </div>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, color: '#1c1c1e' }}>MeinPsyCheck installieren</div>
-            <div style={{ fontSize: 12, color: '#8e8e93', marginBottom: 16 }}>meinpsycheck.de</div>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: '#1c1c1e' }}>MeinPsyCheck</div>
+            <div style={{ fontSize: 11, color: '#8e8e93', marginBottom: 16 }}>meinpsycheck.de</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <div style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 13, color: '#666', textAlign: 'center' }}>Abbrechen</div>
-              <div style={{ flex: 1, padding: '10px', borderRadius: 8, background: '#1a73e8', fontSize: 13, color: '#fff', fontWeight: 700, textAlign: 'center' }}>Installieren</div>
+              <div style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 12, color: '#666', textAlign: 'center' }}>Abbrechen</div>
+              <div style={{ flex: 1, padding: '10px', borderRadius: 8, background: '#1a73e8', fontSize: 12, color: '#fff', fontWeight: 700, textAlign: 'center' }}>Hinzufügen</div>
             </div>
           </div>
         </div>
@@ -325,7 +324,7 @@ function InstallModal({ onClose }) {
 
   const steps = {
     ios: ['Safari öffnen (nicht Chrome)', 'Teilen-Symbol unten antippen', '"Zum Home-Bildschirm" wählen', '"Hinzufügen" tippen – fertig'],
-    android: ['Chrome öffnen', 'Drei Punkte oben rechts antippen', '"App installieren" wählen', 'Bestätigen – fertig'],
+    android: ['Chrome öffnen', 'Drei Punkte oben rechts antippen', '"Zum Startbildschirm hinzufügen" wählen', '"Hinzufügen" tippen – fertig'],
   }
 
   return (

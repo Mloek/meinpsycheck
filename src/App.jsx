@@ -65,16 +65,37 @@ const ANTWORTEN_ASRS = [
   { wert: 4, label: 'Sehr oft' },
 ]
 
-const INSTRUMENTE = ['PHQ9', 'GAD7', 'ASRS']
+// WHO-5 Wellbeing Index – validierter deutscher Wortlaut (WHO, 1998)
+// Skala 0–5 pro Item, Gesamtscore × 4 = 0–100 (höher = besser)
+const WHO5_FRAGEN = [
+  { id: 'who5_1', text: 'Ich bin froh und guter Stimmung gewesen' },
+  { id: 'who5_2', text: 'Ich habe mich ruhig und entspannt gefühlt' },
+  { id: 'who5_3', text: 'Ich habe mich aktiv und lebhaft gefühlt' },
+  { id: 'who5_4', text: 'Ich bin ausgeruht aufgewacht und habe mich frisch gefühlt' },
+  { id: 'who5_5', text: 'Mein Alltag ist voller Dinge, die mich interessieren' },
+]
+
+const ANTWORTEN_WHO5 = [
+  { wert: 5, label: 'Die ganze Zeit' },
+  { wert: 4, label: 'Meistens' },
+  { wert: 3, label: 'Etwas mehr als die Hälfte der Zeit' },
+  { wert: 2, label: 'Etwas weniger als die Hälfte der Zeit' },
+  { wert: 1, label: 'Ab und zu' },
+  { wert: 0, label: 'Zu keinem Zeitpunkt' },
+]
+
+// Reihenfolge: PHQ-9 → GAD-7 → WHO-5 (alle "letzte 2 Wochen") → ASRS ("letzte 6 Monate")
+const INSTRUMENTE = ['PHQ9', 'GAD7', 'WHO5', 'ASRS']
 
 const INSTRUMENT_CONFIG = {
   PHQ9: { fragen: PHQ9_FRAGEN, antworten: ANTWORTEN_STANDARD, zeitrahmen: 'In den letzten 2 Wochen:' },
   GAD7: { fragen: GAD7_FRAGEN, antworten: ANTWORTEN_GAD7, zeitrahmen: 'In den letzten 2 Wochen:' },
+  WHO5: { fragen: WHO5_FRAGEN, antworten: ANTWORTEN_WHO5, zeitrahmen: 'In den letzten 2 Wochen:' },
   ASRS: { fragen: ASRS_FRAGEN, antworten: ANTWORTEN_ASRS, zeitrahmen: 'In den letzten 6 Monaten:' },
 }
 
-// 8 (PHQ-9) + 7 (GAD-7) + 6 (ASRS) + 1 (Suizid) = 22
-const GESAMT_FRAGEN = 22
+// 8 (PHQ-9) + 7 (GAD-7) + 5 (WHO-5) + 6 (ASRS) + 1 (Suizid) = 27
+const GESAMT_FRAGEN = 27
 
 function berechneErgebnisse(antworten) {
   const ergebnisse = []
@@ -101,8 +122,11 @@ function berechneErgebnisse(antworten) {
   }, 0)
   ergebnisse.push({ instrument: 'ASRS v1.1', label: 'ADHS', score: graueFelder, cutOff: 4, stufe: graueFelder >= 4 ? 1 : graueFelder >= 2 ? 2 : 3, chips: graueFelder >= 2 ? ['Konzentration', 'Innere Unruhe'] : [] })
 
-  // WHO-5 entfernt: kein eigenständiger validerter Fragebogen – war aus invertierten PHQ-9-Items approximiert,
-  // was wissenschaftlich nicht haltbar ist. WHO-5 hat eigene Fragen und wird hier nicht erhoben.
+  // WHO-5 Wellbeing Index (WHO, 1998) – Score 0–100, höher = besser
+  // Cutoff ≤ 50 = reduziertes Wohlbefinden; ≤ 28 = stark reduziert (Kriterium für Depressions-Screening)
+  const who5Score = WHO5_FRAGEN.reduce((s, f) => s + (antworten[f.id] ?? 0), 0) * 4
+  const who5Chips = who5Score <= 50 ? ['Chronischer Stress'] : []
+  ergebnisse.push({ instrument: 'WHO-5', label: 'Allgemeines Wohlbefinden', score: who5Score, cutOff: 50, stufe: who5Score <= 28 ? 1 : who5Score <= 50 ? 2 : 3, chips: who5Chips, inverseScore: true })
 
   return ergebnisse
 }
@@ -117,7 +141,7 @@ const ONBOARDING_SCREENS = [
   {
     label: 'Wie es funktioniert',
     titel: 'Validierte Fragebögen. Klare Einschätzung.',
-    text: 'MeinPsyCheck nutzt PHQ-9, GAD-7 und ASRS v1.1 – international standardisierte Instrumente aus der klinischen Praxis. Du beantwortest 22 Fragen. Das Ergebnis zeigt dir, ob Unterstützung für dich sinnvoll wäre.',
+    text: 'MeinPsyCheck nutzt PHQ-9, GAD-7, WHO-5 und ASRS v1.1 – international standardisierte Instrumente aus der klinischen Praxis. Du beantwortest 27 Fragen. Das Ergebnis zeigt dir, ob Unterstützung für dich sinnvoll wäre.',
   },
   {
     label: 'Deine Privatsphäre',
@@ -321,7 +345,7 @@ function ScreeningEinstieg({ symptomAuswahl, setSymptomAuswahl, onWeiter, onZuru
       </div>
 
       <button onClick={onWeiter} disabled={!kannWeiter} style={{ width: '100%', padding: '16px', backgroundColor: kannWeiter ? '#5B6BC8' : colors.border, color: kannWeiter ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: kannWeiter ? 'pointer' : 'default' }}>Weiter</button>
-      <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '12px' }}>22 Fragen · ca. 5–10 Minuten · Alle Angaben bleiben auf deinem Gerät</p>
+      <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '12px' }}>27 Fragen · ca. 5–10 Minuten · Alle Angaben bleiben auf deinem Gerät</p>
     </div>
   )
 }
@@ -400,7 +424,7 @@ function SuizidScreen({ onAntwort }) {
       <div style={{ height: '4px', backgroundColor: colors.border, borderRadius: '2px', marginBottom: '8px' }}>
         <div style={{ height: '4px', backgroundColor: colors.primary, borderRadius: '2px', width: '100%' }} />
       </div>
-      <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 32px' }}>Frage 22 von 22</p>
+      <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 32px' }}>Frage 27 von 27</p>
 
       <div style={{ backgroundColor: colors.crisisBg, borderRadius: '10px', padding: '12px 14px', marginBottom: '24px' }}>
         <p style={{ fontSize: '13px', color: colors.crisis, margin: 0, lineHeight: '1.5' }}>
@@ -491,10 +515,11 @@ function ScreeningFlow({ onZurueck }) {
   }, [phase, alleAntworten, aktuellesInstrument, suizidWert])
 
   // Wie viele Fragen waren schon vor diesem Instrument?
-  // PHQ-9 startet bei Frage 1 (bisherFragen=0)
-  // GAD-7 startet bei Frage 9 (8 PHQ-9 Fragen, bisherFragen=8)
-  // ASRS startet bei Frage 16 (8 + 7 = 15, bisherFragen=15)
-  const bisherFragenProInstrument = [0, 8, 15]
+  // PHQ-9 startet bei Frage 1  (bisherFragen=0)
+  // GAD-7 startet bei Frage 9  (8 PHQ-9, bisherFragen=8)
+  // WHO-5 startet bei Frage 16 (8+7=15, bisherFragen=15)
+  // ASRS  startet bei Frage 21 (8+7+5=20, bisherFragen=20)
+  const bisherFragenProInstrument = [0, 8, 15, 20]
 
   const handleVertiefungFertig = (neueAntworten) => {
     const merged = { ...alleAntworten, ...neueAntworten }
@@ -664,6 +689,10 @@ const STOERUNGSBILDER = {
     kurz: 'Deine Angaben im Bereich Konzentration & Impulsivität überschreiten den klinischen Grenzwert. Das deutet auf ADHS-Symptome im Erwachsenenalter hin.',
     lang: 'Der ASRS v1.1 wurde von der Weltgesundheitsorganisation entwickelt und erfasst typische ADHS-Symptome bei Erwachsenen – Schwierigkeiten beim Abschließen von Aufgaben, Probleme mit Organisation und Planung sowie motorische Unruhe. ADHS im Erwachsenenalter wird oft spät erkannt, weil die Symptome sich anders zeigen als bei Kindern. Viele Betroffene haben jahrelang das Gefühl, sich einfach „mehr anstrengen" zu müssen – ohne zu wissen, dass ein neurobiologischer Unterschied dahintersteckt. Ein Gespräch mit einem Psychiater oder spezialisierten Psychologen kann Klarheit bringen.',
   },
+  'WHO-5': {
+    kurz: 'Dein allgemeines Wohlbefinden liegt unter dem klinischen Schwellenwert. Das kann ein Hinweis auf chronischen Stress, emotionale Erschöpfung oder ein erhöhtes Burnout-Risiko sein.',
+    lang: 'Der WHO-5 Wohlbefindens-Index wurde von der Weltgesundheitsorganisation entwickelt und misst, wie oft du dich in den letzten zwei Wochen gut gestimmt, ruhig, aktiv, ausgeruht und interessiert gefühlt hast. Ein Wert ≤ 50 zeigt reduziertes Wohlbefinden an – nicht zwingend eine psychische Erkrankung, aber ein deutliches Signal, dass das System unter Druck steht. Chronischer Stress ist einer der häufigsten Wegbereiter für Depression und Angststörungen. Wer früh gegensteuert – durch Entspannungstechniken, Bewegung, soziale Verbindung oder professionelle Begleitung – schützt seine langfristige Gesundheit erheblich. Ein Gespräch mit dem Hausarzt oder einem Psychologen kann ein guter erster Schritt sein.',
+  },
 }
 
 const RESSOURCEN_KATALOG = {
@@ -732,6 +761,16 @@ const RESSOURCEN_KATALOG = {
       { titel: 'Grenzen setzen', text: 'Konkrete Übung: eine Anfrage diese Woche ablehnen' },
     ],
   },
+  'Chronischer Stress': {
+    erklaerung: 'Ein reduziertes Wohlbefinden ist oft ein Zeichen, dass das System dauerhaft unter Druck steht. Chronischer Stress ist kein Charakterfehler – er ist ein messbares Signal des Körpers.',
+    interventionen: [
+      { titel: 'Progressive Muskelentspannung', text: 'Muskeln anspannen und loslassen – senkt Cortisol nachweislich', video: 'https://youtu.be/vsJ01LxdAi4' },
+      { titel: '4-7-8 Atemtechnik', text: '4 Sek. einatmen, 7 halten, 8 ausatmen – aktiviert den Parasympathikus' },
+      { titel: 'MBSR-Kurzübung', text: '10 Min. Achtsamkeit täglich – über 500 Studien belegt', video: 'https://youtu.be/TSGOQaxu43o' },
+      { titel: 'Stresstagebuch', text: 'Auslöser 1 Woche täglich notieren – Muster erkennen' },
+      { titel: 'Grenzen setzen', text: 'Konkrete Übung: eine Anfrage diese Woche ablehnen' },
+    ],
+  },
   'Sozialer Rückzug': {
     erklaerung: 'Sozialer Rückzug kann sich selbst verstärken. Nicht mehr Kontakte helfen – sondern die Gedanken darüber verändern.',
     interventionen: [
@@ -763,7 +802,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
       'Schlafprobleme': 'Schlaf', 'Grübeln': 'Grübeln', 'Grübeln / Sorgen': 'Grübeln',
       'Antriebslosigkeit': 'Antrieb', 'Konzentration': 'Konzentration',
       'Innere Unruhe': 'Innere Unruhe', 'Reizbarkeit': 'Reizbarkeit',
-      'Sozialer Rückzug': 'Sozialer Rückzug',
+      'Chronischer Stress': 'Stress', 'Sozialer Rückzug': 'Sozialer Rückzug',
     }
     const alleChips = [...new Set(ergebnisse.flatMap(e => e.chips ?? []))]
     const mapped = [...new Set(alleChips.map(c => katalogToChip[c]).filter(Boolean))]
@@ -786,7 +825,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
     'Schlafprobleme': 'Schlafprobleme', 'Grübeln': 'Grübeln', 'Grübeln / Sorgen': 'Grübeln',
     'Antriebslosigkeit': 'Antriebslosigkeit', 'Konzentration': 'Konzentration',
     'Innere Unruhe': 'Innere Unruhe', 'Reizbarkeit': 'Reizbarkeit',
-    'Sozialer Rückzug': 'Sozialer Rückzug',
+    'Chronischer Stress': 'Chronischer Stress', 'Sozialer Rückzug': 'Sozialer Rückzug',
   }
   const alleRelevantChips = [...new Set(karten.flatMap(r => r.chips ?? []))]
   const relevanteKatalogKeys = [...new Set(alleRelevantChips.map(c => chipToKatalog[c]).filter(k => k && RESSOURCEN_KATALOG[k]))]
@@ -799,6 +838,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
     { katalog: 'Konzentration', label: 'Konzentration', farbe: '#c8d8f0', icon: 'target' },
     { katalog: 'Innere Unruhe', label: 'Innere Unruhe', farbe: '#f0b8c8', icon: 'wave' },
     { katalog: 'Reizbarkeit', label: 'Reizbarkeit', farbe: '#f0d4b8', icon: 'flame' },
+    { katalog: 'Chronischer Stress', label: 'Stress', farbe: '#a8c8e0', icon: 'spiral' },
     { katalog: 'Sozialer Rückzug', label: 'Sozialer Rückzug', farbe: '#c8b8e8', icon: 'person' },
   ]
   const relevanteRessourcen = ressourcenConfig.filter(r => relevanteKatalogKeys.includes(r.katalog))
@@ -1252,6 +1292,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
     { name: 'Konzentration',    farbe: '#c8d8f0', icon: 'target' },
     { name: 'Innere Unruhe',    farbe: '#f0b8c8', icon: 'wave'   },
     { name: 'Reizbarkeit',      farbe: '#f0d4b8', icon: 'flame'  },
+    { name: 'Stress',           farbe: '#a8c8e0', icon: 'spiral' },
     { name: 'Sozialer Rückzug', farbe: '#c8b8e8', icon: 'person' },
   ]
 
@@ -1326,7 +1367,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
             </div>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: '14px', fontWeight: '700', color: textP, margin: '0 0 2px' }}>Neues Screening starten</p>
-              <p style={{ fontSize: '11px', color: textS, margin: 0 }}>22 Fragen · ca. 5–10 Min · wissenschaftlich validiert</p>
+              <p style={{ fontSize: '11px', color: textS, margin: 0 }}>27 Fragen · ca. 5–10 Min · wissenschaftlich validiert</p>
             </div>
             <span style={{ fontSize: '18px', color: '#c0c5dd', flexShrink: 0 }}>›</span>
           </div>
@@ -1986,7 +2027,7 @@ function Einstellungen({ onTourNeuStarten }) {
     {
       id: 'cutoff',
       titel: 'Warum diese Cut-Off-Werte?',
-      text: 'Ein Cut-Off ist der Punktwert, ab dem ein Screening-Ergebnis als klinisch auffällig gilt. Diese Werte wurden nicht willkürlich gewählt – sie stammen aus den Originalpublikationen der Fragebogenentwickler und wurden in unabhängigen Studien für die deutsche Bevölkerung validiert.\nPHQ-9: Cut-Off ≥ 10 – Sensitivität 88%, Spezifität 88% für eine depressive Störung (Kroenke et al., 2001).\nGAD-7: Cut-Off ≥ 10 – Sensitivität 89%, Spezifität 82% für eine generalisierte Angststörung (Spitzer et al., 2006).\nASRS v1.1: ≥ 4 auffällige Antworten – entwickelt von der WHO (Kessler et al., 2005).\nEin positives Screening bedeutet nicht, dass eine Erkrankung vorliegt. Es bedeutet, dass deine Angaben in einem Bereich liegen, in dem professionelle Abklärung sinnvoll ist.',
+      text: 'Ein Cut-Off ist der Punktwert, ab dem ein Screening-Ergebnis als klinisch auffällig gilt. Diese Werte wurden nicht willkürlich gewählt – sie stammen aus den Originalpublikationen der Fragebogenentwickler und wurden in unabhängigen Studien für die deutsche Bevölkerung validiert.\nPHQ-9: Cut-Off ≥ 10 – Sensitivität 88%, Spezifität 88% für eine depressive Störung (Kroenke et al., 2001).\nGAD-7: Cut-Off ≥ 10 – Sensitivität 89%, Spezifität 82% für eine generalisierte Angststörung (Spitzer et al., 2006).\nWHO-5: Cut-Off ≤ 50 (Skala 0–100) – Score ≤ 28 als Depressions-Screening-Kriterium (WHO, 1998).\nASRS v1.1: ≥ 4 auffällige Antworten – entwickelt von der WHO (Kessler et al., 2005).\nEin positives Screening bedeutet nicht, dass eine Erkrankung vorliegt. Es bedeutet, dass deine Angaben in einem Bereich liegen, in dem professionelle Abklärung sinnvoll ist.',
       quellen: [
         'Löwe B et al. (2004). Diagnosing ICD-10 depressive episodes: superior criterion validity of the Patient Health Questionnaire. Psychother Psychosom, 73(6), 386–390.',
         'Löwe B et al. (2008). Validation and standardization of the GAD-7 in the general population. Medical Care, 46(3), 266–274.',

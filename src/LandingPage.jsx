@@ -1,40 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
-const C = {
-  bg: 'linear-gradient(160deg, #4c1d95 0%, #6d28d9 100%)',
-  bgSolid: '#4c1d95',
-  card: 'rgba(255,255,255,0.10)',
-  border: 'rgba(255,255,255,0.18)',
-  text: '#ffffff',
-  muted: 'rgba(255,255,255,0.7)',
-  btn: '#ffffff',
-  btnText: '#4c1d95',
+function useWindowWidth() {
+  const [w, setW] = useState(window.innerWidth)
+  useEffect(() => {
+    const fn = () => setW(window.innerWidth)
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
+  return w
 }
 
-function PhoneMockup({ src, alt, tilt = 0 }) {
+function PhoneMockup({ src, alt, tilt = 0, width }) {
   return (
-    <div style={{
-      transform: `rotate(${tilt}deg)`,
-      width: 140,
-      flexShrink: 0,
-      filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.35))',
-    }}>
+    <div style={{ transform: `rotate(${tilt}deg)`, flexShrink: 0, filter: 'drop-shadow(0 20px 48px rgba(0,0,0,0.45))' }}>
       <div style={{
-        width: 140,
-        height: 290,
-        borderRadius: 28,
-        border: '5px solid rgba(255,255,255,0.25)',
-        background: 'rgba(255,255,255,0.08)',
-        overflow: 'hidden',
-        position: 'relative',
+        width, height: `calc(${width} * 2.1)`,
+        borderRadius: 28, border: '4px solid rgba(255,255,255,0.22)',
+        background: 'rgba(255,255,255,0.06)', overflow: 'hidden', position: 'relative',
       }}>
-        {/* Generic camera dot */}
         <div style={{
-          position: 'absolute', top: 8, left: '50%',
-          transform: 'translateX(-50%)',
-          width: 8, height: 8,
-          borderRadius: '50%', background: 'rgba(255,255,255,0.3)',
-          zIndex: 10,
+          position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
+          width: 8, height: 8, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', zIndex: 10,
         }} />
         {src
           ? <img src={src} alt={alt} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
@@ -47,87 +33,62 @@ function PhoneMockup({ src, alt, tilt = 0 }) {
 
 function InstallModal({ onClose }) {
   const [tab, setTab] = useState('ios')
+  const startY = useRef(0)
+
+  const steps = {
+    ios: ['Safari öffnen (nicht Chrome)', 'Teilen-Symbol unten antippen', '"Zum Home-Bildschirm" wählen', '"Hinzufügen" tippen – fertig'],
+    android: ['Chrome öffnen', 'Drei Punkte oben rechts antippen', '"App installieren" wählen', 'Bestätigen – fertig'],
+  }
+
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 100,
-        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-      }}
-    >
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
+      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+    }}>
       <div
         onClick={e => e.stopPropagation()}
+        onTouchStart={e => { startY.current = e.touches[0].clientY }}
+        onTouchEnd={e => { if (e.changedTouches[0].clientY - startY.current > 80) onClose() }}
         style={{
-          background: '#1e0a3c', borderRadius: '24px 24px 0 0',
-          padding: '32px 24px 40px', width: '100%', maxWidth: 480,
+          background: '#1e0a3c', borderRadius: '28px 28px 0 0',
+          padding: '28px 24px 40px', width: '100%', maxWidth: 520,
           border: '1px solid rgba(124,58,237,0.4)',
         }}
       >
-        {/* Handle */}
-        <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', margin: '0 auto 24px' }} />
-
-        <h2 style={{ fontSize: 20, fontWeight: 800, textAlign: 'center', color: '#fff', marginBottom: 20 }}>
-          App installieren
-        </h2>
+        {/* Swipe handle */}
+        <div style={{ width: 44, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.25)', margin: '0 auto 24px', cursor: 'grab' }} />
+        <h2 style={{ fontSize: 22, fontWeight: 800, textAlign: 'center', color: '#fff', marginBottom: 20 }}>App installieren</h2>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: 4, marginBottom: 24 }}>
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 4, marginBottom: 20 }}>
           {['ios', 'android'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
-              flex: 1, padding: '10px 0', borderRadius: 9, border: 'none',
-              cursor: 'pointer', fontWeight: 700, fontSize: 14,
-              background: tab === t ? '#6d28d9' : 'transparent',
-              color: '#fff', transition: 'background 0.2s',
-            }}>
-              {t === 'ios' ? 'iPhone' : 'Android'}
-            </button>
+              flex: 1, padding: '11px 0', borderRadius: 11, border: 'none', cursor: 'pointer',
+              fontWeight: 700, fontSize: 15, background: tab === t ? '#6d28d9' : 'transparent', color: '#fff',
+            }}>{t === 'ios' ? 'iPhone' : 'Android'}</button>
           ))}
         </div>
 
         {/* Video placeholder */}
         <div style={{
-          background: 'rgba(255,255,255,0.06)', borderRadius: 16,
-          height: 160, marginBottom: 20,
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          border: '1px dashed rgba(255,255,255,0.2)',
-          color: 'rgba(255,255,255,0.4)', fontSize: 14, gap: 8,
+          background: 'rgba(255,255,255,0.06)', borderRadius: 16, height: 160, marginBottom: 20,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          border: '1px dashed rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.4)', gap: 8,
         }}>
-          <div style={{ fontSize: 32 }}>▶</div>
-          <span>Video-Anleitung folgt</span>
+          <div style={{ fontSize: 36 }}>▶</div>
+          <span style={{ fontSize: 14 }}>Video-Anleitung folgt</span>
         </div>
 
         {/* Steps */}
-        {tab === 'ios' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              'Safari öffnen (nicht Chrome)',
-              'Teilen-Symbol unten antippen',
-              '"Zum Home-Bildschirm" wählen',
-              '"Hinzufügen" tippen – fertig',
-            ].map((s, i) => (
-              <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: 12 }}>
-                <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#6d28d9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{i + 1}</span>
-                <span style={{ fontSize: 14, color: '#fff' }}>{s}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              'Chrome öffnen',
-              'Drei Punkte oben rechts antippen',
-              '"App installieren" wählen',
-              'Bestätigen – fertig',
-            ].map((s, i) => (
-              <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.06)', borderRadius: 12 }}>
-                <span style={{ width: 24, height: 24, borderRadius: '50%', background: '#6d28d9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{i + 1}</span>
-                <span style={{ fontSize: 14, color: '#fff' }}>{s}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {steps[tab].map((s, i) => (
+            <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '13px 16px', background: 'rgba(255,255,255,0.07)', borderRadius: 14 }}>
+              <span style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: '#6d28d9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff' }}>{i + 1}</span>
+              <span style={{ fontSize: 15, color: '#fff' }}>{s}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -135,114 +96,128 @@ function InstallModal({ onClose }) {
 
 export default function LandingPage() {
   const [showModal, setShowModal] = useState(false)
+  const vw = useWindowWidth()
+  const isMobile = vw < 680
+
+  const phoneW = isMobile ? `${Math.round(vw * 0.38)}px` : `${Math.round(Math.min(vw * 0.22, 240))}px`
+  const phonWTherapie = isMobile ? `${Math.round(vw * 0.7)}px` : `${Math.round(Math.min(vw * 0.26, 280))}px`
 
   return (
-    <div style={{
-      background: C.bg,
-      minHeight: '100vh',
-      width: '100%',
-      color: C.text,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      overflowX: 'hidden',
-    }}>
-      {/* HEADER */}
-      <div style={{ padding: '24px 24px 0', textAlign: 'center' }}>
-        <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: 0.5 }}>MeinPsyCheck</div>
-      </div>
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', overflowX: 'hidden', color: '#fff' }}>
 
-      {/* HEADLINE */}
-      <div style={{ padding: '32px 24px 0', textAlign: 'center' }}>
-        <div style={{
-          display: 'inline-block',
-          background: 'rgba(255,255,255,0.15)',
-          borderRadius: 100, padding: '5px 14px',
-          fontSize: 12, fontWeight: 700, letterSpacing: 1,
-          marginBottom: 16, color: 'rgba(255,255,255,0.9)',
-        }}>
-          KOSTENLOS · ANONYM · WISSENSCHAFTLICH
+      {/* ── HERO ── */}
+      <div style={{ background: 'linear-gradient(160deg, #3b0764 0%, #6d28d9 100%)', width: '100%', boxSizing: 'border-box', padding: isMobile ? '40px 20px 48px' : '60px 40px 72px' }}>
+
+        {/* Logo + badge */}
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 28 : 44 }}>
+          <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, marginBottom: 14 }}>MeinPsyCheck</div>
+          <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.15)', borderRadius: 100, padding: '6px 18px', fontSize: isMobile ? 11 : 13, fontWeight: 700, letterSpacing: 1.5 }}>
+            KOSTENLOS · ANONYM · WISSENSCHAFTLICH
+          </div>
         </div>
-        <h1 style={{
-          fontSize: 'clamp(26px, 6vw, 38px)',
-          fontWeight: 900, lineHeight: 1.2,
-          margin: '0 auto', maxWidth: 380,
-        }}>
-          Orientierung für deine psychische Gesundheit
-        </h1>
-        <p style={{ fontSize: 16, color: C.muted, marginTop: 16, lineHeight: 1.6, maxWidth: 340, margin: '16px auto 0' }}>
-          26 validierte Fragen. Sofortige Einschätzung. Kostenlos und anonym.
-        </p>
-      </div>
 
-      {/* 3-COLUMN: Phone | Steps | Phone */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 'clamp(8px, 3vw, 24px)',
-        padding: '40px 16px 32px',
-        flexWrap: 'nowrap',
-        overflow: 'visible',
-      }}>
-        {/* Left phone */}
-        <PhoneMockup src="/hauptseite.png" alt="Hauptseite" tilt={-5} />
+        {isMobile ? (
+          /* ── MOBILE: Headline → Phones → Steps ── */
+          <>
+            <h1 style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.2, textAlign: 'center', margin: '0 0 16px' }}>
+              Orientierung für deine psychische Gesundheit
+            </h1>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 1.6, margin: '0 0 32px' }}>
+              Wissenschaftlich validierte Fragebögen. Sofortige Einschätzung. Keine Registrierung.
+            </p>
 
-        {/* Steps */}
-        <div style={{ flex: '1 1 160px', maxWidth: 200, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {[
-            { n: '1', title: '26 validierte Fragen', desc: 'PHQ-9, GAD-7, ASRS – klinisch geprüft' },
-            { n: '2', title: 'Sofortige Einschätzung', desc: 'In drei Stufen – klar und verständlich' },
-            { n: '3', title: 'Passende Ressourcen', desc: 'Schlaf, Antrieb, Stress – konkrete Hilfe' },
-          ].map(s => (
-            <div key={s.n} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                background: 'rgba(255,255,255,0.2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 800, fontSize: 14,
-              }}>{s.n}</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.3, marginBottom: 2 }}>{s.title}</div>
-                <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.4 }}>{s.desc}</div>
+            {/* Two phones side by side */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 36, alignItems: 'flex-end' }}>
+              <PhoneMockup src="/hauptseite.png" alt="Hauptseite" tilt={-5} width={phoneW} />
+              <PhoneMockup src="/ergebnis.png" alt="Ergebnis" tilt={5} width={phoneW} />
+            </div>
+
+            {/* Steps below */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 400, margin: '0 auto' }}>
+              {[
+                { n: '1', title: '26 validierte Fragen', desc: 'PHQ-9, GAD-7, ASRS – klinisch geprüfte Instrumente' },
+                { n: '2', title: 'Sofortige Einschätzung', desc: 'Drei Stufen – von unauffällig bis klinisch relevant' },
+                { n: '3', title: 'Passende Ressourcen', desc: 'Konkrete nächste Schritte für deine Situation' },
+              ].map(s => (
+                <div key={s.n} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15 }}>{s.n}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 3 }}>{s.title}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>{s.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          /* ── DESKTOP: Phone | Steps | Phone ── */
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 40, maxWidth: 1100, margin: '0 auto' }}>
+            <PhoneMockup src="/hauptseite.png" alt="Hauptseite" tilt={-6} width={phoneW} />
+            <div style={{ flex: '1 1 200px', maxWidth: 380 }}>
+              <h1 style={{ fontSize: 'clamp(26px, 3.5vw, 44px)', fontWeight: 900, lineHeight: 1.2, margin: '0 0 20px', textAlign: 'center' }}>
+                Orientierung für deine psychische Gesundheit
+              </h1>
+              <p style={{ fontSize: 'clamp(14px, 1.6vw, 18px)', color: 'rgba(255,255,255,0.7)', textAlign: 'center', lineHeight: 1.6, margin: '0 0 32px' }}>
+                Wissenschaftlich validierte Fragebögen. Sofortige Einschätzung. Keine Registrierung.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {[
+                  { n: '1', title: '26 validierte Fragen', desc: 'PHQ-9, GAD-7, ASRS – klinisch geprüfte Instrumente aus der Psychiatrie' },
+                  { n: '2', title: 'Sofortige Einschätzung', desc: 'Drei Stufen – von unauffällig bis klinisch relevant' },
+                  { n: '3', title: 'Passende Ressourcen', desc: 'Schlaf, Antrieb, Stress – konkrete nächste Schritte' },
+                ].map(s => (
+                  <div key={s.n} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16 }}>{s.n}</div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{s.title}</div>
+                      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>{s.desc}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-
-        {/* Right phone */}
-        <PhoneMockup src="/ergebnis.png" alt="Ergebnis" tilt={5} />
+            <PhoneMockup src="/ergebnis.png" alt="Ergebnis" tilt={6} width={phoneW} />
+          </div>
+        )}
       </div>
 
-      {/* CTA */}
-      <div style={{ padding: '0 24px 48px', textAlign: 'center' }}>
-        <button
-          onClick={() => setShowModal(true)}
-          style={{
-            background: C.btn, color: C.btnText,
-            border: 'none', borderRadius: 100,
-            padding: '18px 48px', fontSize: 18, fontWeight: 800,
-            cursor: 'pointer', width: '100%', maxWidth: 360,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
-          }}
-        >
+      {/* ── THERAPEUTEN ── */}
+      <div style={{ background: 'linear-gradient(160deg, #5b21b6 0%, #7c3aed 100%)', width: '100%', boxSizing: 'border-box', padding: isMobile ? '48px 20px' : '64px 40px' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 32 : 60, maxWidth: 1100, margin: '0 auto' }}>
+          {!isMobile && <PhoneMockup src="/therapeuten.png" alt="Therapeuten" tilt={-3} width={phonWTherapie} />}
+          <div style={{ flex: '1 1 260px', maxWidth: 460, textAlign: isMobile ? 'center' : 'left' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, color: 'rgba(255,255,255,0.55)', marginBottom: 14 }}>KOMMT IN VERSION 2</div>
+            <h2 style={{ fontSize: isMobile ? 24 : 'clamp(24px, 3.5vw, 38px)', fontWeight: 900, lineHeight: 1.2, margin: '0 0 16px' }}>
+              Therapeuten in deiner Nähe finden
+            </h2>
+            <p style={{ fontSize: isMobile ? 15 : 'clamp(14px, 1.6vw, 18px)', color: 'rgba(255,255,255,0.7)', lineHeight: 1.65, margin: 0 }}>
+              Nach dem Screening siehst du, welche Unterstützung zu dir passt – und findest direkt Therapeuten mit freien Terminen in deiner Stadt.
+            </p>
+          </div>
+          {isMobile && <PhoneMockup src="/therapeuten.png" alt="Therapeuten" tilt={2} width={phonWTherapie} />}
+        </div>
+      </div>
+
+      {/* ── CTA ── */}
+      <div style={{ background: '#2e1065', width: '100%', boxSizing: 'border-box', padding: isMobile ? '48px 20px' : '72px 40px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: isMobile ? 24 : 'clamp(24px, 3.5vw, 38px)', fontWeight: 900, marginBottom: 14 }}>Jetzt kostenlos starten</h2>
+        <p style={{ fontSize: isMobile ? 15 : 17, color: 'rgba(255,255,255,0.6)', marginBottom: 36, lineHeight: 1.6 }}>
+          Kein App Store. Kein Konto. Direkt auf deinen Homebildschirm.
+        </p>
+        <button onClick={() => setShowModal(true)} style={{
+          background: '#fff', color: '#3b0764', border: 'none', borderRadius: 100,
+          padding: isMobile ? '18px 40px' : '20px 72px',
+          fontSize: isMobile ? 18 : 22, fontWeight: 800, cursor: 'pointer',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.3)',
+          width: isMobile ? '100%' : 'auto', maxWidth: 440,
+        }}>
           App jetzt installieren
         </button>
-        <p style={{ marginTop: 12, fontSize: 13, color: C.muted }}>
-          Kein App Store. Direkt auf deinen Homebildschirm.
+        <p style={{ marginTop: 20, fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
+          Orientierungsangebot – kein Medizinprodukt · © 2026 MeinPsyCheck
         </p>
       </div>
 
-      {/* DISCLAIMER */}
-      <div style={{
-        padding: '20px 24px',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        textAlign: 'center', fontSize: 11,
-        color: 'rgba(255,255,255,0.4)', lineHeight: 1.6,
-      }}>
-        Orientierungsangebot – kein Medizinprodukt. Ersetzt keine professionelle Diagnose.
-        <br />© 2026 MeinPsyCheck
-      </div>
-
-      {/* MODAL */}
       {showModal && <InstallModal onClose={() => setShowModal(false)} />}
     </div>
   )

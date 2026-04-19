@@ -41,16 +41,44 @@ function PhoneMockup({ src, alt, tilt = 0, width }) {
 
 const INSTALL_STEPS = {
   ios: [
-    { icon: '🧭', title: 'Safari öffnen', desc: 'Diese Seite in Safari aufrufen – nicht Chrome oder Firefox' },
-    { icon: '⬆', title: 'Teilen antippen', desc: 'Das Teilen-Symbol unten in der Mitte antippen (Quadrat mit Pfeil nach oben)' },
-    { icon: '📲', title: '"Zum Home-Bildschirm" wählen', desc: 'In der Liste runterscrollen und "Zum Home-Bildschirm" antippen' },
-    { icon: '✅', title: '"Hinzufügen" tippen', desc: 'Oben rechts auf "Hinzufügen" tippen – fertig!' },
+    {
+      title: 'Safari öffnen',
+      desc: 'Diese Seite in Safari aufrufen – nicht Chrome oder Firefox',
+    },
+    {
+      title: 'Teilen-Symbol antippen',
+      desc: 'Das Symbol unten in der Mitte antippen (Quadrat mit Pfeil nach oben)',
+      img: '/install_ios_share.png',
+    },
+    {
+      title: '"Zum Home-Bildschirm" wählen',
+      desc: 'In der Liste runterscrollen und "Zum Home-Bildschirm" antippen',
+      img: '/install_ios_homescreen.png',
+    },
+    {
+      title: '"Hinzufügen" tippen – fertig!',
+      desc: 'Oben rechts auf "Hinzufügen" tippen',
+    },
   ],
   android: [
-    { icon: '🌐', title: 'Chrome öffnen', desc: 'Diese Seite in Chrome aufrufen' },
-    { icon: '⋮', title: 'Menü öffnen', desc: 'Die drei Punkte oben rechts antippen' },
-    { icon: '📲', title: '"Zum Startbildschirm hinzufügen"', desc: 'Diesen Eintrag in der Liste antippen' },
-    { icon: '✅', title: '"Hinzufügen" tippen', desc: 'Im Dialog bestätigen – fertig!' },
+    {
+      title: 'Chrome öffnen',
+      desc: 'Diese Seite in Chrome aufrufen – nicht Samsung Browser oder Firefox',
+    },
+    {
+      title: 'Drei Punkte oben rechts antippen',
+      desc: 'Das Menü oben rechts öffnen',
+      img: '/install_samsung_dots.jpg',
+    },
+    {
+      title: '"Zum Startbildschirm hinzufügen" wählen',
+      desc: 'Diesen Eintrag in der Liste antippen',
+      img: '/install_android_menu.jpg',
+    },
+    {
+      title: '"Hinzufügen" tippen – fertig!',
+      desc: 'Im Dialog bestätigen',
+    },
   ],
 }
 
@@ -115,24 +143,38 @@ function InstallModal({ onClose, defaultTab }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {steps.map((s, i) => (
             <div key={i} style={{
-              display: 'flex', gap: 14, alignItems: 'flex-start',
               padding: '14px 16px', background: 'rgba(255,255,255,0.07)', borderRadius: 16,
             }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                background: '#6d28d9', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff',
-              }}>
-                {i + 1}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#fff', marginBottom: 3 }}>
-                  {s.title}
+              {/* Nummer + Text */}
+              <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                  background: '#6d28d9', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff',
+                }}>
+                  {i + 1}
                 </div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.45 }}>
-                  {s.desc}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: '#fff', marginBottom: 3 }}>
+                    {s.title}
+                  </div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.45 }}>
+                    {s.desc}
+                  </div>
                 </div>
               </div>
+              {/* Screenshot falls vorhanden */}
+              {s.img && (
+                <img
+                  src={s.img}
+                  alt={s.title}
+                  style={{
+                    marginTop: 10, width: '100%', borderRadius: 10,
+                    objectFit: 'cover', maxHeight: 180,
+                    border: '1px solid rgba(255,255,255,0.12)',
+                  }}
+                />
+              )}
             </div>
           ))}
         </div>

@@ -1995,6 +1995,7 @@ function Einstellungen({ onTourNeuStarten }) {
   const [detailAnsicht, setDetailAnsicht] = useState(null)
   const [email, setEmail] = useState(localStorage.getItem('user_email') || '')
   const [emailGespeichert, setEmailGespeichert] = useState(false)
+  const [tourDialog, setTourDialog] = useState(false)
 
   const accent = '#5B6BC8'
   const textP = '#2a2a3e'
@@ -2345,7 +2346,7 @@ function Einstellungen({ onTourNeuStarten }) {
           <p style={{ fontSize: '11px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px 4px' }}>{sektion.titel}</p>
           <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
             {sektion.items.map((item, i) => (
-              <div key={item} onClick={() => { if (itemToDetail[item] === 'tour') { onTourNeuStarten?.() } else { setDetailAnsicht(itemToDetail[item]) } }}
+              <div key={item} onClick={() => { if (itemToDetail[item] === 'tour') { setTourDialog(true) } else { setDetailAnsicht(itemToDetail[item]) } }}
                 style={{ padding: '16px', fontSize: '15px', color: textP, borderBottom: i < sektion.items.length - 1 ? '1px solid rgba(91,107,200,0.08)' : 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 {item}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={textS} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -2357,6 +2358,21 @@ function Einstellungen({ onTourNeuStarten }) {
       <p style={{ fontSize: '11px', color: textS, textAlign: 'center', marginTop: '8px', lineHeight: '1.7', opacity: 0.7, whiteSpace: 'pre-line' }}>
         {'\u00a9 2026 Midhad L\u00f6k \u2013 MeinPsyCheck\nAlle Rechte vorbehalten.'}
       </p>
+
+      {tourDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,20,60,0.55)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setTourDialog(false)}>
+          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', padding: '28px 20px 36px', width: '100%', maxWidth: '430px' }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontSize: '17px', fontWeight: '700', color: '#2a2a3e', margin: '0 0 8px', textAlign: 'center' }}>App-Tour wiederholen?</p>
+            <p style={{ fontSize: '14px', color: '#8a8faa', margin: '0 0 24px', textAlign: 'center', lineHeight: '1.5' }}>Die Tour zeigt dir alle Funktionen der App. Du wirst zur Hauptseite weitergeleitet.</p>
+            <button onClick={() => { setTourDialog(false); onTourNeuStarten?.() }} style={{ width: '100%', padding: '14px', background: '#5B6BC8', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginBottom: '10px' }}>
+              Ja, Tour starten
+            </button>
+            <button onClick={() => setTourDialog(false)} style={{ width: '100%', padding: '14px', background: 'none', color: '#8a8faa', border: 'none', fontSize: '15px', cursor: 'pointer' }}>
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

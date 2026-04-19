@@ -321,7 +321,7 @@ function ScreeningEinstieg({ symptomAuswahl, setSymptomAuswahl, onWeiter, onZuru
       </div>
 
       <button onClick={onWeiter} disabled={!kannWeiter} style={{ width: '100%', padding: '16px', backgroundColor: kannWeiter ? '#5B6BC8' : colors.border, color: kannWeiter ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: kannWeiter ? 'pointer' : 'default' }}>Weiter</button>
-      <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '12px' }}>26 Fragen · ca. 5–10 Minuten · Alle Angaben bleiben auf deinem Gerät</p>
+      <p style={{ fontSize: '12px', color: colors.textLight, textAlign: 'center', marginTop: '12px' }}>22 Fragen · ca. 5–10 Minuten · Alle Angaben bleiben auf deinem Gerät</p>
     </div>
   )
 }
@@ -732,16 +732,6 @@ const RESSOURCEN_KATALOG = {
       { titel: 'Grenzen setzen', text: 'Konkrete Übung: eine Anfrage diese Woche ablehnen' },
     ],
   },
-  'Chronischer Stress': {
-    erklaerung: 'Chronischer Stress ist nicht Schwäche – er ist ein Signal des Körpers, dass das System überlastet ist. Es gibt gut belegte Techniken, um gezielt gegenzusteuern.',
-    interventionen: [
-      { titel: 'Progressive Muskelentspannung', text: 'Muskeln anspannen und loslassen – senkt Cortisol direkt', video: 'https://youtu.be/vsJ01LxdAi4' },
-      { titel: '4-7-8 Atemtechnik', text: '4 Sek. einatmen, 7 halten, 8 ausatmen' },
-      { titel: 'MBSR-Kurzübung', text: '10 Min. Achtsamkeit täglich – über 500 Studien belegt', video: 'https://youtu.be/TSGOQaxu43o' },
-      { titel: 'Stresstagebuch', text: 'Auslöser 1 Woche täglich notieren' },
-      { titel: 'Grenzen setzen', text: 'Konkrete Übung: eine Anfrage diese Woche ablehnen' },
-    ],
-  },
   'Sozialer Rückzug': {
     erklaerung: 'Sozialer Rückzug kann sich selbst verstärken. Nicht mehr Kontakte helfen – sondern die Gedanken darüber verändern.',
     interventionen: [
@@ -773,7 +763,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
       'Schlafprobleme': 'Schlaf', 'Grübeln': 'Grübeln', 'Grübeln / Sorgen': 'Grübeln',
       'Antriebslosigkeit': 'Antrieb', 'Konzentration': 'Konzentration',
       'Innere Unruhe': 'Innere Unruhe', 'Reizbarkeit': 'Reizbarkeit',
-      'Chronischer Stress': 'Stress', 'Sozialer Rückzug': 'Sozialer Rückzug',
+      'Sozialer Rückzug': 'Sozialer Rückzug',
     }
     const alleChips = [...new Set(ergebnisse.flatMap(e => e.chips ?? []))]
     const mapped = [...new Set(alleChips.map(c => katalogToChip[c]).filter(Boolean))]
@@ -1181,7 +1171,6 @@ const CHIP_TO_KATALOG = {
   'Konzentration': 'Konzentration',
   'Innere Unruhe': 'Innere Unruhe',
   'Reizbarkeit': 'Reizbarkeit',
-  'Stress': 'Chronischer Stress',
   'Sozialer Rückzug': 'Sozialer Rückzug',
 }
 
@@ -1256,13 +1245,13 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
   const hatScreening = !!letztesDatum
 
   const ressourcen = [
+    { name: 'Freudlosigkeit',   farbe: '#e8d4f0', icon: 'spark'  },
     { name: 'Schlaf',           farbe: '#b8d4f0', icon: 'moon'   },
     { name: 'Grübeln',          farbe: '#d4b8e8', icon: 'bulb'   },
     { name: 'Antrieb',          farbe: '#b8e4d0', icon: 'bolt'   },
     { name: 'Konzentration',    farbe: '#c8d8f0', icon: 'target' },
     { name: 'Innere Unruhe',    farbe: '#f0b8c8', icon: 'wave'   },
     { name: 'Reizbarkeit',      farbe: '#f0d4b8', icon: 'flame'  },
-    { name: 'Stress',           farbe: '#a8c8e0', icon: 'spiral' },
     { name: 'Sozialer Rückzug', farbe: '#c8b8e8', icon: 'person' },
   ]
 
@@ -1337,7 +1326,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
             </div>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: '14px', fontWeight: '700', color: textP, margin: '0 0 2px' }}>Neues Screening starten</p>
-              <p style={{ fontSize: '11px', color: textS, margin: 0 }}>26 Fragen · ca. 5–10 Min · wissenschaftlich validiert</p>
+              <p style={{ fontSize: '11px', color: textS, margin: 0 }}>22 Fragen · ca. 5–10 Min · wissenschaftlich validiert</p>
             </div>
             <span style={{ fontSize: '18px', color: '#c0c5dd', flexShrink: 0 }}>›</span>
           </div>

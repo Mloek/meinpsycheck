@@ -463,7 +463,7 @@ function SuizidHinweisScreen({ wert, onWeiter }) {
   }[wert]
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: config.bg, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px 24px' }}>
+    <div style={{ minHeight: '100dvh', backgroundColor: config.bg, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px 24px', paddingTop: 'max(32px, calc(env(safe-area-inset-top) + 16px))', paddingBottom: 'max(32px, calc(env(safe-area-inset-bottom) + 16px))' }}>
       <h2 style={{ fontSize: '22px', fontWeight: '700', color: config.color, margin: '0 0 12px' }}>{config.titel}</h2>
       <p style={{ fontSize: '15px', color: '#333', lineHeight: '1.7', margin: '0 0 28px' }}>{config.text}</p>
 
@@ -634,7 +634,7 @@ function LadeScreen({ onFertig }) {
 
 function DisclaimerScreen({ onWeiter }) {
   return (
-    <div style={{ padding: '24px', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: colors.background }}>
+    <div style={{ padding: '24px', minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: colors.background }}>
       <h2 style={{ fontSize: '20px', fontWeight: '700', color: colors.text, margin: '0 0 24px', lineHeight: '1.4' }}>
         Bevor du deine Ergebnisse siehst – ein kurzer Hinweis.
       </h2>
@@ -656,7 +656,7 @@ function DisclaimerScreen({ onWeiter }) {
 
 function KrisenScreen() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: colors.crisisBg, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px 24px' }}>
+    <div style={{ minHeight: '100dvh', backgroundColor: colors.crisisBg, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px 24px' }}>
       <div style={{ textAlign: 'center', marginBottom: '32px' }}>
         <div style={{ width: '64px', height: '64px', backgroundColor: '#FFCDD2', borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: '700', color: colors.crisis }}>!</div>
         <h2 style={{ fontSize: '22px', fontWeight: '700', color: colors.crisis, margin: '0 0 12px' }}>Hinweis zur Sicherheit</h2>
@@ -844,7 +844,7 @@ function ScreeningErgebnis({ ergebnisse, suizidItem = 0, onNeustart, onZurueck }
   const relevanteRessourcen = ressourcenConfig.filter(r => relevanteKatalogKeys.includes(r.katalog))
 
   return (
-    <div style={{ background: bg, minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', paddingBottom: '40px' }}>
+    <div style={{ background: bg, minHeight: '100dvh', fontFamily: 'system-ui, -apple-system, sans-serif', paddingBottom: 'max(40px, calc(env(safe-area-inset-bottom) + 20px))' }}>
       <style>{`
         @keyframes bergDrift1 { 0%{transform:translateX(0)} 50%{transform:translateX(-18px)} 100%{transform:translateX(0)} }
         @keyframes bergDrift2 { 0%{transform:translateX(0)} 50%{transform:translateX(12px)} 100%{transform:translateX(0)} }
@@ -1313,7 +1313,7 @@ function Hauptseite({ onTagebuchOeffnen, onScreeningOeffnen, onTestErgebnis }) {
   const cardBorder = '1px solid rgba(91,107,200,0.1)'
 
   return (
-    <div style={{ background: '#dde1ee', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ background: '#dde1ee', minHeight: '100dvh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <style>{`
         @keyframes bergDrift1 {
           0%   { transform: translateX(0); }
@@ -1569,7 +1569,7 @@ function Tagebuch({ onZurueck, startAnsicht }) {
   // ─── GESPEICHERT-BESTÄTIGUNG ─────────────────────────────────────────────────
   if (gespeichert) {
     return (
-      <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: colors.background, fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+      <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100dvh', backgroundColor: colors.background, fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
         <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: colors.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
             <path d="M10 20L17 27L30 13" stroke={colors.primary} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -2119,7 +2119,7 @@ function Einstellungen({ onTourNeuStarten }) {
   // ── E-Mail ────────────────────────────────────────────────────
   if (detailAnsicht === 'email') {
     return (
-      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100dvh' }}>
         <ZurueckBtn />
         <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>E-Mail hinterlegen</h1>
         <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Hinterlege deine E-Mail-Adresse, um bei neuen Funktionen und wichtigen Updates benachrichtigt zu werden. Deine Adresse wird nur auf deinem Gerät gespeichert.</p>
@@ -2148,7 +2148,7 @@ function Einstellungen({ onTourNeuStarten }) {
   // ── App bewerten ──────────────────────────────────────────────
   if (detailAnsicht === 'bewerten') {
     return (
-      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100dvh' }}>
         <ZurueckBtn />
         <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>App bewerten</h1>
         <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Dein Feedback hilft dabei, MeinPsyCheck besser zu machen — für dich und für alle, die psychische Unterstützung suchen.</p>
@@ -2175,7 +2175,7 @@ function Einstellungen({ onTourNeuStarten }) {
       { version: '1.0', datum: 'Februar 2026', neu: ['Erster Launch von MeinPsyCheck', 'Screening mit PHQ-9, GAD-7 und ASRS', 'Tagestagebuch', 'Wissenschaftliche Grundlagen'] },
     ]
     return (
-      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100dvh' }}>
         <ZurueckBtn />
         <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>Neuigkeiten & Updates</h1>
         <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Was ist neu in MeinPsyCheck?</p>
@@ -2202,7 +2202,7 @@ function Einstellungen({ onTourNeuStarten }) {
   // ── Datenschutz ───────────────────────────────────────────────
   if (detailAnsicht === 'datenschutz') {
     return (
-      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100dvh' }}>
         <ZurueckBtn />
         <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Datenschutzerklärung</h1>
         {[
@@ -2228,7 +2228,7 @@ function Einstellungen({ onTourNeuStarten }) {
   // ── Impressum ─────────────────────────────────────────────────
   if (detailAnsicht === 'impressum') {
     return (
-      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100dvh' }}>
         <ZurueckBtn />
         <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Impressum</h1>
         <KardBox>
@@ -2277,7 +2277,7 @@ function Einstellungen({ onTourNeuStarten }) {
       { f: 'Wann kommt die native App?', a: 'Eine native App für iOS und Android ist geplant. Du kannst die Web-App jetzt schon auf deinem Startbildschirm speichern – sie funktioniert dann wie eine App.' },
     ]
     return (
-      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100dvh' }}>
         <ZurueckBtn />
         <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 8px' }}>Hilfe & FAQ</h1>
         <p style={{ fontSize: '14px', color: textS, margin: '0 0 24px', lineHeight: '1.6' }}>Häufig gestellte Fragen</p>
@@ -2306,7 +2306,7 @@ function Einstellungen({ onTourNeuStarten }) {
   // ── Wissenschaftliche Grundlagen ──────────────────────────────
   if (detailAnsicht === 'wissenschaft') {
     return (
-      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100dvh' }}>
         <ZurueckBtn />
         <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Wissenschaftliche Grundlagen</h1>
         <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid rgba(91,107,200,0.1)', overflow: 'hidden' }}>
@@ -2355,7 +2355,7 @@ function Einstellungen({ onTourNeuStarten }) {
   }
 
   return (
-    <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100vh' }}>
+    <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100dvh' }}>
       <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 24px' }}>Einstellungen</h1>
       {sektionen.map((sektion) => (
         <div key={sektion.titel} style={{ marginBottom: '28px' }}>
@@ -2393,16 +2393,48 @@ function Einstellungen({ onTourNeuStarten }) {
   )
 }
 
+const SCREEN_ORDER = ['hallo', 'alter', 'app']
+
 function App() {
   const [screen, setScreen] = useState('loading')
+  const [prevScreen, setPrevScreen] = useState(null)
   useEffect(() => {
     const done = localStorage.getItem('onboarding_done')
     setScreen(done === 'true' ? 'app' : 'hallo')
   }, [])
+
+  const goTo = (next) => {
+    setPrevScreen(screen)
+    setScreen(next)
+  }
+
   if (screen === 'loading') return null
-  if (screen === 'hallo') return <OnboardingFlow onWeiter={() => setScreen('alter')} />
-  if (screen === 'alter') return <AlterScreen onWeiter={() => setScreen('app')} onZurueck={() => setScreen('hallo')} />
-  return <HauptApp />
+
+  // Vorwärts = slide von rechts, Rückwärts = slide von links
+  const forward = prevScreen ? SCREEN_ORDER.indexOf(screen) > SCREEN_ORDER.indexOf(prevScreen) : true
+  const anim = forward
+    ? 'screenSlideInRight 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards'
+    : 'screenSlideInLeft 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards'
+
+  return (
+    <>
+      <style>{`
+        @keyframes screenSlideInRight {
+          from { opacity: 0; transform: translateX(32px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes screenSlideInLeft {
+          from { opacity: 0; transform: translateX(-32px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
+      <div key={screen} style={{ animation: anim, willChange: 'transform, opacity' }}>
+        {screen === 'hallo' && <OnboardingFlow onWeiter={() => goTo('alter')} />}
+        {screen === 'alter' && <AlterScreen onWeiter={() => goTo('app')} onZurueck={() => goTo('hallo')} />}
+        {screen === 'app' && <HauptApp />}
+      </div>
+    </>
+  )
 }
 
 export default App

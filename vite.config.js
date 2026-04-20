@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'meinpsycheck_icon_192.png', 'meinpsycheck_icon_512.png'],
+      includeAssets: ['favicon.svg', 'meinpsycheck_icon_192.png'],
       manifest: {
         name: 'MeinPsyCheck',
         short_name: 'PsyCheck',
@@ -25,15 +25,10 @@ export default defineConfig({
             type: 'image/png',
           },
           {
-            src: 'meinpsycheck_icon_512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-          {
-            src: 'meinpsycheck_icon_512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
+            src: 'favicon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable',
           },
         ],
       },

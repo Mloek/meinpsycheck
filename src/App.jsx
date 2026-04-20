@@ -183,7 +183,7 @@ function OnboardingFlow({ onWeiter }) {
   const isLast = step === ONBOARDING_SCREENS.length - 1
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ maxWidth: '430px', margin: '0 auto', height: '100dvh', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative', overflow: 'hidden' }}>
       <style>{`
         @keyframes obEnter {
           from { opacity: 0; transform: translateY(28px) translateX(16px); }
@@ -200,7 +200,7 @@ function OnboardingFlow({ onWeiter }) {
       <div ref={lottieRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.7) 100%)', zIndex: 1 }} />
 
-      <div style={{ position: 'relative', zIndex: 2, minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 24px 40px' }}>
+      <div style={{ position: 'relative', zIndex: 2, height: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 24px', paddingBottom: 'max(40px, calc(env(safe-area-inset-bottom) + 24px))' }}>
         {step > 0 && (
           <p style={{ position: 'absolute', top: '52px', left: '24px', fontSize: '14px', fontWeight: '600', color: 'rgba(255,255,255,0.7)', margin: 0, letterSpacing: '0.5px' }}>MeinPsyCheck</p>
         )}
@@ -255,8 +255,8 @@ function AlterScreen({ onWeiter, onZurueck }) {
   }
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', background: 'linear-gradient(160deg, #E8EAF6 0%, #E1F5FE 35%, #F3E5F5 70%, #EDE7F6 100%)', fontFamily: 'system-ui, -apple-system, sans-serif', padding: '0 24px', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ paddingTop: '52px', marginBottom: '8px' }}>
+    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100dvh', background: 'linear-gradient(160deg, #E8EAF6 0%, #E1F5FE 35%, #F3E5F5 70%, #EDE7F6 100%)', fontFamily: 'system-ui, -apple-system, sans-serif', padding: '0 24px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ paddingTop: 'max(52px, calc(env(safe-area-inset-top) + 16px))', marginBottom: '8px' }}>
         <p style={{ fontSize: '14px', fontWeight: '600', color: 'rgba(90,80,130,0.7)', margin: '0 0 24px', letterSpacing: '0.5px' }}>MeinPsyCheck</p>
         <button onClick={onZurueck} style={{ background: 'none', border: 'none', color: '#5C6BC0', fontSize: '15px', cursor: 'pointer', padding: '0 0 24px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
       </div>
@@ -286,7 +286,7 @@ function AlterScreen({ onWeiter, onZurueck }) {
         {fehler && <p style={{ color: '#E53935', fontSize: '14px', margin: '0 0 16px' }}>{fehler}</p>}
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', padding: '16px 24px 40px', boxSizing: 'border-box', background: 'linear-gradient(to top, #E8EAF6 60%, transparent)' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', padding: '16px 24px', paddingBottom: 'max(40px, calc(env(safe-area-inset-bottom) + 16px))', boxSizing: 'border-box', background: 'linear-gradient(to top, #E8EAF6 60%, transparent)' }}>
         <button onClick={handleWeiter} style={{ width: '100%', padding: '16px', backgroundColor: '#5C6BC0', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>Weiter</button>
       </div>
     </div>
@@ -384,20 +384,20 @@ function ScreeningFragen({ fragen, antworten: antwortOptionen, zeitrahmen, onFer
   }
 
   return (
-    <div style={{ padding: '16px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <button onClick={handleZurueck} style={{ background: 'none', border: 'none', color: '#5B6BC8', fontSize: '15px', cursor: 'pointer', padding: '0 0 16px', display: 'flex', alignItems: 'center', gap: '4px' }}>← Zurück</button>
+    <div style={{ padding: '16px', height: '100dvh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', paddingTop: 'max(16px, env(safe-area-inset-top))', paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+      <button onClick={handleZurueck} style={{ background: 'none', border: 'none', color: '#5B6BC8', fontSize: '15px', cursor: 'pointer', padding: '0 0 12px', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>← Zurück</button>
 
-      <div style={{ height: '4px', backgroundColor: colors.border, borderRadius: '2px', marginBottom: '8px' }}>
+      <div style={{ height: '4px', backgroundColor: colors.border, borderRadius: '2px', marginBottom: '8px', flexShrink: 0 }}>
         <div style={{ height: '4px', backgroundColor: '#5B6BC8', borderRadius: '2px', width: `${prozent}%`, transition: 'width 0.4s ease' }} />
       </div>
-      <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 32px' }}>Frage {aktuelleGesamt} von {GESAMT_FRAGEN}</p>
+      <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 16px', flexShrink: 0 }}>Frage {aktuelleGesamt} von {GESAMT_FRAGEN}</p>
 
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {zeitrahmen && (
           <p style={{ fontSize: '20px', fontWeight: '400', color: colors.textMuted, lineHeight: '1.5', margin: '0 0 8px' }}>{zeitrahmen}</p>
         )}
-        <p style={{ fontSize: '20px', fontWeight: '600', color: colors.text, lineHeight: '1.5', margin: '0 0 32px' }}>{aktuelleFrage.text}</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+        <p style={{ fontSize: '20px', fontWeight: '600', color: colors.text, lineHeight: '1.5', margin: '0 0 24px' }}>{aktuelleFrage.text}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '8px' }}>
           {antwortOptionen.map((opt) => {
             const aktiv = ausgewaehlt === opt.wert
             return (
@@ -409,8 +409,8 @@ function ScreeningFragen({ fragen, antworten: antwortOptionen, zeitrahmen, onFer
         </div>
       </div>
 
-      <button onClick={handleWeiter} disabled={ausgewaehlt === -1} style={{ width: '100%', padding: '16px', backgroundColor: ausgewaehlt !== -1 ? '#5B6BC8' : colors.border, color: ausgewaehlt !== -1 ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: ausgewaehlt !== -1 ? 'pointer' : 'default', transition: 'background 0.2s', marginBottom: '16px' }}>
-        {istLetzte ? 'Abschließen' : 'Weiter'}
+      <button onClick={handleWeiter} disabled={ausgewaehlt === -1} style={{ width: '100%', padding: '16px', backgroundColor: ausgewaehlt !== -1 ? '#5B6BC8' : colors.border, color: ausgewaehlt !== -1 ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: ausgewaehlt !== -1 ? 'pointer' : 'default', transition: 'background 0.2s', marginTop: '12px', flexShrink: 0 }}>
+        Weiter
       </button>
     </div>
   )
@@ -420,23 +420,23 @@ function SuizidScreen({ onAntwort }) {
   const [ausgewaehlt, setAusgewaehlt] = useState(-1)
 
   return (
-    <div style={{ padding: '16px', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ height: '4px', backgroundColor: colors.border, borderRadius: '2px', marginBottom: '8px' }}>
+    <div style={{ padding: '16px', height: '100dvh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', paddingTop: 'max(16px, env(safe-area-inset-top))', paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+      <div style={{ height: '4px', backgroundColor: colors.border, borderRadius: '2px', marginBottom: '8px', flexShrink: 0 }}>
         <div style={{ height: '4px', backgroundColor: colors.primary, borderRadius: '2px', width: '100%' }} />
       </div>
-      <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 32px' }}>Frage 27 von 27</p>
+      <p style={{ fontSize: '12px', color: colors.textLight, margin: '0 0 16px', flexShrink: 0 }}>Frage 27 von 27</p>
 
-      <div style={{ backgroundColor: colors.crisisBg, borderRadius: '10px', padding: '12px 14px', marginBottom: '24px' }}>
+      <div style={{ backgroundColor: colors.crisisBg, borderRadius: '10px', padding: '12px 14px', marginBottom: '16px', flexShrink: 0 }}>
         <p style={{ fontSize: '13px', color: colors.crisis, margin: 0, lineHeight: '1.5' }}>
           Bitte beantworte die Frage mit Blick auf die letzten 2 Wochen.
         </p>
       </div>
 
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: '20px', fontWeight: '600', color: colors.text, lineHeight: '1.5', margin: '0 0 32px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        <p style={{ fontSize: '20px', fontWeight: '600', color: colors.text, lineHeight: '1.5', margin: '0 0 24px' }}>
           Gedanken, dass Sie lieber tot wären oder sich Leid zufügen möchten
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '8px' }}>
           {ANTWORTEN_STANDARD.map((opt) => {
             const aktiv = ausgewaehlt === opt.wert
             return (
@@ -448,7 +448,7 @@ function SuizidScreen({ onAntwort }) {
         </div>
       </div>
 
-      <button onClick={() => onAntwort(ausgewaehlt)} disabled={ausgewaehlt === -1} style={{ width: '100%', padding: '16px', backgroundColor: ausgewaehlt !== -1 ? '#5B6BC8' : colors.border, color: ausgewaehlt !== -1 ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: ausgewaehlt !== -1 ? 'pointer' : 'default', transition: 'background 0.2s', marginBottom: '16px' }}>
+      <button onClick={() => onAntwort(ausgewaehlt)} disabled={ausgewaehlt === -1} style={{ width: '100%', padding: '16px', backgroundColor: ausgewaehlt !== -1 ? '#5B6BC8' : colors.border, color: ausgewaehlt !== -1 ? '#fff' : colors.textLight, border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: '600', cursor: ausgewaehlt !== -1 ? 'pointer' : 'default', transition: 'background 0.2s', marginTop: '12px', flexShrink: 0 }}>
         Weiter
       </button>
     </div>
@@ -1026,6 +1026,16 @@ function TourOverlay({ schritte, schritt, onWeiter, onUeberspringen }) {
   const elRef = useRef(null)
   const accent = '#5B6BC8'
 
+  // Body scroll sperren – verhindert Wischen außerhalb des Highlights
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    document.body.style.touchAction = 'none'
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+  }, [])
+
   useEffect(() => {
     if (elRef.current) {
       elRef.current.style.position = ''
@@ -1155,8 +1165,8 @@ function HauptApp() {
   }
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100vh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, overflowY: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'hidden' : 'auto', pointerEvents: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, touchAction: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, paddingBottom: '70px' }}>
+    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100dvh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}>
+      <div style={{ flex: 1, overflowY: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'hidden' : 'auto', pointerEvents: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, touchAction: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, paddingBottom: 'calc(70px + env(safe-area-inset-bottom))' }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
         {aktiveTab === 'home' && screeningOffen && (testErgebnis
@@ -1186,7 +1196,7 @@ function HauptApp() {
         </div>
       )}
 
-      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100 }}>
+      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {[{ id: 'home', label: 'Hauptseite' }, { id: 'therapeuten', label: 'Therapeuten' }, { id: 'einstellungen', label: 'Einstellungen' }].map((tab) => (
           <button key={tab.id} onClick={() => handleTabKlick(tab.id)} {...(tab.id === 'therapeuten' ? { 'data-tour': 'therapeuten-tab' } : {})} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
             {tab.label}

@@ -58,6 +58,35 @@ html, body {
   overscroll-behavior: none;
 }
 
+/* ── Native App Feel ────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;   /* kein blaues Aufblinken beim Tippen */
+  box-sizing: border-box;
+}
+
+/* Kein Text markieren auf UI-Elementen */
+button, a, label, h1, h2, h3, p, span, div {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Text in Eingabefeldern darf markiert werden */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Kein iOS Long-Press-Kontextmenü */
+button, a, img {
+  -webkit-touch-callout: none;
+}
+
+/* Momentum-Scrolling auf iOS (smooth wie native) */
+[style*="overflow-y: auto"],
+[style*="overflowY: auto"] {
+  -webkit-overflow-scrolling: touch;
+}
+
 #root {
   width: 100%;
   max-width: 100%;

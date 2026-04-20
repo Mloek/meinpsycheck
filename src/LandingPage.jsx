@@ -84,8 +84,16 @@ const INSTALL_STEPS = {
 
 function InstallModal({ onClose, defaultTab }) {
   const [tab, setTab] = useState(defaultTab || 'ios')
+  const [expandedSteps, setExpandedSteps] = useState({})
   const startY = useRef(0)
   const steps = INSTALL_STEPS[tab]
+
+  // Bilder beim Tab-Wechsel einklappen
+  const handleTabChange = (newTab) => {
+    setTab(newTab)
+    setExpandedSteps({})
+  }
+  const toggleStep = (i) => setExpandedSteps(prev => ({ ...prev, [i]: !prev[i] }))
 
   return (
     <div onClick={onClose} style={{
@@ -113,7 +121,7 @@ function InstallModal({ onClose, defaultTab }) {
 
         {/* Tabs */}
         <div style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: 4, marginBottom: 22 }}>
-          <button onClick={() => setTab('ios')} style={{
+          <button onClick={() => handleTabChange('ios')} style={{
             flex: 1, padding: '10px 0', borderRadius: 11, border: 'none', cursor: 'pointer',
             fontWeight: 700, fontSize: 15, transition: 'background 0.2s',
             background: tab === 'ios' ? '#6d28d9' : 'transparent', color: '#fff',
@@ -125,7 +133,7 @@ function InstallModal({ onClose, defaultTab }) {
             </svg>
             iPhone
           </button>
-          <button onClick={() => setTab('android')} style={{
+          <button onClick={() => handleTabChange('android')} style={{
             flex: 1, padding: '10px 0', borderRadius: 11, border: 'none', cursor: 'pointer',
             fontWeight: 700, fontSize: 15, transition: 'background 0.2s',
             background: tab === 'android' ? '#6d28d9' : 'transparent', color: '#fff',
@@ -163,17 +171,32 @@ function InstallModal({ onClose, defaultTab }) {
                   </div>
                 </div>
               </div>
-              {/* Screenshot falls vorhanden */}
+              {/* Screenshot: nur auf Wunsch einblenden */}
               {s.img && (
-                <img
-                  src={s.img}
-                  alt={s.title}
-                  style={{
-                    marginTop: 10, width: '100%', borderRadius: 10,
-                    objectFit: 'cover', maxHeight: 180,
-                    border: '1px solid rgba(255,255,255,0.12)',
-                  }}
-                />
+                <div style={{ marginTop: 10 }}>
+                  <button
+                    onClick={() => toggleStep(i)}
+                    style={{
+                      background: 'none', border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: 8, padding: '5px 12px', color: 'rgba(255,255,255,0.6)',
+                      fontSize: 12, cursor: 'pointer', fontWeight: 600,
+                    }}
+                  >
+                    {expandedSteps[i] ? '▲ Bild ausblenden' : '▼ Beispiel zeigen'}
+                  </button>
+                  {expandedSteps[i] && (
+                    <img
+                      src={s.img}
+                      alt={s.title}
+                      style={{
+                        display: 'block', marginTop: 10, width: '100%', borderRadius: 10,
+                        objectFit: 'contain', maxHeight: 200,
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        background: 'rgba(0,0,0,0.3)',
+                      }}
+                    />
+                  )}
+                </div>
               )}
             </div>
           ))}

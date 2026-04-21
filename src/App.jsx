@@ -1150,8 +1150,8 @@ function HauptApp() {
   }
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100dvh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}>
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 'calc(70px + env(safe-area-inset-bottom))' }}>
+    <div style={{ maxWidth: '430px', margin: '0 auto', height: '100dvh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
         {aktiveTab === 'home' && screeningOffen && (testErgebnis
@@ -1181,7 +1181,7 @@ function HauptApp() {
         </div>
       )}
 
-      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div style={{ flexShrink: 0, width: '100%', backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {[{ id: 'home', label: 'Hauptseite' }, { id: 'therapeuten', label: 'Therapeuten' }, { id: 'einstellungen', label: 'Einstellungen' }].map((tab) => (
           <button key={tab.id} onClick={() => handleTabKlick(tab.id)} {...(tab.id === 'therapeuten' ? { 'data-tour': 'therapeuten-tab' } : {})} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
             {tab.label}
@@ -2416,7 +2416,7 @@ function App() {
           to   { opacity: 1; transform: translateX(0); }
         }
       `}</style>
-      <div key={screen} style={{ animation: anim, willChange: 'transform, opacity', height: '100dvh', overflow: animating ? 'hidden' : 'visible' }}>
+      <div key={screen} style={{ animation: anim, willChange: animating ? 'transform, opacity' : 'auto', height: '100dvh', overflow: 'hidden' }}>
         {screen === 'hallo' && <OnboardingFlow onWeiter={() => goTo('alter')} />}
         {screen === 'alter' && <AlterScreen onWeiter={() => goTo('app')} onZurueck={() => goTo('hallo')} />}
         {screen === 'app' && <HauptApp />}

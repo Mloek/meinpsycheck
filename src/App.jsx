@@ -183,54 +183,69 @@ function OnboardingFlow({ onWeiter }) {
   const isLast = step === ONBOARDING_SCREENS.length - 1
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', height: '100dvh', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative', overflow: 'hidden', background: 'linear-gradient(180deg, #a8c2d8 0%, #c0b4d0 45%, #6b5b80 80%, #3a2a4e 100%)' }}>
+    <div style={{ maxWidth: '430px', margin: '0 auto', height: '100dvh', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative', overflow: 'hidden', background: 'linear-gradient(180deg, #a8c5dc 0%, #b8b0cc 40%, #6b5b80 75%, #2e1f42 100%)' }}>
       <style>{`
         @keyframes obEnter {
-          from { opacity: 0; transform: translateY(28px) translateX(16px); }
-          to { opacity: 1; transform: translate(0, 0); }
+          from { opacity: 0; transform: translateY(24px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes obExit {
-          from { opacity: 1; transform: translate(0, 0); }
-          to { opacity: 0; transform: translateY(-20px) translateX(-12px); }
+          from { opacity: 1; transform: translateY(0); }
+          to { opacity: 0; transform: translateY(-16px); }
         }
-        .ob-enter { animation: obEnter 600ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
-        .ob-exit { animation: obExit 300ms ease-in forwards; }
+        .ob-enter { animation: obEnter 500ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+        .ob-exit { animation: obExit 250ms ease-in forwards; }
       `}</style>
 
+      {/* Lottie Hintergrund */}
       <div ref={lottieRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.7) 100%)', zIndex: 1 }} />
 
-      <div style={{ position: 'relative', zIndex: 2, height: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 24px', paddingBottom: 'max(40px, calc(env(safe-area-inset-bottom) + 24px))' }}>
-        {step > 0 && (
-          <p style={{ position: 'absolute', top: '52px', left: '24px', fontSize: '14px', fontWeight: '600', color: 'rgba(255,255,255,0.7)', margin: 0, letterSpacing: '0.5px' }}>MeinPsyCheck</p>
-        )}
-        <div key={step} className={animClass}>
-          <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '3px', color: 'rgba(255,255,255,0.5)', margin: '0 0 16px' }}>{screen.label}</p>
-          <h1 style={{ fontSize: screen.titelGross ? '42px' : '24px', fontWeight: screen.titelGross ? '700' : '600', color: '#fff', margin: '0 0 16px', textShadow: '0 1px 16px rgba(0,0,0,0.5)', lineHeight: 1.15 }}>{screen.titel}</h1>
-          <p style={{ fontSize: '14px', color: 'rgba(220,240,220,0.9)', lineHeight: '1.75', margin: '0 0 32px' }}>{screen.text}</p>
+      {/* Gradient nur im unteren 50% – kein harter schwarzer Balken */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.72) 100%)', zIndex: 1 }} />
+
+      {/* Content-Schicht */}
+      <div style={{ position: 'relative', zIndex: 2, height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+
+        {/* ── Logo oben – immer zentriert, groß ── */}
+        <div style={{ textAlign: 'center', paddingTop: 'max(52px, calc(env(safe-area-inset-top) + 16px))', paddingBottom: 8, flexShrink: 0 }}>
+          <p style={{ fontSize: '18px', fontWeight: '800', color: '#fff', margin: 0, letterSpacing: '0.3px', textShadow: '0 1px 12px rgba(0,0,0,0.4)' }}>MeinPsyCheck</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '24px', justifyContent: 'center' }}>
-          {ONBOARDING_SCREENS.map((_, i) => (
-            <div key={i} style={{ height: '4px', borderRadius: '4px', backgroundColor: i === step ? '#ffffff' : 'rgba(255,255,255,0.55)', width: i === step ? '22px' : '8px', transition: 'all 0.3s ease' }} />
-          ))}
-        </div>
+        {/* ── Freier Mittelbereich (Lottie sichtbar) ── */}
+        <div style={{ flex: 1 }} />
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {step > 0 && (
-            <button onClick={() => goTo(step - 1)} style={{ flex: 1, padding: '16px', backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
-              Zurück
-            </button>
-          )}
-          {!isLast ? (
-            <button onClick={() => goTo(step + 1)} style={{ flex: 1, padding: '16px', backgroundColor: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
-              Weiter
-            </button>
-          ) : (
-            <button onClick={onWeiter} style={{ flex: 1, padding: '16px', backgroundColor: '#2D6A4F', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
-              Starten
-            </button>
-          )}
+        {/* ── Unteres Panel – Text + Buttons + Safe Area ── */}
+        <div style={{ flexShrink: 0, padding: '0 24px', paddingBottom: 'max(28px, calc(env(safe-area-inset-bottom) + 16px))' }}>
+          <div key={step} className={animClass}>
+            <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '3px', color: 'rgba(255,255,255,0.5)', margin: '0 0 10px' }}>{screen.label}</p>
+            <h1 style={{ fontSize: screen.titelGross ? '40px' : '24px', fontWeight: '700', color: '#fff', margin: '0 0 12px', textShadow: '0 1px 16px rgba(0,0,0,0.6)', lineHeight: 1.15 }}>{screen.titel}</h1>
+            <p style={{ fontSize: '14px', color: 'rgba(220,240,220,0.88)', lineHeight: '1.7', margin: '0 0 24px' }}>{screen.text}</p>
+          </div>
+
+          {/* Dots */}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', justifyContent: 'center' }}>
+            {ONBOARDING_SCREENS.map((_, i) => (
+              <div key={i} style={{ height: '4px', borderRadius: '4px', backgroundColor: i === step ? '#ffffff' : 'rgba(255,255,255,0.45)', width: i === step ? '22px' : '8px', transition: 'all 0.3s ease' }} />
+            ))}
+          </div>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {step > 0 && (
+              <button onClick={() => goTo(step - 1)} style={{ flex: 1, padding: '15px', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.35)', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+                Zurück
+              </button>
+            )}
+            {!isLast ? (
+              <button onClick={() => goTo(step + 1)} style={{ flex: 1, padding: '15px', backgroundColor: 'rgba(255,255,255,0.22)', color: '#fff', border: '1px solid rgba(255,255,255,0.45)', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+                Weiter
+              </button>
+            ) : (
+              <button onClick={onWeiter} style={{ flex: 1, padding: '15px', backgroundColor: '#2D6A4F', color: '#fff', border: 'none', borderRadius: '100px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}>
+                Starten
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

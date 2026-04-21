@@ -183,7 +183,7 @@ function OnboardingFlow({ onWeiter }) {
   const isLast = step === ONBOARDING_SCREENS.length - 1
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', height: '100dvh', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ maxWidth: '430px', margin: '0 auto', height: '100dvh', fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative', overflow: 'hidden', background: 'linear-gradient(180deg, #a8c2d8 0%, #c0b4d0 45%, #6b5b80 80%, #3a2a4e 100%)' }}>
       <style>{`
         @keyframes obEnter {
           from { opacity: 0; transform: translateY(28px) translateX(16px); }
@@ -1026,16 +1026,6 @@ function TourOverlay({ schritte, schritt, onWeiter, onUeberspringen }) {
   const elRef = useRef(null)
   const accent = '#5B6BC8'
 
-  // Body scroll sperren – verhindert Wischen außerhalb des Highlights
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    document.body.style.touchAction = 'none'
-    return () => {
-      document.body.style.overflow = ''
-      document.body.style.touchAction = ''
-    }
-  }, [])
-
   useEffect(() => {
     if (elRef.current) {
       elRef.current.style.position = ''
@@ -1047,6 +1037,7 @@ function TourOverlay({ schritte, schritt, onWeiter, onUeberspringen }) {
     const aktuell = schritte[schritt]
     const el = document.querySelector(`[data-tour="${aktuell.tourKey}"]`)
     if (!el) return
+    // Scroll muss VOR der Rect-Messung abgeschlossen sein
     el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     const t = setTimeout(() => {
       const r = el.getBoundingClientRect()
@@ -1054,7 +1045,7 @@ function TourOverlay({ schritte, schritt, onWeiter, onUeberspringen }) {
       elRef.current = el
       el.style.position = 'relative'
       el.style.zIndex = '10001'
-    }, 380)
+    }, 500) // 500ms – sicher nach smooth scroll
     return () => clearTimeout(t)
   }, [schritt])
 
@@ -1070,7 +1061,10 @@ function TourOverlay({ schritte, schritt, onWeiter, onUeberspringen }) {
 
   return (
     <>
-      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', touchAction: 'none' }} />
+      <div
+        style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', touchAction: 'none' }}
+        onTouchMove={e => e.preventDefault()}
+      />
       <div style={{ position: 'fixed', pointerEvents: 'none', top: rect.top - 5, left: rect.left - 5, width: rect.width + 10, height: rect.height + 10, zIndex: 10000, borderRadius: '20px', border: '2px solid rgba(255,255,255,0.5)', boxShadow: '0 0 24px rgba(91,107,200,0.5)', transition: 'all 0.3s ease' }} />
       <div style={{ position: 'fixed', left: '14px', right: '14px', ...(unten ? { top: rect.bottom + ABST } : { bottom: window.innerHeight - rect.top + ABST }), zIndex: 10002, background: '#fff', borderRadius: '16px', padding: '18px 18px 14px', boxShadow: '0 8px 32px rgba(0,0,0,0.28)' }}>
         <div style={{ position: 'absolute', ...(unten ? { top: -8 } : { bottom: -8 }), left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', ...(unten ? { borderBottom: '8px solid #fff' } : { borderTop: '8px solid #fff' }) }} />
@@ -1166,7 +1160,7 @@ function HauptApp() {
 
   return (
     <div style={{ maxWidth: '430px', margin: '0 auto', minHeight: '100dvh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}>
-      <div style={{ flex: 1, overflowY: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'hidden' : 'auto', pointerEvents: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, touchAction: (tourSchritt !== null || therapeutenTourSchritt !== null) ? 'none' : undefined, paddingBottom: 'calc(70px + env(safe-area-inset-bottom))' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 'calc(70px + env(safe-area-inset-bottom))' }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
         {aktiveTab === 'home' && screeningOffen && (testErgebnis
@@ -2428,7 +2422,7 @@ function App() {
           to   { opacity: 1; transform: translateX(0); }
         }
       `}</style>
-      <div key={screen} style={{ animation: anim, willChange: 'transform, opacity' }}>
+      <div key={screen} style={{ animation: anim, willChange: 'transform, opacity', height: '100dvh', overflow: 'hidden' }}>
         {screen === 'hallo' && <OnboardingFlow onWeiter={() => goTo('alter')} />}
         {screen === 'alter' && <AlterScreen onWeiter={() => goTo('app')} onZurueck={() => goTo('hallo')} />}
         {screen === 'app' && <HauptApp />}

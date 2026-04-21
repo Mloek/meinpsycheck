@@ -1040,60 +1040,33 @@ const THERAPEUTEN_TOUR = [
 ]
 
 function TourOverlay({ schritte, schritt, onWeiter, onUeberspringen }) {
-  const [rect, setRect] = useState(null)
-  const elRef = useRef(null)
-  const accent = '#5B6BC8'
-
-  useEffect(() => {
-    if (elRef.current) {
-      elRef.current.style.position = ''
-      elRef.current.style.zIndex = ''
-      elRef.current = null
-      setRect(null)
-    }
-    if (schritt === null) return
-    const aktuell = schritte[schritt]
-    const el = document.querySelector(`[data-tour="${aktuell.tourKey}"]`)
-    if (!el) return
-    // Scroll muss VOR der Rect-Messung abgeschlossen sein
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    const t = setTimeout(() => {
-      const r = el.getBoundingClientRect()
-      setRect({ top: r.top, left: r.left, right: r.right, bottom: r.bottom, width: r.width, height: r.height })
-      elRef.current = el
-      el.style.position = 'relative'
-      el.style.zIndex = '10001'
-    }, 500) // 500ms – sicher nach smooth scroll
-    return () => clearTimeout(t)
-  }, [schritt])
-
-  useEffect(() => () => {
-    if (elRef.current) { elRef.current.style.position = ''; elRef.current.style.zIndex = '' }
-  }, [])
-
-  if (schritt === null || !rect) return null
+  if (schritt === null) return null
   const aktuell = schritte[schritt]
   const istLetzte = schritt === schritte.length - 1
-  const ABST = 12
-  const unten = rect.bottom + ABST + 230 < window.innerHeight
+  const accent = '#5B6BC8'
 
   return (
     <>
-      <div
-        style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.75)', touchAction: 'none' }}
-        onTouchMove={e => e.preventDefault()}
-      />
-      <div style={{ position: 'fixed', pointerEvents: 'none', top: rect.top - 5, left: rect.left - 5, width: rect.width + 10, height: rect.height + 10, zIndex: 10000, borderRadius: '20px', border: '2px solid rgba(255,255,255,0.5)', boxShadow: '0 0 24px rgba(91,107,200,0.5)', transition: 'all 0.3s ease' }} />
-      <div style={{ position: 'fixed', left: '14px', right: '14px', ...(unten ? { top: rect.bottom + ABST } : { bottom: window.innerHeight - rect.top + ABST }), zIndex: 10002, background: '#fff', borderRadius: '16px', padding: '18px 18px 14px', boxShadow: '0 8px 32px rgba(0,0,0,0.28)' }}>
-        <div style={{ position: 'absolute', ...(unten ? { top: -8 } : { bottom: -8 }), left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', ...(unten ? { borderBottom: '8px solid #fff' } : { borderTop: '8px solid #fff' }) }} />
-        <p style={{ fontSize: '16px', fontWeight: '700', color: '#2a2a3e', margin: '0 0 7px' }}>{aktuell.titel}</p>
-        <p style={{ fontSize: '13px', color: '#8a8faa', margin: '0 0 14px', lineHeight: '1.55' }}>{aktuell.text}</p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '12px' }}>
-          {schritte.map((_, i) => <div key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === schritt ? accent : 'rgba(91,107,200,0.2)' }} />)}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.6)' }} />
+      <div style={{
+        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: '430px', zIndex: 10000,
+        background: '#fff', borderRadius: '24px 24px 0 0',
+        padding: '20px 20px',
+        paddingBottom: 'max(20px, calc(env(safe-area-inset-bottom) + 16px))',
+        boxShadow: '0 -8px 40px rgba(0,0,0,0.25)',
+      }}>
+        <div style={{ width: 36, height: 4, background: '#e5e7ef', borderRadius: 2, margin: '0 auto 20px' }} />
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 16 }}>
+          {schritte.map((_, i) => (
+            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i === schritt ? accent : 'rgba(91,107,200,0.2)', transition: 'background 0.2s' }} />
+          ))}
         </div>
+        <p style={{ fontSize: '17px', fontWeight: '700', color: '#2a2a3e', margin: '0 0 8px', textAlign: 'center' }}>{aktuell.titel}</p>
+        <p style={{ fontSize: '14px', color: '#8a8faa', margin: '0 0 24px', lineHeight: '1.6', textAlign: 'center' }}>{aktuell.text}</p>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={onUeberspringen} style={{ flex: 1, padding: '11px', background: 'none', border: 'none', color: '#aab0c8', fontSize: '14px', cursor: 'pointer' }}>Überspringen</button>
-          <button onClick={onWeiter} style={{ flex: 2, padding: '11px', background: accent, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>{istLetzte ? 'Verstanden' : 'Weiter'}</button>
+          <button onClick={onUeberspringen} style={{ flex: 1, padding: '12px', background: 'none', border: 'none', color: '#aab0c8', fontSize: '14px', cursor: 'pointer' }}>Überspringen</button>
+          <button onClick={onWeiter} style={{ flex: 2, padding: '12px', background: accent, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>{istLetzte ? 'Verstanden' : 'Weiter'}</button>
         </div>
       </div>
     </>

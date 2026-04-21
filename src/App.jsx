@@ -200,7 +200,10 @@ function OnboardingFlow({ onWeiter }) {
       {/* Lottie Hintergrund */}
       <div ref={lottieRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }} />
 
-      {/* Gradient nur im unteren 50% – kein harter schwarzer Balken */}
+      {/* Oben: Blend vom Status-Bar-Ton (#a0bdd4) in den Lottie-Himmel */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '110px', background: 'linear-gradient(to bottom, #a0bdd4 0%, transparent 100%)', zIndex: 1 }} />
+
+      {/* Unten: Gradient nur im unteren 50% – kein harter schwarzer Balken */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.72) 100%)', zIndex: 1 }} />
 
       {/* Content-Schicht */}

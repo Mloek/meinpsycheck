@@ -2383,6 +2383,7 @@ const SCREEN_ORDER = ['hallo', 'alter', 'app']
 function App() {
   const [screen, setScreen] = useState('loading')
   const [prevScreen, setPrevScreen] = useState(null)
+  const [animating, setAnimating] = useState(false)
   useEffect(() => {
     const done = localStorage.getItem('onboarding_done')
     setScreen(done === 'true' ? 'app' : 'hallo')
@@ -2391,6 +2392,8 @@ function App() {
   const goTo = (next) => {
     setPrevScreen(screen)
     setScreen(next)
+    setAnimating(true)
+    setTimeout(() => setAnimating(false), 320)
   }
 
   if (screen === 'loading') return null
@@ -2413,7 +2416,7 @@ function App() {
           to   { opacity: 1; transform: translateX(0); }
         }
       `}</style>
-      <div key={screen} style={{ animation: anim, willChange: 'transform, opacity', height: '100dvh', overflow: 'hidden' }}>
+      <div key={screen} style={{ animation: anim, willChange: 'transform, opacity', height: '100dvh', overflow: animating ? 'hidden' : 'visible' }}>
         {screen === 'hallo' && <OnboardingFlow onWeiter={() => goTo('alter')} />}
         {screen === 'alter' && <AlterScreen onWeiter={() => goTo('app')} onZurueck={() => goTo('hallo')} />}
         {screen === 'app' && <HauptApp />}

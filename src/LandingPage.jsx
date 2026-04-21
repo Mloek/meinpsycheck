@@ -48,12 +48,13 @@ const INSTALL_STEPS = {
     {
       title: 'Teilen-Symbol antippen',
       desc: 'Das Symbol unten in der Mitte antippen (Quadrat mit Pfeil nach oben)',
-      img: '/install_ios_share.png',
+      // Kein Bild – das bisherige Bild zeigte fälschlicherweise das 3-Punkte-Menü
     },
     {
       title: '"Zum Home-Bildschirm" wählen',
       desc: 'In der Liste runterscrollen und "Zum Home-Bildschirm" antippen',
       img: '/install_ios_homescreen.png',
+      showLabel: 'Beispiel anzeigen',
     },
     {
       title: '"Hinzufügen" tippen – fertig!',
@@ -69,11 +70,13 @@ const INSTALL_STEPS = {
       title: 'Drei Punkte oben rechts antippen',
       desc: 'Das Menü oben rechts öffnen',
       img: '/install_samsung_dots.jpg',
+      showLabel: 'Wie sieht das aus?',
     },
     {
       title: '"Zum Startbildschirm hinzufügen" wählen',
       desc: 'Diesen Eintrag in der Liste antippen',
       img: '/install_android_menu.jpg',
+      showLabel: 'Wie sieht das aus?',
     },
     {
       title: '"Hinzufügen" tippen – fertig!',
@@ -172,7 +175,7 @@ function InstallModal({ onClose, defaultTab }) {
                 </div>
               </div>
               {/* Screenshot: nur auf Wunsch einblenden */}
-              {s.img && (
+              {s.img && s.showLabel && (
                 <div style={{ marginTop: 10 }}>
                   <button
                     onClick={() => toggleStep(i)}
@@ -182,7 +185,7 @@ function InstallModal({ onClose, defaultTab }) {
                       fontSize: 12, cursor: 'pointer', fontWeight: 600,
                     }}
                   >
-                    {expandedSteps[i] ? '▲ Bild ausblenden' : '▼ Beispiel zeigen'}
+                    {expandedSteps[i] ? '▲ Ausblenden' : `▼ ${s.showLabel}`}
                   </button>
                   {expandedSteps[i] && (
                     <img
@@ -190,7 +193,7 @@ function InstallModal({ onClose, defaultTab }) {
                       alt={s.title}
                       style={{
                         display: 'block', marginTop: 10, width: '100%', borderRadius: 10,
-                        objectFit: 'contain', maxHeight: 200,
+                        objectFit: 'contain', maxHeight: 220,
                         border: '1px solid rgba(255,255,255,0.12)',
                         background: 'rgba(0,0,0,0.3)',
                       }}

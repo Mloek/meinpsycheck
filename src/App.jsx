@@ -1150,7 +1150,7 @@ function HauptApp() {
   }
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', height: '100dvh', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}>
+    <div style={{ maxWidth: '430px', margin: '0 auto', height: '100%', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}>
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
         {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
@@ -2005,7 +2005,7 @@ function Einstellungen({ onTourNeuStarten }) {
 
   const sektionen = [
     { titel: 'Konto', items: ['E-Mail-Adresse hinterlegen', 'App bewerten', 'App-Tour wiederholen'] },
-    { titel: 'Info', items: ['Neuigkeiten & Updates', 'Datenschutz', 'Impressum', 'Hilfe & FAQ', 'Wissenschaftliche Grundlagen'] },
+    { titel: 'Info', items: ['Neuigkeiten & Updates', 'Datenschutz', 'Impressum', 'Hilfe & FAQ', 'Wissenschaftliche Grundlagen', 'Über uns'] },
   ]
 
   const wissenschaft = [
@@ -2327,6 +2327,59 @@ function Einstellungen({ onTourNeuStarten }) {
     )
   }
 
+  // ── Über uns ──────────────────────────────────────────────────
+  if (detailAnsicht === 'ueber-uns') {
+    return (
+      <div style={{ padding: '24px 16px 40px', background: bg, minHeight: '100%' }}>
+        <ZurueckBtn />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
+          <div style={{ width: 72, height: 72, borderRadius: '20px', background: 'linear-gradient(135deg, #7b5ea7, #5B6BC8)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', boxShadow: '0 4px 16px rgba(91,107,200,0.25)' }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="white"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
+          </div>
+          <h1 style={{ fontSize: '22px', fontWeight: '800', color: textP, margin: '0 0 4px', textAlign: 'center' }}>Über MeinPsyCheck</h1>
+          <p style={{ fontSize: '13px', color: accent, fontWeight: '600', margin: 0 }}>Von einem Studenten, für alle</p>
+        </div>
+
+        <KardBox>
+          <div style={{ padding: '18px 16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px' }}>Wer steckt dahinter</p>
+            <TextBlock>{'Hallo, ich bin Midhad – Psychologiestudent und Gründer von MeinPsyCheck.\n\nIch habe diese App entwickelt, weil ich täglich sehe, wie viele Menschen nicht wissen, ob und wie sie Hilfe bekommen können. Nicht wegen mangelndem Willen – sondern weil der Weg dorthin so unübersichtlich ist.'}</TextBlock>
+          </div>
+        </KardBox>
+
+        <KardBox>
+          <div style={{ padding: '18px 16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px' }}>Warum diese App?</p>
+            <TextBlock>{'Wartelisten von 6–18 Monaten sind in Deutschland die Norm. Viele warten – ohne zu wissen, ob ihre Belastung überhaupt klinisch relevant ist.\n\nGleichzeitig ist das Internet voll mit Fehlinformationen: Tests ohne wissenschaftliche Grundlage, reißerische Diagnosen, Ratschläge ohne Evidenz.\n\nMeinPsyCheck soll eine ehrliche Alternative sein: Kein Clickbait, keine Diagnosen – sondern eine klare, wissenschaftlich fundierte Einschätzung, ob eine professionelle Abklärung sinnvoll wäre.'}</TextBlock>
+          </div>
+        </KardBox>
+
+        <KardBox>
+          <div style={{ padding: '18px 16px' }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: textS, textTransform: 'uppercase', letterSpacing: '0.8px', margin: '0 0 8px' }}>Was wir anbieten</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[
+                { icon: '🔬', text: 'Validierte Screening-Fragebögen (PHQ-9, GAD-7, ASRS, WHO-5)' },
+                { icon: '📓', text: 'Stimmungstagebuch zur langfristigen Selbstbeobachtung' },
+                { icon: '📍', text: 'Therapeutensuche in deiner Nähe' },
+                { icon: '📚', text: 'Ressourcen zu häufigen psychischen Themen' },
+              ].map(({ icon, text }) => (
+                <div key={text} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '18px', flexShrink: 0, lineHeight: '1.4' }}>{icon}</span>
+                  <p style={{ fontSize: '14px', color: textS, margin: 0, lineHeight: '1.6' }}>{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </KardBox>
+
+        <p style={{ fontSize: '12px', color: textS, textAlign: 'center', lineHeight: '1.7', opacity: 0.6, marginTop: '8px' }}>
+          {'MeinPsyCheck ist kein Medizinprodukt und ersetzt keine professionelle Beratung.\nBei akuten Krisen: Telefonseelsorge 0800 111 0 111 (kostenlos, 24/7)'}
+        </p>
+      </div>
+    )
+  }
+
   // ── Hauptansicht ──────────────────────────────────────────────
   const itemToDetail = {
     'E-Mail-Adresse hinterlegen': 'email',
@@ -2337,6 +2390,7 @@ function Einstellungen({ onTourNeuStarten }) {
     'Impressum': 'impressum',
     'Hilfe & FAQ': 'faq',
     'Wissenschaftliche Grundlagen': 'wissenschaft',
+    'Über uns': 'ueber-uns',
   }
 
   return (

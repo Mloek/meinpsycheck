@@ -1150,16 +1150,33 @@ function HauptApp() {
   }
 
   return (
-    <div style={{ maxWidth: '430px', margin: '0 auto', height: '100%', backgroundColor: '#dde1ee', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top)' }}>
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-        {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
-        {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
-        {aktiveTab === 'home' && screeningOffen && (testErgebnis
-          ? <ScreeningErgebnis ergebnisse={testErgebnis} suizidItem={0} onNeustart={() => { setScreeningOffen(false); setTestErgebnis(null) }} onZurueck={() => { setScreeningOffen(false); setTestErgebnis(null) }} />
-          : <ScreeningFlow onZurueck={() => setScreeningOffen(false)} />
-        )}
-        {aktiveTab === 'therapeuten' && <TherapeutenPlatzhalter />}
-        {aktiveTab === 'einstellungen' && <Einstellungen onTourNeuStarten={handleTourNeuStarten} />}
+    /* ── Äußerster Container: viewport-fixiert, kein vh ────────── */
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', overflow: 'hidden', backgroundColor: '#dde1ee' }}>
+
+      {/* ── 430px-Wrapper: flex-column, volle Höhe ─────────────── */}
+      <div style={{ width: '100%', maxWidth: '430px', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'system-ui, -apple-system, sans-serif', paddingTop: 'env(safe-area-inset-top)' }}>
+
+        {/* ── Scrollbarer Inhalt ──────────────────────────────── */}
+        <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '80px' }}>
+          {aktiveTab === 'home' && !tagebuchOffen && !screeningOffen && <Hauptseite onTagebuchOeffnen={handleTagebuchOeffnen} onScreeningOeffnen={() => setScreeningOffen(true)} onTestErgebnis={IS_DEV ? handleTestErgebnis : undefined} />}
+          {aktiveTab === 'home' && tagebuchOffen && <Tagebuch onZurueck={() => { setTagebuchOffen(false); setTagebuchStartAnsicht(null) }} startAnsicht={tagebuchStartAnsicht} />}
+          {aktiveTab === 'home' && screeningOffen && (testErgebnis
+            ? <ScreeningErgebnis ergebnisse={testErgebnis} suizidItem={0} onNeustart={() => { setScreeningOffen(false); setTestErgebnis(null) }} onZurueck={() => { setScreeningOffen(false); setTestErgebnis(null) }} />
+            : <ScreeningFlow onZurueck={() => setScreeningOffen(false)} />
+          )}
+          {aktiveTab === 'therapeuten' && <TherapeutenPlatzhalter />}
+          {aktiveTab === 'einstellungen' && <Einstellungen onTourNeuStarten={handleTourNeuStarten} />}
+        </div>
+
+        {/* ── Tab-Bar: static, immer unten, kein position:fixed ── */}
+        <div style={{ flexShrink: 0, backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          {[{ id: 'home', label: 'Hauptseite' }, { id: 'therapeuten', label: 'Therapeuten' }, { id: 'einstellungen', label: 'Einstellungen' }].map((tab) => (
+            <button key={tab.id} onClick={() => handleTabKlick(tab.id)} {...(tab.id === 'therapeuten' ? { 'data-tour': 'therapeuten-tab' } : {})} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
       </div>
 
       {/* ── Tab-Wechsel-Dialog ──────────────────────────────────── */}
@@ -1180,14 +1197,6 @@ function HauptApp() {
           </div>
         </div>
       )}
-
-      <div style={{ flexShrink: 0, width: '100%', backgroundColor: '#fff', borderTop: '1px solid rgba(91,107,200,0.12)', display: 'flex', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {[{ id: 'home', label: 'Hauptseite' }, { id: 'therapeuten', label: 'Therapeuten' }, { id: 'einstellungen', label: 'Einstellungen' }].map((tab) => (
-          <button key={tab.id} onClick={() => handleTabKlick(tab.id)} {...(tab.id === 'therapeuten' ? { 'data-tour': 'therapeuten-tab' } : {})} style={{ flex: 1, padding: '12px 0 10px', background: 'none', border: 'none', borderTop: `2px solid ${aktiveTab === tab.id ? '#5B6BC8' : 'transparent'}`, cursor: 'pointer', fontSize: '11px', fontWeight: aktiveTab === tab.id ? '600' : '400', color: aktiveTab === tab.id ? '#5B6BC8' : '#aab0c8' }}>
-            {tab.label}
-          </button>
-        ))}
-      </div>
 
       {tourSchritt !== null && (
         <TourOverlay schritte={TOUR_SCHRITTE} schritt={tourSchritt} onWeiter={handleTourWeiter} onUeberspringen={handleTourUeberspringen} />
@@ -2463,11 +2472,11 @@ function App() {
       <style>{`
         @keyframes screenSlideInRight {
           from { opacity: 0; transform: translateX(32px); }
-          to   { opacity: 1; transform: translateX(0); }
+          to   { opacity: 1; }
         }
         @keyframes screenSlideInLeft {
           from { opacity: 0; transform: translateX(-32px); }
-          to   { opacity: 1; transform: translateX(0); }
+          to   { opacity: 1; }
         }
       `}</style>
       <div key={screen} style={{ animation: anim, willChange: animating ? 'transform, opacity' : 'auto', height: '100dvh', overflow: 'hidden' }}>

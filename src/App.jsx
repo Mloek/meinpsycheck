@@ -1151,10 +1151,10 @@ function HauptApp() {
 
   return (
     /* ── Äußerster Container: viewport-fixiert, kein vh ────────── */
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', overflow: 'hidden', backgroundColor: '#dde1ee' }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', overflow: 'hidden', backgroundColor: '#fff' }}>
 
       {/* ── 430px-Wrapper: flex-column, volle Höhe ─────────────── */}
-      <div style={{ width: '100%', maxWidth: '430px', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'system-ui, -apple-system, sans-serif', paddingTop: 'env(safe-area-inset-top)' }}>
+      <div style={{ flex: 1, width: '100%', maxWidth: '430px', display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'system-ui, -apple-system, sans-serif', paddingTop: 'env(safe-area-inset-top)', backgroundColor: '#dde1ee' }}>
 
         {/* ── Scrollbarer Inhalt ──────────────────────────────── */}
         <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: '80px' }}>
